@@ -1,7 +1,9 @@
 
 
+// Equations Here:
+// https://www.desmos.com/calculator/i8h0wzqaci
 
-export const calculateL = (pNow: number, pDeposit: number, vDeposit: number, pLower: number, pUpper: number) => {
+export const calculateL = (pDeposit: number, vDeposit: number, pLower: number, pUpper: number) => {
     if (pDeposit < pLower)
         return vDeposit / ( pDeposit * ( 1 / Math.sqrt(pLower) - 1 / Math.sqrt(pUpper)))
     else if (pDeposit > pUpper)

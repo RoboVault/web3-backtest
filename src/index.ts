@@ -17,8 +17,8 @@ async function main () {
     const pool = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
     const datasource = new UniV3DataSource(
         pool, 
-        getTimestamp('11/01/2022'),
-        getTimestamp('11/11/2022'),
+        getTimestamp('10/01/2022'),
+        getTimestamp('12/01/2022'),
         'ethereum'
     )
 

@@ -14,33 +14,35 @@ class CoreStrategy {
     public position?: UniV3Position
     public lend: number = 0
     public borrow: number = 0
-    public totalAssets: number
-    public debtRatioRange: number = 0.10 // +/- 5%
-    public ticks = 2000
+    public borrowInShort: number = 0
+    public debtRatioRange: number = 0.05 // +/- %
+    public ticks = 10000
+    public firstPosition = false
 
     constructor(
-        amount: number,
+        public initialInvestment: number,
     ) {
-        this.totalAssets = amount
-        this.updateLenderAmounts(amount)
     }
 
     public async process(mgr: UniV3PositionManager, data: PoolHourData) {
+        this.log(data)
+
         const debtRatio = this.calcDebtRatio()
-        if (!this.position) {
-            await this.openPosition(mgr, data)
+        if (!this.firstPosition) {
+            this.openFirstPosition(mgr, data)
         } else if (debtRatio > (1 + this.debtRatioRange) || debtRatio < (1 - this.debtRatioRange)) {
-            console.log('rebalancing debt! ' + debtRatio)
+            console.log('\n************* rebalancing debt! *************')
+            console.log((debtRatio * 100).toFixed(2))
             this.rebalanceDebt(mgr, data)
-            // ToDo - Rebalance Debt
         }
 
-        this.log(data)
     }
 
-    public openPosition(mgr: UniV3PositionManager, data: PoolHourData) {
+    public openFirstPosition(mgr: UniV3PositionManager, data: PoolHourData) {
+        const borrowInWant = this.updateLenderAmounts(this.initialInvestment, data)
+        this.firstPosition = true
         console.log('Openning Position!!')
-        const lpSize = this.borrow * 2       
+        const lpSize = borrowInWant * 2       
         this.position = mgr.openBalancedPosition(
             lpSize,
             this.ticks // ticks
@@ -53,27 +55,18 @@ class CoreStrategy {
     }
 
     public rebalanceDebt(mgr: UniV3PositionManager, data: PoolHourData) {
-        const snapshot = this.snapshot
-        const reserves = snapshot.reserves;
-        const fees = [snapshot.feeToken0, snapshot.feeToken1]
         if (!this.position) throw new Error('wot')
+
+        // Calc total assets
+        const totalAssets = this.estTotalAssets(data)
+
+        // Close this position
         mgr.close(this.position)
         this.position = undefined
         
-
-        const totalAssets = 
-            this.lend - this.borrow + 
-            (reserves[0] + fees[1]) * data.close + 
-            (reserves[1] + fees[0])
-        console.log('\ntotal Assets: ' + totalAssets)
-        console.log(this.lend, this.borrow)
-        console.log(reserves)
-        console.log(fees)
-        
         // Update Lend
-        this.updateLenderAmounts(totalAssets)
-
-        const lpSize = this.borrow * 2      
+        const borrowInWant = this.updateLenderAmounts(totalAssets, data)
+        const lpSize = borrowInWant * 2      
         this.position = mgr.openBalancedPosition(
             lpSize,
             this.ticks // ticks
@@ -82,16 +75,28 @@ class CoreStrategy {
     }
 
     public estTotalAssets(data: PoolHourData) {
-        if (!this.position?.snapshot) return
+        if (!this.position?.snapshot) throw new Error('No Snapshot')
         const snapshot = this.position.snapshot
-        return this.lend - this.borrow + data.close * snapshot.reserves[0] + snapshot.reserves[1]
+        const reserves = snapshot.reserves
+        const fees = [snapshot.cumulativeFeeToken0, snapshot.cumulativeFeeToken1]
+        const price = data.close
+        const totalAsset = this.lend + reserves[1] + fees[0] + price * (snapshot.reserves[0] + fees[1] - this.borrow)
+        console.log(this.lend, reserves[1], fees[0], snapshot.reserves[0], fees[1], this.borrow)
+        console.log('estTotalAssets')
+        console.log(totalAsset)
+        console.log(reserves)
+        return totalAsset
     }
 
 
-    private updateLenderAmounts(totalAssets: number) {
+    private updateLenderAmounts(totalAssets: number, data: PoolHourData) {
         const collatRatio = 0.6
         this.lend = totalAssets * (1 / (1 + collatRatio))
-        this.borrow = totalAssets - this.lend
+        const borrowInWant = totalAssets - this.lend
+        this.borrow = borrowInWant / data.close
+        // console.log('updateLenderAmounts')
+        // console.log(this.lend, borrowInWant, this.borrow, totalAssets)
+        return borrowInWant
     }
 
     private calcDebtRatio(): number {
@@ -101,9 +106,11 @@ class CoreStrategy {
             return 1
 
         const snapshot = this.position.snapshot
-        // console.log(this.position)
-        const shortInLp = snapshot.reserves[0] * snapshot.close
-        return shortInLp / this.borrow
+        // console.log('calcDebtRatio')
+        // console.log(snapshot.reserves)
+        // console.log(this.borrow)
+        const debtRatio =  this.borrow / snapshot.reserves[0]
+        return debtRatio
     }
 
     private async log(data: PoolHourData) {
@@ -113,7 +120,7 @@ class CoreStrategy {
         const token1 = this.position.snapshot.tokens[1]
         const reserves0 = this.position.snapshot.reserves[0]
         const reserves1 = this.position.snapshot.reserves[1]
-        const usdValue = this.estTotalAssets(data)
+        const totalAssets = this.estTotalAssets(data)
 
         const log = {
             tags: {
@@ -126,15 +133,19 @@ class CoreStrategy {
                 token1,
                 reserves0,
                 reserves1,
-                usdValue,
+                totalAssets,
                 debtUpper: 1 + this.debtRatioRange,
                 debtLower: 1 - this.debtRatioRange,
                 price_max: this.position.maxRange,
                 price_min: this.position.minRange,
-                debt_ratio: this.calcDebtRatio()
+                debt_ratio: this.calcDebtRatio(),
+                lend: this.lend,
+                borrow: this.borrow,
+                borrowInWant: this.borrow * data.close,
             },
             timestamp: new Date(data.periodStartUnix * 1000),
         }
+        // console.log(log.timestamp)
         // delete log.fields.tokens
         // console.log(log)
         // Log.writePoint(log)

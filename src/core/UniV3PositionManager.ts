@@ -54,12 +54,15 @@ const liquidityForStrategy = (price: number, low: number, high: number, tokens0:
     }
 }
 
-
 // Calculate the number of Tokens a strategy owns at a specific price 
-export const tokensForStrategy = (entryPrice: number, minRange: number, maxRange: number, initalInvestment: number, price: number, decimal: number) => {
-    const L = calculateL(price, entryPrice, initalInvestment, minRange, maxRange)
+export const tokensForStrategy = (entryPrice: number, price: number, minRange: number, maxRange: number, initalInvestment: number) => {
+    const L = calculateL(entryPrice, initalInvestment, minRange, maxRange)
     const xLp = getXReal(price, minRange, maxRange, L)
     const yLp = getYReal(price, minRange, maxRange, L)
+    const amountNow = yLp + xLp * price
+    console.log('tokensForStrategy')
+    console.log(amountNow, initalInvestment)
+    console.log(amountNow / initalInvestment) // amountNow is always gt initalInvestment
     return [xLp, yLp];
 }
 
@@ -70,6 +73,8 @@ export class UniV3Position {
     // provider!: ethers.providers.BaseProvider
     public unboundedFees: [number, number] = [0, 0]
     public snapshot: any
+    public feeToken0: number = 0
+    public feeToken1: number = 0
 
     constructor(
         public amount: number, 
@@ -119,7 +124,8 @@ export class UniV3Position {
     public processData(lastData: PoolHourData, data: PoolHourData, unbFees: [number, number]) {
         this.unboundedFees[0] += unbFees[0]
         this.unboundedFees[1] += unbFees[1]
-        const posReserves = tokensForStrategy(this.entryPrice, this.minRange, this.maxRange, this.amount, data.close, data.pool.token0.decimals)
+        const posReserves = tokensForStrategy(this.entryPrice, data.close, this.minRange, this.maxRange, this.amount)
+        // const posReserves = tokensForStrategy2(this.minRange, this.maxRange, this.amount, data.close, data.pool.token0.decimals)
         const unboundedLiquidity = liquidityForStrategy(this.entryPrice, Math.pow(1.0001, -887220), Math.pow(1.0001, 887220), posReserves[0], posReserves[1], data.pool.token0.decimals, data.pool.token1.decimals);
         const liquidity = liquidityForStrategy(this.entryPrice, this.minRange, this.maxRange, posReserves[0], posReserves[1], data.pool.token0.decimals, data.pool.token1.decimals)
 
@@ -137,6 +143,8 @@ export class UniV3Position {
 
         const feeToken0 = unbFees[0] * liquidity * activeLiquidity / 100;
         const feeToken1 = unbFees[1] * liquidity * activeLiquidity / 100;
+        this.feeToken0 += feeToken0
+        this.feeToken1 += feeToken1
 
         const feeUnb0 = unbFees[0] * unboundedLiquidity;
         const feeUnb1 = unbFees[1] * unboundedLiquidity;
@@ -175,6 +183,8 @@ export class UniV3Position {
             feeUSD = feeV * (lastData.pool.totalValueLockedUSD) / ((lastData.pool.totalValueLockedToken1) + ((lastData.pool.totalValueLockedToken0) / (lastData.close)));
             amountTR = this.amount + (amountV - ((x0 * (1 / data.close)) + y0));
         }
+
+        
     
         const date = new Date(data.periodStartUnix*1000);
         // console.log(data)
@@ -200,7 +210,9 @@ export class UniV3Position {
             amountTR: amountTR,
             feeUSD: feeUSD,
             close: data.close,
-            baseClose: this.priceToken === 1 ? 1 / data.close : data.close
+            baseClose: this.priceToken === 1 ? 1 / data.close : data.close,
+            cumulativeFeeToken0: this.feeToken0,
+            cumulativeFeeToken1: this.feeToken1,
         }
     }
 }
@@ -233,6 +245,7 @@ export class UniV3PositionManager {
         for (const pos of this.positions) {
             pos.processData(this.lastData, data, unboundFees)
         }
+        this.lastData = data
         return true
     }
 
@@ -261,9 +274,6 @@ export class UniV3PositionManager {
 
 
         const currentTick = getTickFromPrice(this.lastData.close, this.lastData.pool)
-        // console.log('Price: ' + this.lastData.close)
-        // console.log('current tick: ' + currentTick)
-        // console.log('Price: ' + getPriceFromTick(currentTick, this.lastData.pool))
         const maxRange = getPriceFromTick(currentTick + tickRange, this.lastData.pool)
         const minRange = getPriceFromTick(currentTick - tickRange, this.lastData.pool)
         console.log('Openning position')
