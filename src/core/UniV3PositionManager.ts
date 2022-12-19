@@ -138,7 +138,6 @@ export class UniV3Position {
         const feeToken0 = unbFees[0] * liquidity * activeLiquidity / 100;
         const feeToken1 = unbFees[1] * liquidity * activeLiquidity / 100;
 
-
         const feeUnb0 = unbFees[0] * unboundedLiquidity;
         const feeUnb1 = unbFees[1] * unboundedLiquidity;
 
@@ -237,12 +236,12 @@ export class UniV3PositionManager {
         return true
     }
 
-    public async open(
+    public open(
         amount: number, 
         minRange: number, 
         maxRange: number, 
         priceToken: number = 0
-    ): Promise<UniV3Position> {
+    ): UniV3Position {
         if (!this.lastData)
             throw new Error('wow')
         const pos = new UniV3Position(amount, minRange, maxRange, priceToken, this.lastData.close)
@@ -250,11 +249,11 @@ export class UniV3PositionManager {
         return pos
     }
 
-    public async openBalancedPosition(
+    public openBalancedPosition(
         amount: number, 
         tickRange: number, 
         priceToken: number = 0
-    ): Promise<UniV3Position> {
+    ): UniV3Position {
         if (!this.lastData)
             throw new Error('wow')
 
@@ -290,5 +289,10 @@ export class UniV3PositionManager {
         const fg1 = (fg1_0 - fg1_1); // fee of token 1 earned in 1 period by 1 unit of unbounded liquidity
     
         return [fg0, fg1];
+    }
+
+    public close(pos: UniV3Position){
+        const idx = this.positions.indexOf(pos)
+        this.positions.splice(idx, 1)
     }
 }

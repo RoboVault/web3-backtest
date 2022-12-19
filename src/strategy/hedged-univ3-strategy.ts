@@ -12,18 +12,17 @@ const Log = new Measurement<ILogAny, any, any>('backtest_v1')
 
 class CoreStrategy {
     public position?: UniV3Position
-    public lend: number
-    public borrow: number
+    public lend: number = 0
+    public borrow: number = 0
     public totalAssets: number
-    public debtRatioRange: number = 0.05 // +/- 5%
+    public debtRatioRange: number = 0.10 // +/- 5%
+    public ticks = 2000
 
     constructor(
         amount: number,
     ) {
         this.totalAssets = amount
-        const lender = this.calcLenderAmounts(amount)
-        this.lend = lender.lend
-        this.borrow = lender.borrow
+        this.updateLenderAmounts(amount)
     }
 
     public async process(mgr: UniV3PositionManager, data: PoolHourData) {
@@ -31,27 +30,68 @@ class CoreStrategy {
         if (!this.position) {
             await this.openPosition(mgr, data)
         } else if (debtRatio > (1 + this.debtRatioRange) || debtRatio < (1 - this.debtRatioRange)) {
-                // ToDo - Rebalance Debt
+            console.log('rebalancing debt! ' + debtRatio)
+            this.rebalanceDebt(mgr, data)
+            // ToDo - Rebalance Debt
         }
 
         this.log(data)
     }
 
-    public async openPosition(mgr: UniV3PositionManager, data: PoolHourData) {
+    public openPosition(mgr: UniV3PositionManager, data: PoolHourData) {
         console.log('Openning Position!!')
         const lpSize = this.borrow * 2       
-        this.position = await mgr.openBalancedPosition(
+        this.position = mgr.openBalancedPosition(
             lpSize,
-            2000 // ticks
+            this.ticks // ticks
         )
     }
 
+    public get snapshot() {
+        if (!this.position?.snapshot) return
+        return this.position.snapshot
+    }
 
-    private calcLenderAmounts(totalAssets: number): { lend: number, borrow: number} {
+    public rebalanceDebt(mgr: UniV3PositionManager, data: PoolHourData) {
+        const snapshot = this.snapshot
+        const reserves = snapshot.reserves;
+        const fees = [snapshot.feeToken0, snapshot.feeToken1]
+        if (!this.position) throw new Error('wot')
+        mgr.close(this.position)
+        this.position = undefined
+        
+
+        const totalAssets = 
+            this.lend - this.borrow + 
+            (reserves[0] + fees[1]) * data.close + 
+            (reserves[1] + fees[0])
+        console.log('\ntotal Assets: ' + totalAssets)
+        console.log(this.lend, this.borrow)
+        console.log(reserves)
+        console.log(fees)
+        
+        // Update Lend
+        this.updateLenderAmounts(totalAssets)
+
+        const lpSize = this.borrow * 2      
+        this.position = mgr.openBalancedPosition(
+            lpSize,
+            this.ticks // ticks
+        )
+
+    }
+
+    public estTotalAssets(data: PoolHourData) {
+        if (!this.position?.snapshot) return
+        const snapshot = this.position.snapshot
+        return this.lend - this.borrow + data.close * snapshot.reserves[0] + snapshot.reserves[1]
+    }
+
+
+    private updateLenderAmounts(totalAssets: number) {
         const collatRatio = 0.6
-        const lend = totalAssets * (1 / (1 + collatRatio))
-        const borrow = totalAssets - lend
-        return {lend, borrow}
+        this.lend = totalAssets * (1 / (1 + collatRatio))
+        this.borrow = totalAssets - this.lend
     }
 
     private calcDebtRatio(): number {
@@ -73,7 +113,7 @@ class CoreStrategy {
         const token1 = this.position.snapshot.tokens[1]
         const reserves0 = this.position.snapshot.reserves[0]
         const reserves1 = this.position.snapshot.reserves[1]
-        const usdValue = data.close * reserves0 + reserves1
+        const usdValue = this.estTotalAssets(data)
 
         const log = {
             tags: {
@@ -87,6 +127,8 @@ class CoreStrategy {
                 reserves0,
                 reserves1,
                 usdValue,
+                debtUpper: 1 + this.debtRatioRange,
+                debtLower: 1 - this.debtRatioRange,
                 price_max: this.position.maxRange,
                 price_min: this.position.minRange,
                 debt_ratio: this.calcDebtRatio()
