@@ -72,7 +72,7 @@ export class UniV3DataSource implements DataSource {
             finished = len !== size
             if (len > 0) {
                 timestamp = parseInt(data.poolHourDatas[len-1].periodStartUnix)
-                console.log(data.poolHourDatas[len-1])
+                // console.log(data.poolHourDatas[len-1])
             }
         } while (!finished)
     }
@@ -121,8 +121,8 @@ export class UniV3DataSource implements DataSource {
             pool: this.pool,
             end: this.end
         }
-        console.log(query)
-        console.log(variables)
+        // console.log(query)
+        // console.log(variables)
         return { query, variables }
     }
 

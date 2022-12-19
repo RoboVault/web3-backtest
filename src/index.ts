@@ -18,11 +18,11 @@ async function main () {
     const datasource = new UniV3DataSource(
         pool, 
         getTimestamp('11/01/2022'),
-        getTimestamp('11/30/2022'),
+        getTimestamp('11/11/2022'),
         'ethereum'
     )
 
-    const strategy = new HedgedUniv3Strategy(pool)
+    const strategy = new HedgedUniv3Strategy()
     const bt = new Backtest(
         datasource,
         strategy
