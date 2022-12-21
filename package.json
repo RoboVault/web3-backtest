@@ -19,6 +19,7 @@
     "node": ">=14.0"
   },
   "scripts": {
+    "start": "ts-node ./src/index.ts",
     "build": "tsc --build tsconfig.build.json",
     "clean": "git clean -dfqX",
     "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",

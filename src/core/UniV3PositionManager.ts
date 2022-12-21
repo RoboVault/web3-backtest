@@ -66,8 +66,6 @@ export const tokensForStrategy = (entryPrice: number, price: number, minRange: n
     return [xLp, yLp];
 }
 
-
-
 export class UniV3Position {
     // pool!: ethers.Contract
     // provider!: ethers.providers.BaseProvider
@@ -165,15 +163,6 @@ export class UniV3Position {
             amountV = tokens[0] + (tokens[1] * data.close);
             feeUSD = feeV * (lastData.pool.totalValueLockedUSD) / (((lastData.pool.totalValueLockedToken1) * (lastData.close) ) + (lastData.pool.totalValueLockedToken0) );
             amountTR = this.amount + (amountV - ((x0 * data.close) + y0));
-
-            // console.log(tokens)
-            // console.log(liquidity)
-            // console.log(tokens[0] + tokens[1] * data.close)
-            // console.log(amountV)
-            // console.log(this.entryPrice, data.close)
-            // console.log('quitting')
-
-            // process.exit(1)
         }
         else if (this.priceToken === 1) {
             fgV = (unbFees[0] / data.close) + unbFees[1];
@@ -184,11 +173,7 @@ export class UniV3Position {
             amountTR = this.amount + (amountV - ((x0 * (1 / data.close)) + y0));
         }
 
-        
-    
         const date = new Date(data.periodStartUnix*1000);
-        // console.log(data)
-        // console.log('snapshot')
         this.snapshot =  {
             hour: date.getUTCHours(),
             day: date.getUTCDate(),

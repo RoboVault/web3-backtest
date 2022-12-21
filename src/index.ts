@@ -14,7 +14,8 @@ function getTimestamp(dateString: string) {
 }
 
 async function main () {
-    const pool = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640"
+    // const pool = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640" // WETH/USDC 0.05%
+    const pool = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8' // WETH/USDC 0.3%
     const datasource = new UniV3DataSource(
         pool, 
         getTimestamp('10/01/2022'),

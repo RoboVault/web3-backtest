@@ -175,13 +175,10 @@ export class HedgedUniv3Strategy implements Strategy {
     }
 
     public async after() {
-        // console.log('Unbounded fees:')
-        // console.log(this.position?.unboundedFees)
         console.log('Back test finished')
     }
 
     public async onData(data: PoolHourData) {
-        
         if (!await this.posMgr.processPoolData(data)) {
             // skip on first data
             return
