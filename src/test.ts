@@ -1,12 +1,16 @@
-import * as jsbi from 'jsbi'
-const JSBI: any = jsbi
 
 
 async function main () {
-    // console.log(jsbi)
-    const x = JSBI.BigInt(12)
-    const y = JSBI.BigInt(10)
-    console.log(JSBI.multiply(x, y).toString())
+
+
+	const i = 1000
+	const br = 0.18
+	const er = 0.29
+	const l = 5.5
+
+	const glp = i - (er + br) / l
+	console.log(glp)
+
 }
 
 export default main()

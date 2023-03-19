@@ -4,8 +4,8 @@ import type { OnDataCallback } from "./core";
 
 
 
-export abstract class DataSource {
-    abstract init(): Promise<any>
-    abstract run(ondata: OnDataCallback<any>): Promise<any>
+export abstract class DataSource<T> {
+    abstract init(): Promise<void>
+    abstract run(ondata: OnDataCallback<T>): Promise<any>
     
 }

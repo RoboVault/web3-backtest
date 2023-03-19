@@ -1,5 +1,5 @@
 import * as process from 'process'
-import '../data/config'
+import '../data/config.js'
 
 import { ethers } from "ethers";
 
@@ -23,7 +23,7 @@ export class Settings {
         if (!process.env[setting]) {
             throw new Error(`ENV: ${setting} not configured`)
         }
-        return process.env[setting]
+        return process.env[setting] as string
     }
 }
 

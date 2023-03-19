@@ -1,13 +1,13 @@
-import type { DataSource } from "./types/datasource";
-import type { Strategy } from "./types/strategy";
+import type { DataSource } from "./types/datasource.js";
+import type { Strategy } from "./types/strategy.js";
 
 
 
 
-export class Backtest {
+export class Backtest<SampleType> {
 
     constructor(
-        private datasource: DataSource,
+        private datasource: DataSource<SampleType>,
         private strategy: Strategy
     ) {
     }
