@@ -231,6 +231,13 @@ export class nGLPStrategy implements Strategy {
 			'withoutTraderPnL',
 			debtRange
 		))
+        this.strategies.push(new nGLPStrategySim(
+			'withTraderPnL',
+			this.glp, this.gmx, 
+			amount, 
+			'withTraderPnL',
+			debtRange
+		))
     }
 
     public async before() {

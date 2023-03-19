@@ -17,8 +17,8 @@ async function main () {
     const pool = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8' // WETH/USDC 0.3%
     const datasource = new GmxDataSource(
         pool, 
-        3000000,//getTimestamp('12/11/2021'),
-        71000000,//getTimestamp('03/17/2023'),
+        2260000, //3000000
+        71000000,
         'ethereum'
     )
 
