@@ -1,0 +1,1087 @@
+{
+	"annotations": {
+	  "list": [
+		{
+		  "builtIn": 1,
+		  "datasource": "-- Grafana --",
+		  "enable": true,
+		  "hide": true,
+		  "iconColor": "rgba(0, 211, 255, 1)",
+		  "name": "Annotations & Alerts",
+		  "target": {
+			"limit": 100,
+			"matchAny": false,
+			"tags": [],
+			"type": "dashboard"
+		  },
+		  "type": "dashboard"
+		}
+	  ]
+	},
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 2,
+	"id": 1,
+	"iteration": 1679201007123,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+	  {
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "mode": "palette-classic"
+			},
+			"custom": {
+			  "axisLabel": "",
+			  "axisPlacement": "auto",
+			  "barAlignment": 0,
+			  "drawStyle": "line",
+			  "fillOpacity": 0,
+			  "gradientMode": "none",
+			  "hideFrom": {
+				"legend": false,
+				"tooltip": false,
+				"viz": false
+			  },
+			  "lineInterpolation": "linear",
+			  "lineWidth": 1,
+			  "pointSize": 5,
+			  "scaleDistribution": {
+				"type": "linear"
+			  },
+			  "showPoints": "auto",
+			  "spanNulls": false,
+			  "stacking": {
+				"group": "A",
+				"mode": "none"
+			  },
+			  "thresholdsStyle": {
+				"mode": "off"
+			  }
+			},
+			"mappings": [],
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "green",
+				  "value": null
+				},
+				{
+				  "color": "red",
+				  "value": 80
+				}
+			  ]
+			}
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 9,
+		  "w": 12,
+		  "x": 0,
+		  "y": 0
+		},
+		"id": 2,
+		"options": {
+		  "legend": {
+			"calcs": [],
+			"displayMode": "list",
+			"placement": "bottom"
+		  },
+		  "tooltip": {
+			"mode": "single",
+			"sort": "none"
+		  }
+		},
+		"targets": [
+		  {
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "5m"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"totalAssets"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"title": "totalAssets",
+		"type": "timeseries"
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"fill": 0,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 9,
+		  "w": 12,
+		  "x": 12,
+		  "y": 0
+		},
+		"hiddenSeries": false,
+		"id": 3,
+		"legend": {
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"nullPointMode": "null",
+		"options": {
+		  "alertThreshold": true
+		},
+		"percentage": false,
+		"pluginVersion": "8.4.4",
+		"pointradius": 2,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [
+		  {
+			"alias": "Rebalance Count",
+			"yaxis": 1
+		  }
+		],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"alias": "ETH",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "5m"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"btcDebtRatio"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  },
+		  {
+			"alias": "BTC",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "5m"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"hide": false,
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "B",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"ethDebtRatio"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"thresholds": [],
+		"timeRegions": [],
+		"title": "Debt Ratios",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "mode": "time",
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 9,
+		  "w": 12,
+		  "x": 0,
+		  "y": 9
+		},
+		"hiddenSeries": false,
+		"id": 5,
+		"legend": {
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"nullPointMode": "null",
+		"options": {
+		  "alertThreshold": true
+		},
+		"percentage": false,
+		"pluginVersion": "8.4.4",
+		"pointradius": 2,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [
+		  {
+			"alias": "Rebalance Count",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "ETH",
+			"yaxis": 2
+		  }
+		],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"alias": "BTC",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "5m"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"btcPrice"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  },
+		  {
+			"alias": "ETH",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "5m"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"hide": false,
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "B",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"ethPrice"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"thresholds": [],
+		"timeRegions": [],
+		"title": "ETH & BTC Prices",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "mode": "time",
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 9,
+		  "w": 12,
+		  "x": 12,
+		  "y": 9
+		},
+		"hiddenSeries": false,
+		"id": 7,
+		"legend": {
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"nullPointMode": "null",
+		"options": {
+		  "alertThreshold": true
+		},
+		"percentage": false,
+		"pluginVersion": "8.4.4",
+		"pointradius": 2,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [
+		  {
+			"alias": "Rebalance Count",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "ETH",
+			"yaxis": 2
+		  }
+		],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"alias": "BTC",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"btcPrice"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  },
+		  {
+			"alias": "ETH",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"hide": false,
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "B",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"ethPrice"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"thresholds": [],
+		"timeRegions": [],
+		"title": "ETH & BTC Prices",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "mode": "time",
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 9,
+		  "w": 12,
+		  "x": 0,
+		  "y": 18
+		},
+		"hiddenSeries": false,
+		"id": 6,
+		"legend": {
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"nullPointMode": "null",
+		"options": {
+		  "alertThreshold": true
+		},
+		"percentage": false,
+		"pluginVersion": "8.4.4",
+		"pointradius": 2,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [
+		  {
+			"alias": "Rebalance Count",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "Rewards per token ($)",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "Rewards per token (ETH)",
+			"yaxis": 2
+		  }
+		],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"alias": "Rewards ($)",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "null"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "glp_position",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"rewards"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "sum"
+				},
+				{
+				  "params": [],
+				  "type": "cumulative_sum"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  },
+		  {
+			"alias": "Rewards per token (ETH)",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"hide": true,
+			"measurement": "nglp_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "B",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"cumulativeRewardPerToken"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"thresholds": [],
+		"timeRegions": [],
+		"title": "GLP Rewards ($ETH)",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "mode": "time",
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false
+		}
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 9,
+		  "w": 12,
+		  "x": 12,
+		  "y": 18
+		},
+		"hiddenSeries": false,
+		"id": 8,
+		"legend": {
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"nullPointMode": "null",
+		"options": {
+		  "alertThreshold": true
+		},
+		"percentage": false,
+		"pluginVersion": "8.4.4",
+		"pointradius": 2,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [
+		  {
+			"alias": "Rebalance Count",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "ETH",
+			"yaxis": 2
+		  }
+		],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"alias": "BTC Borrow Fee ($)",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "gmx_position",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"borrowFee"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "sum"
+				},
+				{
+				  "params": [],
+				  "type": "cumulative_sum"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  },
+			  {
+				"condition": "AND",
+				"key": "shortToken",
+				"operator": "=",
+				"value": "BTC"
+			  }
+			]
+		  },
+		  {
+			"alias": "ETH Borrow Fee ($)",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"hide": false,
+			"measurement": "gmx_position",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "B",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"borrowFee"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "sum"
+				},
+				{
+				  "params": [],
+				  "type": "cumulative_sum"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  },
+			  {
+				"condition": "AND",
+				"key": "shortToken",
+				"operator": "=",
+				"value": "ETH"
+			  }
+			]
+		  }
+		],
+		"thresholds": [],
+		"timeRegions": [],
+		"title": "Cumulative Borrowing Costs",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "mode": "time",
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false
+		}
+	  }
+	],
+	"refresh": false,
+	"schemaVersion": 35,
+	"style": "dark",
+	"tags": [],
+	"templating": {
+	  "list": [
+		{
+		  "current": {
+			"selected": false,
+			"text": "standard",
+			"value": "standard"
+		  },
+		  "definition": "SHOW TAG VALUES FROM \"nglp_strategy\" WITH KEY = \"strategy\"",
+		  "hide": 0,
+		  "includeAll": false,
+		  "label": "Strategy",
+		  "multi": false,
+		  "name": "strategy",
+		  "options": [],
+		  "query": "SHOW TAG VALUES FROM \"nglp_strategy\" WITH KEY = \"strategy\"",
+		  "refresh": 1,
+		  "regex": "",
+		  "skipUrlSync": false,
+		  "sort": 0,
+		  "type": "query"
+		}
+	  ]
+	},
+	"time": {
+	  "from": "2023-02-09T17:52:26.489Z",
+	  "to": "2023-02-24T15:53:29.098Z"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "nGLP Backtest",
+	"uid": "9q2_aqaVz",
+	"version": 7,
+	"weekStart": ""
+  }

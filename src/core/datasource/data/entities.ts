@@ -15,6 +15,9 @@ export class GLP extends BaseEntity {
   glpAum!: number;
 
   @Column({ type: 'float' })
+  glpTotalSupply!: number;
+
+  @Column({ type: 'float' })
   glpPrice!: number;
 
   @Column({ type: 'float' })

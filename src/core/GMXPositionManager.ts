@@ -13,9 +13,10 @@ type Snapshot = {
 	quote: TokenSymbol
 	base: TokenSymbol
 	collateral: number
-	openLeverage: number
 	long: boolean
 	value: number
+	borrowFee: number
+	borrowFeePerHour: number
 }
 
 const POSITION_FEE = 0.001
@@ -30,14 +31,18 @@ export class GMXPosition {
 	public positionQuote: number
 	public baseValueUsd: number
 	public quoteValueUsd: number
+	public lastSampleTime: number
+	public borrowFee: number = 0
+	public borrowFeePerHour: number = 0
 	
 	constructor(
 		private fetchPrice: PriceFetcher,
 		private quote: TokenSymbol,
 		private base: TokenSymbol,
 		private collateral: number, 
-		private openLeverage: number,
-		private long: boolean
+		private long: boolean,
+		openLeverage: number,
+		timestamp: number,
 	) {
 		const dir = (this.long ? 1 : -1)
 		const size = collateral * openLeverage
@@ -51,9 +56,19 @@ export class GMXPosition {
 		this.profitPercent = 0
 		this.baseValueUsd = this.positionBase * basePrice
 		this.quoteValueUsd = this.positionQuote * quotePrice
+		this.lastSampleTime = timestamp
 	}
 
-	public processSample() {
+	public getUtilisation(data: GLPData, token: TokenSymbol) {
+		switch (token) {
+			case 'ETH': return data.ethUtilisation
+			case 'BTC': return data.btcUtilisation
+			default:
+				throw new Error('Utilisation not support for token')
+		}
+	}
+
+	public processSample(data: GLPData) {
 		const dir = (this.long ? 1 : -1)
 		const basePrice = this.fetchPrice(this.base)
 		const quotePrice = this.fetchPrice(this.quote)
@@ -61,14 +76,25 @@ export class GMXPosition {
 		this.quoteValueUsd = this.positionQuote * quotePrice
 		this.profit = this.baseValueUsd + this.quoteValueUsd
 		this.profitPercent = this.profit / this.collateral
+
+
+		// Calc borrow fee
+		// Borrow fee per hour = (assets borrowed) / (total assets in pool) * 0.01%
+		const hoursPassed = (data.timestamp - this.lastSampleTime) / (60 * 60)
+
+		// ** WARNING - Assmumes a short position **
+		this.borrowFeePerHour = this.getUtilisation(data, this.base) * 0.0001
+		this.borrowFee = Math.abs(this.borrowFeePerHour * hoursPassed * this.baseValueUsd)
+		this.collateral -= this.borrowFee
+		this.lastSampleTime = data.timestamp
 	}
 
+	// Assumes a short position!!
 	public adjustPosition(data: GLPData, newCollateral: number, newLeverage: number) {
 		// Calc the fee
-		const shortSizeCurrent = -this.snapshot.positionBase * data.btcPrice
 		const shortSizeDisired = newCollateral * newLeverage
-		const shortSizeDiff = shortSizeDisired - shortSizeCurrent
-		const fee = shortSizeDiff * POSITION_FEE
+		const shortSizeDiff = shortSizeDisired - ( -this.baseValueUsd ) 
+		const fee = Math.abs(shortSizeDiff) * POSITION_FEE
 
 		// Prices
 		const basePrice = this.fetchPrice(this.base)
@@ -77,6 +103,7 @@ export class GMXPosition {
 
 		// Update Position
 		const dir = (this.long ? 1 : -1)
+		this.collateral = newCollateral
 		this.positionBase = dir * (shortSizeDisired - fee) / price
 		this.positionQuote = -dir * (shortSizeDisired - fee)
 		this.profit = 0
@@ -100,9 +127,10 @@ export class GMXPosition {
 			quote: this.quote,
 			base: this.base,
 			collateral: this.collateral,
-			openLeverage: this.openLeverage,
 			long: this.long,
-			value: this.valueUsd()
+			value: this.valueUsd(),
+			borrowFee: this.borrowFee,
+			borrowFeePerHour: this.borrowFeePerHour,
 		}
 	}
 	
@@ -111,7 +139,6 @@ export class GMXPosition {
 	}
 
 }
-
 
 export class GMXPositionManager {
     lastData!: GLPData
@@ -122,7 +149,7 @@ export class GMXPositionManager {
 		this.lastData = data
 		for (const pos of this.positions) {
 			if (pos.open) {
-				pos.processSample()
+				pos.processSample(data)
 			}
 		}
 		return isFirst
@@ -130,7 +157,7 @@ export class GMXPositionManager {
 
 	// Assumes collateral is in DAI
 	public openShort(collateralDai: number, leverage: number, token: TokenSymbol) {
-		const pos = new GMXPosition(this.getTokenPrice.bind(this), 'DAI', token, collateralDai, leverage, false)
+		const pos = new GMXPosition(this.getTokenPrice.bind(this), 'DAI', token, collateralDai, false, leverage, this.lastData.timestamp)
 		this.positions.push(pos)
 		return pos
 	}

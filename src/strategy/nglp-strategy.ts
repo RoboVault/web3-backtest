@@ -18,11 +18,6 @@ type AumType = 'AmountsUsdg' | 'withoutTraderPnL' | 'withTraderPnL'
 
 class nGLPStrategySim {
 
-    // public lend: number = 0
-    // public borrow: number = 0
-    // public borrowInShort: number = 0
-    // public debtRatioRange: number = 0.05 
-    // public ticks = 10000
     public firstPosition = true
 
 	public glpPosition!: GLPPosition
@@ -55,11 +50,6 @@ class nGLPStrategySim {
 				this.rebalancePosition(data)
 			}
 		}
-		// else if (debtRatio > (1 + this.debtRatioRange) || debtRatio < (1 - this.debtRatioRange)) {
-        //     console.log('\n************* rebalancing debt! *************')
-        //     console.log((debtRatio * 100).toFixed(2))
-        //     this.rebalanceDebt(mgr, data)
-        // }
     }
 
 	private getAum(data: GLPData, token: 'BTC' | 'ETH') {
@@ -84,7 +74,7 @@ class nGLPStrategySim {
 				return token === 'BTC' ? data.btcRatioC : data.ethRatioC
 		}
 
-	}
+	}	
 
 	private desiredPosition(data: GLPData, investment: number) {
 		const i = investment
@@ -101,31 +91,36 @@ class nGLPStrategySim {
 		console.log(`Openning first position with ${this.initialInvestment} DAI`)
 		const { l, glpAmount, btcCollateral, ethCollateral } = this.desiredPosition(data, investment)
 		this.glpPosition = this.glp.OpenPosition(glpAmount)
-		const btcLong = data.btcRatioB * this.glpPosition.snapshot.valueUsd
 		this.btcShort = this.gmx.openShort(btcCollateral, l, 'BTC')
 		this.ethShort = this.gmx.openShort(ethCollateral, l, 'ETH')
 		this.firstPosition = false
     }
 
+	public timestring(ts: number) {
+		const d = new Date(ts * 1000)
+		return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
+	}
+
     public rebalancePosition(data: GLPData) {
 		const { btcDebtRatio, ethDebtRatio }  = this.calcDebtRatios(data)
-		// Liquidate everything and rebalance to an equal position
-		console.log('rebalancing!' + data.block)
 		const totalAssets = this.totalAssets(data)
 
+		console.log(`${this.timestring(data.timestamp)} | Rebalancing!`, data.block, btcDebtRatio, ethDebtRatio)
+
 		// Calc the size we need 
-		const { i, l, br, er, glpAmount, btcCollateral, ethCollateral } = this.desiredPosition(data, totalAssets)
+		const { l, glpAmount, btcCollateral, ethCollateral } = this.desiredPosition(data, totalAssets)
 
 		// Adjust GLP Position
-		const glpDiffUsd = this.glpPosition.snapshot.valueUsd - glpAmount
+		const glpDiffUsd = glpAmount - this.glpPosition.snapshot.valueUsd
 		if(glpDiffUsd > 0) {
 			this.glpPosition.increase(data, glpDiffUsd)
 		} else {
-			this.glpPosition.decrease(data, glpDiffUsd)
+			this.glpPosition.decrease(data, -glpDiffUsd)
 		}
 
+		// Adjust short positions
+		this.ethShort.adjustPosition(data, ethCollateral, l)
 		this.btcShort.adjustPosition(data, btcCollateral, l)
-		this.ethShort.adjustPosition(data, btcCollateral, l)
 
 		RebalanceLog.writePoint({
 			tags: {},
@@ -142,16 +137,6 @@ class nGLPStrategySim {
 		return this.glpPosition.snapshot.valueUsd + 
 			this.btcShort.valueUsd() +
 			this.ethShort.valueUsd()
-    }
-
-    private updateLenderAmounts(totalAssets: number, data: GLPData) {
-        // const collatRatio = 0.6
-        // this.lend = totalAssets * (1 / (1 + collatRatio))
-        // const borrowInWant = totalAssets - this.lend
-        // this.borrow = borrowInWant / data.close
-        // // console.log('updateLenderAmounts')
-        // // console.log(this.lend, borrowInWant, this.borrow, totalAssets)
-        // return borrowInWant
     }
 
     private calcDebtRatios(data: GLPData) {
@@ -222,6 +207,12 @@ class nGLPStrategySim {
     }
 }
 
+const wait = async (ms: number) => {
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms)
+	})
+}
+
 
 export class nGLPStrategy implements Strategy {
     glp: GLPPositionManager
@@ -232,20 +223,13 @@ export class nGLPStrategy implements Strategy {
         const amount = 10000 // USD amount
         this.glp = new GLPPositionManager()
         this.gmx = new GMXPositionManager()
-		const debtRange = 0.05
+		const debtRange = 0.03
         this.strategies.push(new nGLPStrategySim(
 			'standard',
 			this.glp, this.gmx, 
 			amount, 
 			'withoutTraderPnL',
 			debtRange
-		))
-        this.strategies.push(new nGLPStrategySim(
-			'hedgeTraderPnL',
-			this.glp, this.gmx, 
-			amount, 
-			'withTraderPnL',
-			debtRange,
 		))
     }
 
@@ -260,6 +244,7 @@ export class nGLPStrategy implements Strategy {
     }
 
     public async onData(data: any) {
+		await wait(10)
 		await this.gmx.update(data)
         if (await this.glp.update(data)) {
             // skip on first data

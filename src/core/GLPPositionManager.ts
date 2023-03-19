@@ -12,15 +12,13 @@ export class GLPPosition {
 		openValueUsd: number
 		valueUsd: number
 		amount: number
-		profit: number
-		profitPercent: number
 		rewards: number
 		openFee: number
 		swapFee: number
 	}
 	constructor(data: GLPData, private glpAmount: number) {
 		const openFee = glpAmount * OPEN_FEE
-		const swapFee = glpAmount * OPEN_FEE
+		const swapFee = 0 // User pays swap fee on open
 		const glpAmountWithFee = glpAmount - openFee - swapFee
 		console.log(`created GLP position with ${glpAmount} GLP`)
 		const valueUsd = glpAmountWithFee * data.glpPrice
@@ -28,8 +26,6 @@ export class GLPPosition {
 			openPrice: data.glpPrice,
 			amount: glpAmountWithFee,
 			openValueUsd: valueUsd,
-			profit: 0,
-			profitPercent: 0,
 			valueUsd: valueUsd,
 			rewards: 0,
 			openFee,
@@ -39,13 +35,16 @@ export class GLPPosition {
 	}
 
 	private harvestRewards(data: GLPData): number {
-		const tokensEmitted = data.cumulativeRewardPerToken - this.lastCumulativeRewardPerToken
-		const relativeGlpHoldings = this.snapshot.valueUsd / data.glpAum
-		const earnedGMX = (tokensEmitted / relativeGlpHoldings)
-		return earnedGMX * data.gmxPrice
+		const newRewardsPerToken = data.cumulativeRewardPerToken - this.lastCumulativeRewardPerToken
+		if (newRewardsPerToken === 0)
+			return 0
+		const earnedETH = this.snapshot.amount * newRewardsPerToken
+		return earnedETH * data.ethPrice
 	}
 
 	public increase(data: GLPData, amountUsd: number) {
+		// TODO - Calc the funding fee using ethersjs
+
 		const swapFee = amountUsd * SWAP_FEE
 		const increaseGlpAmount = (amountUsd - swapFee) / data.glpPrice
 		this.snapshot.amount = this.snapshot.amount + increaseGlpAmount
@@ -56,10 +55,12 @@ export class GLPPosition {
 	}
 
 	public decrease(data: GLPData, amountUsd: number) {
+		// TODO - Calc the funding fee using ethersjs
+
 		const swapFee = amountUsd * SWAP_FEE
-		const dencreaseGlpAmount = (amountUsd - swapFee) / data.glpPrice
-		this.snapshot.amount = this.snapshot.amount - dencreaseGlpAmount
-		this.snapshot.valueUsd = this.snapshot.amount * data.glpPrice
+		const decreaseGlpAmount = (amountUsd - swapFee) / data.glpPrice
+		this.snapshot.amount = this.snapshot.amount - decreaseGlpAmount
+		this.snapshot.valueUsd = this.snapshot.amount * data.ethPrice
 		this.snapshot.rewards = 0
 		this.snapshot.openFee = 0
 		this.snapshot.swapFee = swapFee
@@ -67,11 +68,10 @@ export class GLPPosition {
 
 	public processSample(data: GLPData) {
 		const snapshot = this.snapshot
-		snapshot.valueUsd = snapshot.amount * data.glpPrice
-		const profit = snapshot.valueUsd - snapshot.openValueUsd
-		snapshot.profit = profit
-		snapshot.profitPercent = profit / snapshot.openValueUsd
 		snapshot.rewards = this.harvestRewards(data)
+		// assums autocompounded rewards
+		snapshot.amount = snapshot.amount + (snapshot.rewards / data.glpPrice)
+		snapshot.valueUsd = snapshot.amount * data.glpPrice
 		snapshot.openFee = 0;
 		snapshot.swapFee = 0;
 		this.lastCumulativeRewardPerToken = data.cumulativeRewardPerToken

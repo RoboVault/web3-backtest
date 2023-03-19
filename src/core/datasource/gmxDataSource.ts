@@ -9,6 +9,7 @@ export type GLPData = {
 	block: number
 	timestamp: number
 	glpAum: number
+	glpTotalSupply: number
 	ethAumA: number
 	btcAumA: number
 	ethAumB: number
@@ -71,12 +72,7 @@ export class GmxDataSource implements DataSource<GLPData> {
 				block: Between(from, to)
 			}
 		})
-		console.log(data)
-		console.log(from, to)
-
 		
-		// 1639141200 from
-		// 1678971600 to
 		return this.prepData(data)
 	}
 
