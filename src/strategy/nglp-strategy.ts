@@ -48,7 +48,7 @@ class nGLPStrategySim {
 				return debtRatio < (1 - this.debtRange) || debtRatio > (1 + this.debtRange)
 			}
 			if (isOutOfRange(debtRatio)) {
-				this.rebalancePosition(data)
+				await this.rebalancePosition(data)
 			}
 		}
 
@@ -104,7 +104,7 @@ class nGLPStrategySim {
 		return `${d.toLocaleDateString()} ${d.toLocaleTimeString()}`
 	}
 
-    public rebalancePosition(data: GLPData) {
+    public async rebalancePosition(data: GLPData) {
 		const { btcDebtRatio, ethDebtRatio }  = this.calcDebtRatios(data)
 		const totalAssets = this.totalAssets(data)
 
@@ -116,15 +116,15 @@ class nGLPStrategySim {
 		// Adjust GLP Position
 		const glpDiffUsd = glpAmount - this.glpPosition.snapshot.valueUsd
 		if(glpDiffUsd > 0) {
-			this.glpPosition.increase(data, glpDiffUsd)
+			await this.glpPosition.increase(data, glpDiffUsd)
 		} else {
-			this.glpPosition.decrease(data, -glpDiffUsd)
+			await this.glpPosition.decrease(data, -glpDiffUsd)
 		}
 
 		// Adjust short positions
 		let borrowFee = 0
-		borrowFee += this.ethShort.adjustPosition(data, ethCollateral, l)
-		borrowFee += this.btcShort.adjustPosition(data, btcCollateral, l)
+		borrowFee += await this.ethShort.adjustPosition(data, ethCollateral, l)
+		borrowFee += await this.btcShort.adjustPosition(data, btcCollateral, l)
 		this.harvestSum -= borrowFee
 
 		RebalanceLog.writePoint({
@@ -211,6 +211,7 @@ class nGLPStrategySim {
 
             await Log.writePoint(strategyLog)
         } catch(e) {
+			console.log(e)
 			console.log(strategyLog)
             throw new Error('Log Failed')
         }
@@ -231,7 +232,7 @@ export class nGLPStrategy implements Strategy {
     strategies: nGLPStrategySim[] = []
 
     constructor() {
-        const amount = 10000 // USD amount
+        const amount = 1000000 // USD amount
         this.glp = new GLPPositionManager()
         this.gmx = new GMXPositionManager()
 		const debtRange = 0.03

@@ -1,11 +1,18 @@
+import { ethers } from "ethers"
+import { GlpVaultAbi } from "../abis/glp-vault-abi.js"
+import { toNumber } from "../utils/utility.js"
 import { GLPData } from "./datasource/GmxDataSource.js"
 
 
 const OPEN_FEE = 0.001
+const SWAP_FEE = 0.0025 // No longer used
+const VAULT = '0x489ee077994B6658eAfA855C308275EAd8097C4A'
+const DAI = '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1'
 
 export class GLPPosition {
 	public open: boolean = true
 	public lastCumulativeRewardPerToken
+	public mintBurnFee = 0
 	public snapshot: {
 		openPrice: number
 		openValueUsd: number
@@ -13,7 +20,10 @@ export class GLPPosition {
 		amount: number
 		rewards: number
 		openFee: number
+		swapFee: number
+		mintBurnFee: number
 	}
+	public vault: ethers.Contract
 	constructor(data: GLPData, private glpAmount: number) {
 		const openFee = glpAmount * OPEN_FEE
 		const swapFee = 0 // User pays swap fee on open
@@ -27,8 +37,12 @@ export class GLPPosition {
 			valueUsd: valueUsd,
 			rewards: 0,
 			openFee,
+			swapFee,
+			mintBurnFee: 0,
 		}
 		this.lastCumulativeRewardPerToken = data.cumulativeRewardPerToken
+		const provider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/arbitrum/af86a2e6f3c814ccf008f195be5c8fd7721fcb55ed6b38b607c84b01a50956a0')
+		this.vault = new ethers.Contract(VAULT, GlpVaultAbi, provider)
 	}
 
 	private harvestRewards(data: GLPData): number {
@@ -39,24 +53,49 @@ export class GLPPosition {
 		return earnedETH * data.ethPrice
 	}
 
-	public increase(data: GLPData, amountUsd: number) {
-		// TODO - Calc the funding fee using ethersjs
+	public async dynamicFee(data: GLPData, amountUsd: number, increase: boolean) {
+		const block = data.block
+		const amount = Math.round(amountUsd * 1e18)
+		const get = async () =>  {
+			let retry = 0
+			while(retry < 5) {
+				try {
+					return await this.vault.getFeeBasisPoints(DAI, `0x${amount.toString(16)}`, 25, 0, increase, {blockTag: block})
+				} catch(e) {
+					console.log('failed. Trying again', retry)
+					retry++
+				}
+				await new Promise((resolve) => setTimeout(resolve, 200))
+			}
+			throw new Error('Failed to fetch getFeeBasisPoints')
+		}
+		return await get()
+	}
 
-		const increaseGlpAmount = (amountUsd) / data.glpPrice
+	public async increase(data: GLPData, amountUsd: number) {
+		const feeBps = toNumber(await this.dynamicFee(data, amountUsd, true), 2)
+		this.mintBurnFee = feeBps
+		const mintFee = amountUsd * feeBps
+		const increaseGlpAmount = (amountUsd - mintFee) / data.glpPrice
 		this.snapshot.amount = this.snapshot.amount + increaseGlpAmount
 		this.snapshot.valueUsd = this.snapshot.amount * data.glpPrice
 		this.snapshot.rewards = 0
 		this.snapshot.openFee = 0
+		this.snapshot.swapFee = feeBps
+		this.snapshot.mintBurnFee = this.mintBurnFee
 	}
 
-	public decrease(data: GLPData, amountUsd: number) {
-		// TODO - Calc the funding fee using ethersjs
-
-		const decreaseGlpAmount = (amountUsd) / data.glpPrice
+	public async decrease(data: GLPData, amountUsd: number) {
+		const feeBps = toNumber(await this.dynamicFee(data, amountUsd, false), 2)
+		this.mintBurnFee = feeBps
+		const burnFee = amountUsd * feeBps
+		const decreaseGlpAmount = (amountUsd - burnFee) / data.glpPrice
 		this.snapshot.amount = this.snapshot.amount - decreaseGlpAmount
 		this.snapshot.valueUsd = this.snapshot.amount * data.ethPrice
 		this.snapshot.rewards = 0
 		this.snapshot.openFee = 0
+		this.snapshot.swapFee = feeBps
+		this.snapshot.mintBurnFee = this.mintBurnFee
 	}
 
 	public processSample(data: GLPData) {
@@ -64,6 +103,7 @@ export class GLPPosition {
 		snapshot.rewards = this.harvestRewards(data)
 		snapshot.valueUsd = snapshot.amount * data.glpPrice
 		snapshot.openFee = 0;
+		snapshot.swapFee = 0;
 		this.lastCumulativeRewardPerToken = data.cumulativeRewardPerToken
 	}
 	public close() {
