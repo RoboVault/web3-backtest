@@ -36,10 +36,8 @@ export type GLPData = {
 export class GmxDataSource implements DataSource<GLPData> {
 
     constructor(
-        private pool: string,
         private start: number,
         private end: number,
-        private chain: Chain,
     ) {}
     
     public async init() {
@@ -68,7 +66,6 @@ export class GmxDataSource implements DataSource<GLPData> {
 			take: 10,
 			skip,
 			where: { 
-				// timestamp: Between(from, to)
 				block: Between(from, to)
 			}
 		})

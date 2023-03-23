@@ -2,7 +2,6 @@ import { GLPData } from "./datasource/GmxDataSource.js"
 
 
 const OPEN_FEE = 0.001
-const SWAP_FEE = 0.001 // Assumes a constant swap fee when increasing/decreasing the position??
 
 export class GLPPosition {
 	public open: boolean = true
@@ -14,7 +13,6 @@ export class GLPPosition {
 		amount: number
 		rewards: number
 		openFee: number
-		swapFee: number
 	}
 	constructor(data: GLPData, private glpAmount: number) {
 		const openFee = glpAmount * OPEN_FEE
@@ -29,7 +27,6 @@ export class GLPPosition {
 			valueUsd: valueUsd,
 			rewards: 0,
 			openFee,
-			swapFee,
 		}
 		this.lastCumulativeRewardPerToken = data.cumulativeRewardPerToken
 	}
@@ -45,35 +42,28 @@ export class GLPPosition {
 	public increase(data: GLPData, amountUsd: number) {
 		// TODO - Calc the funding fee using ethersjs
 
-		const swapFee = amountUsd * SWAP_FEE
-		const increaseGlpAmount = (amountUsd - swapFee) / data.glpPrice
+		const increaseGlpAmount = (amountUsd) / data.glpPrice
 		this.snapshot.amount = this.snapshot.amount + increaseGlpAmount
 		this.snapshot.valueUsd = this.snapshot.amount * data.glpPrice
 		this.snapshot.rewards = 0
 		this.snapshot.openFee = 0
-		this.snapshot.swapFee = swapFee
 	}
 
 	public decrease(data: GLPData, amountUsd: number) {
 		// TODO - Calc the funding fee using ethersjs
 
-		const swapFee = amountUsd * SWAP_FEE
-		const decreaseGlpAmount = (amountUsd - swapFee) / data.glpPrice
+		const decreaseGlpAmount = (amountUsd) / data.glpPrice
 		this.snapshot.amount = this.snapshot.amount - decreaseGlpAmount
 		this.snapshot.valueUsd = this.snapshot.amount * data.ethPrice
 		this.snapshot.rewards = 0
 		this.snapshot.openFee = 0
-		this.snapshot.swapFee = swapFee
 	}
 
 	public processSample(data: GLPData) {
 		const snapshot = this.snapshot
 		snapshot.rewards = this.harvestRewards(data)
-		// assums autocompounded rewards
-		snapshot.amount = snapshot.amount + (snapshot.rewards / data.glpPrice)
 		snapshot.valueUsd = snapshot.amount * data.glpPrice
 		snapshot.openFee = 0;
-		snapshot.swapFee = 0;
 		this.lastCumulativeRewardPerToken = data.cumulativeRewardPerToken
 	}
 	public close() {

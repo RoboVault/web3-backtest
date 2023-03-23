@@ -34,6 +34,7 @@ export class GMXPosition {
 	public lastSampleTime: number
 	public borrowFee: number = 0
 	public borrowFeePerHour: number = 0
+	public borrowFeeSum = 0
 	
 	constructor(
 		private fetchPrice: PriceFetcher,
@@ -50,13 +51,14 @@ export class GMXPosition {
 		const basePrice = this.fetchPrice(this.base)
 		const quotePrice = this.fetchPrice(this.quote)
 		const price = basePrice / quotePrice
-		this.positionBase = dir * (size - fee) / price
-		this.positionQuote = -dir * (size - fee)
+		this.positionBase = dir * (size) / price
+		this.positionQuote = -dir * (size)
 		this.profit = 0
 		this.profitPercent = 0
 		this.baseValueUsd = this.positionBase * basePrice
 		this.quoteValueUsd = this.positionQuote * quotePrice
 		this.lastSampleTime = timestamp
+		this.collateral -= fee
 	}
 
 	public getUtilisation(data: GLPData, token: TokenSymbol) {
@@ -85,7 +87,8 @@ export class GMXPosition {
 		// ** WARNING - Assmumes a short position **
 		this.borrowFeePerHour = this.getUtilisation(data, this.base) * 0.0001
 		this.borrowFee = Math.abs(this.borrowFeePerHour * hoursPassed * this.baseValueUsd)
-		this.collateral -= this.borrowFee
+		this.borrowFeeSum += this.borrowFee
+		// this.collateral -= this.borrowFee //
 		this.lastSampleTime = data.timestamp
 	}
 
@@ -103,13 +106,16 @@ export class GMXPosition {
 
 		// Update Position
 		const dir = (this.long ? 1 : -1)
-		this.collateral = newCollateral
-		this.positionBase = dir * (shortSizeDisired - fee) / price
-		this.positionQuote = -dir * (shortSizeDisired - fee)
+		this.collateral = newCollateral - fee
+		this.positionBase = dir * (shortSizeDisired) / price
+		this.positionQuote = -dir * (shortSizeDisired)
 		this.profit = 0
 		this.profitPercent = 0
 		this.baseValueUsd = this.positionBase * basePrice
-		this.quoteValueUsd = this.positionQuote * quotePrice		
+		this.quoteValueUsd = this.positionQuote * quotePrice	
+		const borrowFeeSum = this.borrowFeeSum
+		this.borrowFeeSum = 0	
+		return borrowFeeSum // This fee needs to be covered elsewhere
 	}
 
 	public valueUsd() {

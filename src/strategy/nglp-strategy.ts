@@ -24,6 +24,7 @@ class nGLPStrategySim {
 	public ethShort!: GMXPosition
 	public btcShort!: GMXPosition
 	public rebalanceCount = 0
+	public harvestSum = 0
 
     constructor(
 		public id: string,
@@ -41,15 +42,17 @@ class nGLPStrategySim {
         if (this.firstPosition) {
             this.openPosition(data, this.initialInvestment)
         } else {
-			const { btcDebtRatio, ethDebtRatio }  = this.calcDebtRatios(data)
+			const { debtRatio }  = this.calcDebtRatios(data)
 
 			const isOutOfRange = (debtRatio: number) => {
 				return debtRatio < (1 - this.debtRange) || debtRatio > (1 + this.debtRange)
 			}
-			if (isOutOfRange(btcDebtRatio) || isOutOfRange(ethDebtRatio)) {
+			if (isOutOfRange(debtRatio)) {
 				this.rebalancePosition(data)
 			}
 		}
+
+		this.harvestSum += this.glpPosition.snapshot.rewards
     }
 
 	private getAum(data: GLPData, token: 'BTC' | 'ETH') {
@@ -119,8 +122,10 @@ class nGLPStrategySim {
 		}
 
 		// Adjust short positions
-		this.ethShort.adjustPosition(data, ethCollateral, l)
-		this.btcShort.adjustPosition(data, btcCollateral, l)
+		let borrowFee = 0
+		borrowFee += this.ethShort.adjustPosition(data, ethCollateral, l)
+		borrowFee += this.btcShort.adjustPosition(data, btcCollateral, l)
+		this.harvestSum -= borrowFee
 
 		RebalanceLog.writePoint({
 			tags: {},
@@ -148,7 +153,11 @@ class nGLPStrategySim {
 		const ethShort = -this.ethShort.positionBase * data.ethPrice
 		const ethDebtRatio = ethLong / ethShort
 
-		return {btcDebtRatio, ethDebtRatio}
+		const longSum = (ethLong * data.ethPrice) + (btcLong * data.btcPrice)
+		const shortSum = (ethShort * data.ethPrice) + (btcShort * data.btcPrice)
+		const debtRatio = longSum / shortSum
+
+		return {btcDebtRatio, ethDebtRatio, debtRatio }
     }
 
     private async log(data: GLPData) {
@@ -158,7 +167,7 @@ class nGLPStrategySim {
 
         const totalAssets = this.totalAssets(data)
 		const timestamp = new Date(data.timestamp * 1000)
-		const {btcDebtRatio, ethDebtRatio} = this.calcDebtRatios(data)
+		const { btcDebtRatio, ethDebtRatio, debtRatio } = this.calcDebtRatios(data)
 
 		// Strategy log
         const strategyLog = {
@@ -171,8 +180,10 @@ class nGLPStrategySim {
 				totalAssets,
 				btcDebtRatio,
 				ethDebtRatio,	
+				debtRatio,
 				rebalanceCount: this.rebalanceCount,	
 				block: data.block,	
+				harvestSum: this.harvestSum,
             },
             timestamp,
         }

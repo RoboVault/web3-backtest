@@ -13,14 +13,9 @@ function getTimestamp(dateString: string) {
 }
 
 async function main () {
-    // const pool = "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640" // WETH/USDC 0.05%
-    const pool = '0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8' // WETH/USDC 0.3%
-    const datasource = new GmxDataSource(
-        pool, 
-        2260000, //3000000
-        71000000,
-        'ethereum'
-    )
+	const fromBlock = 2260000
+	const toBlock = 71000000
+    const datasource = new GmxDataSource(fromBlock, toBlock)
 
     const strategy = new nGLPStrategy()
     const bt = new Backtest(
