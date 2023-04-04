@@ -1,6 +1,6 @@
 import * as Influx from 'influx'
 import * as os from 'os'
-import { Settings } from '../utils/utility'
+import { Settings } from '../utils/utility.js'
 
 export abstract class Schema {
     public abstract tags: object

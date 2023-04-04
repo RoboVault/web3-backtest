@@ -5,6 +5,7 @@
   "version": "0.0.0",
   "author": "Apollo <packages@apollographql.com>",
   "license": "MIT",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/typescript-repo-template"
@@ -57,5 +58,7 @@
     "graphql-request": "^5.0.0",
     "influx": "^5.9.3",
     "jsbi": "^3.2.5"
+    "pg": "^8.10.0",
+    "typeorm": "^0.3.12"
   }
 }

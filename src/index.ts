@@ -1,9 +1,9 @@
 
 
 import { request, gql } from 'graphql-request'
-import { Backtest } from './core/backtest';
-import { UniV3DataSource } from './core/datasource/univ3datasource';
-import { HedgedUniv3Strategy } from './strategy/hedged-univ3-strategy';
+import { Backtest } from './core/backtest.js';
+import { UniV3DataSource } from './core/datasource/univ3datasource.js';
+import { HedgedUniv3Strategy } from './strategy/hedged-univ3-strategy.js';
 import './data/timeseriesdb';
 
 
