@@ -73,7 +73,7 @@ export class GLPPosition {
 	}
 
 	public async increase(data: GLPData, amountUsd: number) {
-		const feeBps = toNumber(await this.dynamicFee(data, amountUsd, true), 2)
+		const feeBps = 0.25//toNumber(await this.dynamicFee(data, amountUsd, true), 2)
 		this.mintBurnFee = feeBps
 		const mintFee = amountUsd * feeBps
 		const increaseGlpAmount = (amountUsd - mintFee) / data.glpPrice
@@ -86,7 +86,7 @@ export class GLPPosition {
 	}
 
 	public async decrease(data: GLPData, amountUsd: number) {
-		const feeBps = toNumber(await this.dynamicFee(data, amountUsd, false), 2)
+		const feeBps = 0.25//toNumber(await this.dynamicFee(data, amountUsd, false), 2)
 		this.mintBurnFee = feeBps
 		const burnFee = amountUsd * feeBps
 		const decreaseGlpAmount = (amountUsd - burnFee) / data.glpPrice

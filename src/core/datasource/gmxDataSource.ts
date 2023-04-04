@@ -1,9 +1,30 @@
 
-import { Between, Repository } from "typeorm";
-import type { Chain, OnDataCallback } from "../types/core.js";
+import type { OnDataCallback } from "../types/core.js";
 import type { DataSource } from "../types/datasource.js";
-import { TypeOrmDataSource as GLPDatabase } from "./data/database.js";
-import { GLP } from "./data/entities.js";
+import { gql, GraphQLClient } from "graphql-request";
+
+type GLP = {
+	id: string,
+	block: number,
+	timestamp: number,
+	glpAum: number,
+	glpTotalSupply: number,
+	glpPrice: number,
+	btcReserves: number,
+	ethReserves: number,
+	btcPrice: number,
+	ethPrice: number,
+	ethAumA: number,
+	btcAumA: number,
+	ethAumB: number,
+	btcAumB: number,
+	ethAumC: number,
+	btcAumC: number,
+	btcUtilisation: number,
+	ethUtilisation: number,
+	cumulativeRewardPerToken: number,
+	gmxPrice: number,
+}
 
 export type GLPData = {
 	block: number
@@ -34,11 +55,14 @@ export type GLPData = {
 }
 
 export class GmxDataSource implements DataSource<GLPData> {
-
+	private client: GraphQLClient
     constructor(
         private start: number,
         private end: number,
-    ) {}
+    ) {
+		const url = 'http://ec2-44-201-19-56.compute-1.amazonaws.com:4000/s_battenally/nglp_backtest/graphql'
+        this.client = new GraphQLClient(url, { headers: {} })
+	}
     
     public async init() {
 
@@ -60,31 +84,49 @@ export class GmxDataSource implements DataSource<GLPData> {
 		return res
 	}
 
-	private async fetch(glp: Repository<GLP>, from: number, to: number, skip: number) {
-		const data = await glp.find({ 
-			order: { block: "ASC" },
-			take: 10,
-			skip,
-			where: { 
-				block: Between(from, to)
+	private async fetch(fromBlock: number, limit: number, skip: number) {
+		const query = gql`query MyQuery {
+			GLPs(
+			  sort: BLOCK_ASC
+			  limit: ${limit}
+			  skip: ${skip}
+			  filter: {_operators: {block: {gt: ${fromBlock}}}}
+			) {
+			  block
+			  btcAumA
+			  btcAumB
+			  btcAumC
+			  btcPrice
+			  btcUtilisation
+			  btcReserves
+			  cumulativeRewardPerToken
+			  ethAumA
+			  ethAumB
+			  ethAumC
+			  ethPrice
+			  ethReserves
+			  ethUtilisation
+			  glpAum
+			  glpPrice
+			  glpTotalSupply
+			  gmxPrice
+			  id
+			  timestamp
 			}
-		})
-		
-		return this.prepData(data)
+		  }
+		`
+		const data = await this.client.request(query)
+		return this.prepData(data.GLPs)
 	}
 
     public async run(ondata: OnDataCallback<any>) {
-		await GLPDatabase.initialize()
         let finished = false
-
-		const glp = GLPDatabase.getRepository(GLP)
-
 		let skip = 0
         do {
             
-            let data = await this.fetch(glp, this.start, this.end, skip)
+            let data = await this.fetch(this.start, 100, skip)
 			skip += data.length
-            
+            console.log(data[0].block)
             // Calls the ondata handler
             for (const update of data) {
                 await ondata(update)
