@@ -60,7 +60,7 @@ export class GmxDataSource implements DataSource<GLPData> {
         private start: number,
         private end: number,
     ) {
-		const url = 'http://ec2-44-201-19-56.compute-1.amazonaws.com:4000/s_battenally/nglp_backtest/graphql'
+		const url = 'http://ec2-44-201-19-56.compute-1.amazonaws.com:4000/s_battenally/nglpbacktest2/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
     
@@ -126,7 +126,6 @@ export class GmxDataSource implements DataSource<GLPData> {
             
             let data = await this.fetch(this.start, 100, skip)
 			skip += data.length
-            console.log(data[0].block)
             // Calls the ondata handler
             for (const update of data) {
                 await ondata(update)
