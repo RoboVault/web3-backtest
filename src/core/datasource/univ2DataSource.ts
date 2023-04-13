@@ -126,7 +126,7 @@ export class Univ2DataSource implements DataSource<DataUpdate> {
 		let skip = 0
         do {
             
-            let data = await this.fetch(this.start, 1000, skip)
+            let data = await this.fetch(this.start, 500, skip)
 			skip += data.length
             // Calls the ondata handler
             for (const update of data) {

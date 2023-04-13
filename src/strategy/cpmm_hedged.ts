@@ -207,8 +207,8 @@ export class CpmmHedgedStrategy implements Strategy {
 			await this.aaveManager.update(data.aave)
 
 		// Procress the strategy
-		await wait(1)
 		for (const strat of this.strategies) {
+			await wait(1)
 			await strat.process(this.univ2Manager, this.aaveManager, this.farm, data.univ2)
 		}
     }
