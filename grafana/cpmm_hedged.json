@@ -1,0 +1,719 @@
+{
+	"annotations": {
+	  "list": [
+		{
+		  "builtIn": 1,
+		  "datasource": "-- Grafana --",
+		  "enable": true,
+		  "hide": true,
+		  "iconColor": "rgba(0, 211, 255, 1)",
+		  "name": "Annotations & Alerts",
+		  "target": {
+			"limit": 100,
+			"matchAny": false,
+			"tags": [],
+			"type": "dashboard"
+		  },
+		  "type": "dashboard"
+		}
+	  ]
+	},
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 2,
+	"id": 2,
+	"iteration": 1681389611143,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+	  {
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "mode": "palette-classic"
+			},
+			"custom": {
+			  "axisLabel": "",
+			  "axisPlacement": "auto",
+			  "barAlignment": 0,
+			  "drawStyle": "line",
+			  "fillOpacity": 0,
+			  "gradientMode": "none",
+			  "hideFrom": {
+				"legend": false,
+				"tooltip": false,
+				"viz": false
+			  },
+			  "lineInterpolation": "linear",
+			  "lineWidth": 1,
+			  "pointSize": 5,
+			  "scaleDistribution": {
+				"type": "linear"
+			  },
+			  "showPoints": "never",
+			  "spanNulls": true,
+			  "stacking": {
+				"group": "A",
+				"mode": "none"
+			  },
+			  "thresholdsStyle": {
+				"mode": "off"
+			  }
+			},
+			"decimals": 5,
+			"mappings": [],
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "green",
+				  "value": null
+				},
+				{
+				  "color": "red",
+				  "value": 80
+				}
+			  ]
+			},
+			"unit": "short"
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 13,
+		  "w": 12,
+		  "x": 0,
+		  "y": 0
+		},
+		"id": 2,
+		"options": {
+		  "legend": {
+			"calcs": [],
+			"displayMode": "list",
+			"placement": "bottom"
+		  },
+		  "tooltip": {
+			"mode": "multi",
+			"sort": "none"
+		  }
+		},
+		"pluginVersion": "8.4.4",
+		"targets": [
+		  {
+			"alias": "$tag_strategy",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "strategy"
+				],
+				"type": "tag"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "cpmm_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"totalAssets"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"title": "Strategy AUM",
+		"type": "timeseries"
+	  },
+	  {
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "mode": "palette-classic"
+			},
+			"custom": {
+			  "axisLabel": "",
+			  "axisPlacement": "auto",
+			  "barAlignment": 0,
+			  "drawStyle": "line",
+			  "fillOpacity": 0,
+			  "gradientMode": "none",
+			  "hideFrom": {
+				"legend": false,
+				"tooltip": false,
+				"viz": false
+			  },
+			  "lineInterpolation": "linear",
+			  "lineWidth": 1,
+			  "pointSize": 5,
+			  "scaleDistribution": {
+				"type": "linear"
+			  },
+			  "showPoints": "never",
+			  "spanNulls": true,
+			  "stacking": {
+				"group": "A",
+				"mode": "none"
+			  },
+			  "thresholdsStyle": {
+				"mode": "area"
+			  }
+			},
+			"decimals": 4,
+			"mappings": [],
+			"max": 1.05,
+			"min": 0.95,
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "red",
+				  "value": null
+				},
+				{
+				  "color": "green",
+				  "value": 0.98
+				},
+				{
+				  "color": "red",
+				  "value": 1.02
+				}
+			  ]
+			},
+			"unit": "short"
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 13,
+		  "w": 12,
+		  "x": 12,
+		  "y": 0
+		},
+		"id": 3,
+		"options": {
+		  "legend": {
+			"calcs": [],
+			"displayMode": "list",
+			"placement": "bottom"
+		  },
+		  "tooltip": {
+			"mode": "multi",
+			"sort": "none"
+		  }
+		},
+		"pluginVersion": "8.4.4",
+		"targets": [
+		  {
+			"alias": "$tag_strategy",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "strategy"
+				],
+				"type": "tag"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "cpmm_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"debtRatio"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"title": "Debt Ratios",
+		"type": "timeseries"
+	  },
+	  {
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "mode": "palette-classic"
+			},
+			"custom": {
+			  "axisLabel": "",
+			  "axisPlacement": "auto",
+			  "barAlignment": 0,
+			  "drawStyle": "line",
+			  "fillOpacity": 10,
+			  "gradientMode": "none",
+			  "hideFrom": {
+				"legend": false,
+				"tooltip": false,
+				"viz": false
+			  },
+			  "lineInterpolation": "linear",
+			  "lineWidth": 1,
+			  "pointSize": 5,
+			  "scaleDistribution": {
+				"type": "linear"
+			  },
+			  "showPoints": "never",
+			  "spanNulls": true,
+			  "stacking": {
+				"group": "A",
+				"mode": "none"
+			  },
+			  "thresholdsStyle": {
+				"mode": "off"
+			  }
+			},
+			"decimals": 4,
+			"mappings": [],
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "green",
+				  "value": null
+				},
+				{
+				  "color": "red",
+				  "value": 80
+				}
+			  ]
+			},
+			"unit": "short"
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 13,
+		  "w": 12,
+		  "x": 0,
+		  "y": 13
+		},
+		"id": 5,
+		"options": {
+		  "legend": {
+			"calcs": [],
+			"displayMode": "list",
+			"placement": "bottom"
+		  },
+		  "tooltip": {
+			"mode": "multi",
+			"sort": "none"
+		  }
+		},
+		"pluginVersion": "8.4.4",
+		"targets": [
+		  {
+			"alias": "BTC",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "cpmm_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"price"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": []
+		  }
+		],
+		"title": "ETH Price",
+		"type": "timeseries"
+	  },
+	  {
+		"fieldConfig": {
+		  "defaults": {
+			"color": {
+			  "mode": "palette-classic"
+			},
+			"custom": {
+			  "axisLabel": "",
+			  "axisPlacement": "auto",
+			  "barAlignment": 0,
+			  "drawStyle": "line",
+			  "fillOpacity": 10,
+			  "gradientMode": "none",
+			  "hideFrom": {
+				"legend": false,
+				"tooltip": false,
+				"viz": false
+			  },
+			  "lineInterpolation": "linear",
+			  "lineWidth": 1,
+			  "pointSize": 5,
+			  "scaleDistribution": {
+				"type": "linear"
+			  },
+			  "showPoints": "never",
+			  "spanNulls": true,
+			  "stacking": {
+				"group": "A",
+				"mode": "none"
+			  },
+			  "thresholdsStyle": {
+				"mode": "off"
+			  }
+			},
+			"decimals": 4,
+			"mappings": [],
+			"thresholds": {
+			  "mode": "absolute",
+			  "steps": [
+				{
+				  "color": "green",
+				  "value": null
+				},
+				{
+				  "color": "red",
+				  "value": 80
+				}
+			  ]
+			},
+			"unit": "short"
+		  },
+		  "overrides": []
+		},
+		"gridPos": {
+		  "h": 13,
+		  "w": 12,
+		  "x": 12,
+		  "y": 13
+		},
+		"id": 9,
+		"options": {
+		  "legend": {
+			"calcs": [],
+			"displayMode": "list",
+			"placement": "bottom"
+		  },
+		  "tooltip": {
+			"mode": "multi",
+			"sort": "none"
+		  }
+		},
+		"pluginVersion": "8.4.4",
+		"targets": [
+		  {
+			"alias": "BTC",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "cpmm_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"price"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "mean"
+				}
+			  ]
+			],
+			"tags": []
+		  }
+		],
+		"title": "ETH Price",
+		"type": "timeseries"
+	  },
+	  {
+		"aliasColors": {},
+		"bars": false,
+		"dashLength": 10,
+		"dashes": false,
+		"fill": 1,
+		"fillGradient": 0,
+		"gridPos": {
+		  "h": 13,
+		  "w": 12,
+		  "x": 0,
+		  "y": 26
+		},
+		"hiddenSeries": false,
+		"id": 8,
+		"legend": {
+		  "avg": false,
+		  "current": false,
+		  "max": false,
+		  "min": false,
+		  "show": true,
+		  "total": false,
+		  "values": false
+		},
+		"lines": true,
+		"linewidth": 1,
+		"nullPointMode": "null",
+		"options": {
+		  "alertThreshold": true
+		},
+		"percentage": false,
+		"pluginVersion": "8.4.4",
+		"pointradius": 2,
+		"points": false,
+		"renderer": "flot",
+		"seriesOverrides": [
+		  {
+			"alias": "Rebalance Count",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "ETH",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "BTC Borrow Fee ($)",
+			"yaxis": 1
+		  },
+		  {
+			"alias": "borrow (short)",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "debt_2%: borrow (short)",
+			"yaxis": 2
+		  },
+		  {
+			"alias": "debt_1.5%: borrow (short)",
+			"yaxis": 2
+		  }
+		],
+		"spaceLength": 10,
+		"stack": false,
+		"steppedLine": false,
+		"targets": [
+		  {
+			"alias": "$tag_strategy",
+			"datasource": {
+			  "type": "influxdb",
+			  "uid": "Z8Eeb3-4z"
+			},
+			"groupBy": [
+			  {
+				"params": [
+				  "$__interval"
+				],
+				"type": "time"
+			  },
+			  {
+				"params": [
+				  "strategy"
+				],
+				"type": "tag"
+			  },
+			  {
+				"params": [
+				  "previous"
+				],
+				"type": "fill"
+			  }
+			],
+			"measurement": "cpmm_strategy",
+			"orderByTime": "ASC",
+			"policy": "default",
+			"refId": "A",
+			"resultFormat": "time_series",
+			"select": [
+			  [
+				{
+				  "params": [
+					"pendingRewards"
+				  ],
+				  "type": "field"
+				},
+				{
+				  "params": [],
+				  "type": "median"
+				}
+			  ]
+			],
+			"tags": [
+			  {
+				"key": "strategy",
+				"operator": "=~",
+				"value": "/^$strategy$/"
+			  }
+			]
+		  }
+		],
+		"thresholds": [],
+		"timeRegions": [],
+		"title": "Rewards",
+		"tooltip": {
+		  "shared": true,
+		  "sort": 0,
+		  "value_type": "individual"
+		},
+		"type": "graph",
+		"xaxis": {
+		  "mode": "time",
+		  "show": true,
+		  "values": []
+		},
+		"yaxes": [
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  },
+		  {
+			"format": "short",
+			"logBase": 1,
+			"show": true
+		  }
+		],
+		"yaxis": {
+		  "align": false
+		}
+	  }
+	],
+	"refresh": false,
+	"schemaVersion": 35,
+	"style": "dark",
+	"tags": [],
+	"templating": {
+	  "list": [
+		{
+		  "current": {
+			"selected": false,
+			"text": "All",
+			"value": "$__all"
+		  },
+		  "definition": "SHOW TAG VALUES FROM \"cpmm_strategy\" WITH KEY = \"strategy\"",
+		  "hide": 0,
+		  "includeAll": true,
+		  "label": "Strategy",
+		  "multi": false,
+		  "name": "strategy",
+		  "options": [],
+		  "query": "SHOW TAG VALUES FROM \"cpmm_strategy\" WITH KEY = \"strategy\"",
+		  "refresh": 1,
+		  "regex": "",
+		  "skipUrlSync": false,
+		  "sort": 0,
+		  "type": "query"
+		}
+	  ]
+	},
+	"time": {
+	  "from": "now-130d",
+	  "to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "CPMM Backtest",
+	"uid": "kJogzeL4z",
+	"version": 9,
+	"weekStart": ""
+  }
