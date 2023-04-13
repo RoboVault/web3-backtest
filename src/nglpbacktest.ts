@@ -14,7 +14,7 @@ function getTimestamp(dateString: string) {
 
 async function main () {
 	const fromBlock = 2260000
-	const toBlock = 71000000
+	const toBlock = 0 // not used
     const datasource = new GmxDataSource(fromBlock, toBlock)
 
     const strategy = new nGLPStrategy()
