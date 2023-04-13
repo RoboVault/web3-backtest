@@ -16,7 +16,7 @@ function getTimestamp(dateString: string) {
 
 async function main () {
     const datasource = new Univ2DataSource(
-		1678865040, //getTimestamp('10/01/2022'), 
+		1670366220, //getTimestamp('10/01/2022'), 
 		Math.floor(Date.now() / 1000)
 	)
 

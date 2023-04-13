@@ -1,4 +1,4 @@
-import { UniV2Data } from "./datasource/univ2DataSource.js"
+import { AAVEData, UniV2Data } from "./datasource/univ2DataSource.js"
 
 export class AAVEPosition {
 	public borrows: { [key: string]: number } = {}
@@ -31,10 +31,8 @@ export class AAVEPosition {
 		this.borrows[token] = now + amount
     }
 
-    public processData(lastData: UniV2Data, data: UniV2Data) {
-		// todo, update rates
-
-		const elapsed = data.timestamp - lastData.timestamp
+    public process(elapsed: number, rates: { [key: string]: number }) {
+		this.rates = rates
 		
 		for (const borrow of Object.keys(this.borrows)) {
 			const rate = this.rates[borrow]
@@ -51,21 +49,30 @@ export class AAVEPosition {
 }
 
 export class AAVEPositionManager {
-	private lastData: any
+	private lastData!: AAVEData
+	private rates: { [key: string]: number }
     positions: AAVEPosition[] = []
 	
+	
     constructor() {
-
+		this.rates = {
+			'USDC': 0, // 2%
+			'ETH': 0, // 1%
+		}
     }
 
-    public update(data: any): boolean {
+    public update(data: AAVEData): boolean {
         if (!this.lastData) {
             this.lastData = data
             return false
         }
-
+		const elapsed = data.timestamp - this.lastData.timestamp
+		this.rates = {
+			'USDC': data.usdcIncomeRate - 1,
+			'ETH': data.ethDebtRate - 1,
+		}
         for (const pos of this.positions) {
-            pos.processData(this.lastData, data)
+            pos.process(elapsed, this.rates)
         }
 
         this.lastData = data
@@ -73,11 +80,7 @@ export class AAVEPositionManager {
     }
 
     public create(): AAVEPosition {
-		// TODO - Use real rates
-        const pos = new AAVEPosition({
-			'USDC': 0.02, // 2%
-			'ETH': 0.01, // 1%
-		})
+        const pos = new AAVEPosition(this.rates)
         this.positions.push(pos)
         return pos
     }
