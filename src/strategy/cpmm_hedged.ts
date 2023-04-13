@@ -124,6 +124,12 @@ class CpmmHedgedPosition {
         return this.borrowInWant(data) / this.position.reserves1
     }
 
+    private calcCollatRatio(data: UniV2Data): number {
+        if (!this.position)
+            return 1
+        return this.borrowInWant(data) / this.aave.lent('USDC')
+    }
+
     private async log(data: UniV2Data) {
         if (!this.position) return
 
@@ -140,6 +146,7 @@ class CpmmHedgedPosition {
 				price: data.close,
 				totalAssets: this.estTotalAssets(data),
                 debtRatio: this.calcDebtRatio(data),
+				collatRatio: this.calcCollatRatio(data),
 				pendingRewards: this.farm.pendingRewards,
             },
             timestamp: new Date(data.timestamp * 1000),
