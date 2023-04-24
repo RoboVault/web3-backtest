@@ -1,11 +1,9 @@
 
 
-import { Backtest } from './core/backtest.js';
-import { GmxDataSource } from './core/datasource/GmxDataSource.js';
-import { Univ2DataSource } from './core/datasource/univ2DataSource.js';
-import './data/timeseriesdb.js';
-import { CpmmHedgedStrategy } from './strategy/cpmm_hedged.js';
-import { nGLPStrategy } from './strategy/nglp-strategy.js';
+import { Backtest } from './core/backtest.js'
+import { Univ2DataSource } from './core/datasource/univ2DataSource.js'
+import './data/timeseriesdb.js'
+import { CpmmHedgedStrategy } from './strategy/cpmm_hedged.js'
 
 
 function getTimestamp(dateString: string) {
@@ -16,7 +14,8 @@ function getTimestamp(dateString: string) {
 
 async function main () {
     const datasource = new Univ2DataSource(
-		1670366220, //getTimestamp('10/01/2022'), 
+		getTimestamp('01/24/2023'), // 1670386220, // 
+		// getTimestamp('01/30/2023'), // 1670386220, // 
 		Math.floor(Date.now() / 1000)
 	)
 

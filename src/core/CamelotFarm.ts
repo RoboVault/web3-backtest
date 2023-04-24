@@ -9,8 +9,15 @@ export class FarmPosition {
     public process(elapsed: number, data: UniV2Data, farm: FarmData) {
 		const pc = this.staked / data.totalSupply
 		this.harvest = pc * elapsed * farm.rewardsPerSecond * farm.rewardTokenPrice
+		// console.log(this.harvest, pc, elapsed, farm.rewardsPerSecond, farm.rewardTokenPrice)
 		this.pendingRewards += this.harvest
     }
+
+	public claim() {
+		const rewards = this.pendingRewards
+		this.pendingRewards = 0
+		return rewards
+	}
 }
 
 export class CamelotFarm {

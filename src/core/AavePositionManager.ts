@@ -3,6 +3,7 @@ import { AAVEData, UniV2Data } from "./datasource/univ2DataSource.js"
 export class AAVEPosition {
 	public borrows: { [key: string]: number } = {}
 	public lends: { [key: string]: number } = {}
+	public interest = { cost: 0, income: 0 }
 
     constructor(public rates: { [key: string]: number }) {
 	}
@@ -23,6 +24,14 @@ export class AAVEPosition {
 		this.lends[token] = now + amount
     }
 
+    public redeem(
+		token: string,
+        amount: number,
+    ) {
+		const now = this.lends[token] || 0
+		this.lends[token] = now - amount
+    }
+
     public borrow(
 		token: string,
         amount: number,
@@ -33,18 +42,24 @@ export class AAVEPosition {
 
     public process(elapsed: number, rates: { [key: string]: number }) {
 		this.rates = rates
+		let income = 0
+		let cost = 0
 		
+		// WARN this is broken for generic borrows. Only works for USDC
 		for (const borrow of Object.keys(this.borrows)) {
 			const rate = this.rates[borrow]
 			const interest = this.borrows[borrow] * rate * elapsed / (60 * 60 * 24 * 365)
 			this.borrows[borrow] -= interest
+			cost += interest
 		}
 
 		for (const lend of Object.keys(this.lends)) {
 			const rate = this.rates[lend]
 			const interest = this.lends[lend] * rate * elapsed / (60 * 60 * 24 * 365)
 			this.lends[lend] += interest
+			income += interest
 		}
+		this.interest = { cost, income }
     }
 }
 

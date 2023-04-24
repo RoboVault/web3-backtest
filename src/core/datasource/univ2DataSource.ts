@@ -52,7 +52,7 @@ export class Univ2DataSource implements DataSource<DataUpdate> {
         private end: number,
     ) {
 		// const url = 'http://0.0.0.0:4000/graphql'
-		const url = 'https://data.arkiver.net/s_battenally/cpmm_v1/graphql'
+		const url = 'https://data.arkiver.net/s_battenally/cpmm_v2/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
     
@@ -80,13 +80,13 @@ export class Univ2DataSource implements DataSource<DataUpdate> {
 	}
 
 	// Only supports USDC/WETH on Camelot right now
-	private async fetch(from: number, limit: number, skip: number) {
+	private async fetch(from: number, limit: number, minuteSkip: number, hourSkip: number) {
 		const minuteDataQuery = gql`query MyQuery {
 			MinuteDatas (
 				sort: TIMESTAMP_ASC
 				filter: {_operators: {timestamp: {gt: ${from}, lt: ${this.end}}}}
 				limit: ${limit}
-				skip: ${skip}
+				skip: ${minuteSkip}
 			) {
 				timestamp
 				reserves0
@@ -97,7 +97,7 @@ export class Univ2DataSource implements DataSource<DataUpdate> {
 		`
 		const minuteData = (await this.client.request(minuteDataQuery)).MinuteDatas
 		if (!minuteData.length)
-		  return []
+		  return { data: [], hourlyCount: 0 }
 
 		const end = minuteData[minuteData.length - 1].timestamp
 
@@ -105,8 +105,7 @@ export class Univ2DataSource implements DataSource<DataUpdate> {
 			HourDatas (
 				sort: TIMESTAMP_ASC
 				filter: {_operators: {timestamp: {gt: ${from}, lt: ${end}}}}
-				limit: ${limit}
-				skip: ${skip}
+				skip: ${hourSkip}
 			) {
 				timestamp
 				usdcIncomeRate
@@ -118,16 +117,21 @@ export class Univ2DataSource implements DataSource<DataUpdate> {
 		`
 
 		const hourData = (await this.client.request(hourDataQuery)).HourDatas
-		return this.prepData({ minuteData, hourData })
+		return {
+			data: this.prepData({ minuteData, hourData }),
+			hourlyCount: hourData.length,
+		}
 	}
 
     public async run(ondata: OnDataCallback<any>) {
         let finished = false
 		let skip = 0
+		let hourSkip = 0
         do {
             
-            let data = await this.fetch(this.start, 500, skip)
+            const { data, hourlyCount } = await this.fetch(this.start, 500, skip, hourSkip)
 			skip += data.length
+			hourSkip += hourlyCount
             // Calls the ondata handler
             for (const update of data) {
                 await ondata(update)
