@@ -1,5 +1,5 @@
-import { Backtest } from "../../backtest.js"
-import { DataSourceInfo } from "../../datasource/types.js"
+import { Backtest } from "../../lib/backtest.js"
+import { DataSourceInfo } from "../../lib/datasource/types.js"
 import { CpmmHedgedStrategy } from "./strategy.js"
 
 

@@ -1,11 +1,11 @@
-import { CamelotFarmRewardsSnapshot } from "../../datasource/camelotFarm.js";
-import { Univ2PoolSnapshot } from "../../datasource/camelotDex.js";
-import { AavePoolSnapshot } from "../../datasource/Aave.js";
-import { UniV2Position, UniV2PositionManager } from "../../protocols/UniV2PositionManager.js";
-import { AAVEPosition, AAVEPositionManager } from "../../protocols/AavePositionManager.js";
-import { CamelotFarm, FarmPosition } from "../../protocols/CamelotFarm.js";
-import { Measurement, Schema } from "../../utils/timeseriesdb.js";
-import { DataSnapshot } from "../../datasource/types.js";
+import { CamelotFarmRewardsSnapshot } from "../../lib/datasource/camelotFarm.js";
+import { Univ2PoolSnapshot } from "../../lib/datasource/camelotDex.js";
+import { AavePoolSnapshot } from "../../lib/datasource/Aave.js";
+import { UniV2Position, UniV2PositionManager } from "../../lib/protocols/UniV2PositionManager.js";
+import { AAVEPosition, AAVEPositionManager } from "../../lib/protocols/AavePositionManager.js";
+import { CamelotFarm, FarmPosition } from "../../lib/protocols/CamelotFarm.js";
+import { Measurement, Schema } from "../../lib/utils/timeseriesdb.js";
+import { DataSnapshot } from "../../lib/datasource/types.js";
 
 interface ILogAny extends Schema {
     tags: any
