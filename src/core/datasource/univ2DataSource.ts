@@ -51,7 +51,6 @@ export class Univ2DataSource implements DataSource<DataUpdate> {
         private start: number,
         private end: number,
     ) {
-		// const url = 'http://0.0.0.0:4000/graphql'
 		const url = 'https://data.arkiver.net/s_battenally/cpmm_v2/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
