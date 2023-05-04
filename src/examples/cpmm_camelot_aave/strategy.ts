@@ -382,10 +382,11 @@ export class CpmmHedgedStrategy {
 		farm: string,
 	}) {
 		const strategies = [
-			{ name: 'collat_60%', initialInvestment: 1000000, collatRatio: 0.60, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
-			// { name: 'collat_65%', initialInvestment: 1000000, collatRatio: 0.65, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
-			// { name: 'collat_70%', initialInvestment: 1000000, collatRatio: 0.70, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
-			// { name: 'collat_75%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
+			{ name: 'collat_60%', initialInvestment: 1000000, collatRatio: 0.60, debtRatioRange: 0.015, performanceFee: 0.2, managementFee: 0.01 },
+			{ name: 'collat_65%', initialInvestment: 1000000, collatRatio: 0.65, debtRatioRange: 0.02, performanceFee: 0.2, managementFee: 0.01 },
+			{ name: 'collat_70%', initialInvestment: 1000000, collatRatio: 0.70, debtRatioRange: 0.03, performanceFee: 0.2, managementFee: 0.01 },
+			{ name: 'collat_75%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.04, performanceFee: 0.2, managementFee: 0.01 },
+			{ name: 'collat_80%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
 		]
 		this.strategies = strategies.map(s => new CpmmHedgedPosition(s.name, s))
     }

@@ -86,16 +86,17 @@ main()
 ```
 
 # Features
-| Feature    | Status  |
-| --------  | --------  |
-| Generic Data Sources 				| &check; |
-| Generic Backtest API 				| &check; |
-| Examples: Hedged Farming Strategy | &check;     |
-| Multi-resolution Support (1m, 1d, 1h) | &check;     |
-| Influx boilerplate for charting | &check;     |
-| NPM Module | &cross;     |
-| Example: AAVE Folding | &cross;     |
-| Wallet support for simulators | &cross;     |
+| Feature | Status  |
+| -------- | -------- |
+| Generic Data Sources | &check; |
+| Generic Backtest API | &check; |
+| Examples: Hedged Farming Strategy | &check; |
+| Multi-resolution Support (1m, 1d, 1h) | &check; |
+| Influx boilerplate for charting | &check; |
+| NPM Module | &cross; |
+| Example: AAVE Folding | &cross; |
+| Wallet support for simulators | &cross; |
+| Local Data Caching | &cross; |
 
 # Position Simulators
 | Protocol         | Status     |
