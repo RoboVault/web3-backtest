@@ -1,10 +1,11 @@
-import { Measurement, Schema } from "../data/timeseriesdb.js";
-import type { Strategy } from "../core/types/strategy.js";
-import { UniV2Position, UniV2PositionManager } from "../core/UniV2PositionManager.js";
-import { DataUpdate, UniV2Data } from "../core/datasource/UniV2DataSource.js";
-import { AAVEPosition, AAVEPositionManager } from "../core/AavePositionManager.js";
-import { CamelotFarm } from "../core/CamelotFarm.js";
-import { FarmPosition } from "../core/CamelotFarm.js";
+import { CamelotFarmRewardsSnapshot } from "../../lib/datasource/camelotFarm.js";
+import { Univ2PoolSnapshot } from "../../lib/datasource/camelotDex.js";
+import { AavePoolSnapshot } from "../../lib/datasource/Aave.js";
+import { UniV2Position, UniV2PositionManager } from "../../lib/protocols/UniV2PositionManager.js";
+import { AAVEPosition, AAVEPositionManager } from "../../lib/protocols/AavePositionManager.js";
+import { CamelotFarm, FarmPosition } from "../../lib/protocols/CamelotFarm.js";
+import { Measurement, Schema } from "../../lib/utils/timeseriesdb.js";
+import { DataSnapshot } from "../../lib/datasource/types.js";
 
 interface ILogAny extends Schema {
     tags: any
@@ -18,6 +19,21 @@ const AAVE = new Measurement<ILogAny, any, any>('cpmm_aave')
 
 const REBALANCE_COST = 5
 const HARVEST_COST = 5
+
+
+
+type Snapshots = 
+	| CamelotFarmRewardsSnapshot
+	| Univ2PoolSnapshot
+	| AavePoolSnapshot
+
+
+type DataUpdate = {
+	timestamp: number,
+	univ2: Univ2PoolSnapshot,
+	aave: AavePoolSnapshot[],
+	farm?: CamelotFarmRewardsSnapshot,
+}
 
 class CpmmHedgedPosition {
     public position!: UniV2Position
@@ -39,6 +55,7 @@ class CpmmHedgedPosition {
 	public harvestCount: number = 0
 	public rewardsSum: number = 0
 	public pendingRewards: number = 0
+	public symbol
 
 	// cumulative fees
 	public fees: {
@@ -58,6 +75,7 @@ class CpmmHedgedPosition {
 		performanceFee: number,
 		managementFee: number,
 	}) {
+		this.symbol = 'WETH/USDC'
         this.initialInvestment = options.initialInvestment
         this.debtRatioRange = options.debtRatioRange
         this.collatRatio = options.collatRatio
@@ -71,7 +89,7 @@ class CpmmHedgedPosition {
 		farm: CamelotFarm, 
 		data: DataUpdate
 	) {
-		if (data.univ2.timestamp  % (60 * 10) === 0)
+		if (data.timestamp  % (60 * 10) === 0)
         	this.log(data)
 
         if (!this.firstPosition) {
@@ -86,7 +104,7 @@ class CpmmHedgedPosition {
 				console.log('new debt ratio:', this.calcDebtRatio(data))
 			}
 
-			const sinceLastHarvest = data.univ2.timestamp - this.lastHarvest
+			const sinceLastHarvest = data.timestamp - this.lastHarvest
 			const harvestInterval = 60 * 60 * 24 // one day
 			if (sinceLastHarvest >= harvestInterval) {
 				this.harvest(mgr, aave, farm, data)
@@ -96,7 +114,7 @@ class CpmmHedgedPosition {
     }
 
     public openFirstPosition(mgr: UniV2PositionManager, aave: AAVEPositionManager, farmMgr: CamelotFarm, data: DataUpdate) {
-		this.lastHarvest = data.univ2.timestamp
+		this.lastHarvest = data.timestamp
 		this.lastHarvestSharePrice = 1
 		const { borrow, lend } = this.calcLenderAmounts(this.initialInvestment, data)
 		this.aave = aave.create()
@@ -104,24 +122,20 @@ class CpmmHedgedPosition {
 		this.aave.borrow('ETH', borrow)
         this.firstPosition = true  
 		// console.log(borrow, lend)
-		this.start = data.univ2.timestamp
+		this.start = data.timestamp
 		this.highest = this.initialInvestment
 		// process.exit(-1)
         this.position = mgr.addLiquidity(
+			this.symbol,
 			borrow,
             borrow * data.univ2.close,
         )
-		this.farm = farmMgr.stake(this.position.lpTokens)
+		this.farm = farmMgr.stake(this.position.lpTokens, this.symbol)
     }
-
-    // public get positionSnapshot() {
-    //     if (!this.position?.snapshot) return
-    //     return this.position.snapshot
-    // }
 
     public rebalanceDebt(mgr: UniV2PositionManager, aave: AAVEPositionManager, farmMgr: CamelotFarm, data: DataUpdate) {
 		this.rebalanceCount++
-		console.log('rebalanceDebt', (new Date(data.univ2.timestamp * 1000)).toISOString())
+		console.log('rebalanceDebt', (new Date(data.timestamp * 1000)).toISOString())
         // Calc total assets
         const totalAssets = this.estTotalAssets(data)
 
@@ -138,23 +152,24 @@ class CpmmHedgedPosition {
 		this.aave.lend('USDC', lend)
 		this.aave.borrow('ETH', borrow)
         this.position = mgr.addLiquidity(
+			this.symbol,
 			borrow,
             borrow * data.univ2.close,
         )
-		this.farm = farmMgr.stake(this.position.lpTokens)
+		this.farm = farmMgr.stake(this.position.lpTokens, this.symbol)
 		this.gasCosts += REBALANCE_COST
 		Rebalance.writePoint({
 			tags: { strategy: this.name },
 			fields: {
 				gas: REBALANCE_COST,
 			},
-			timestamp: new Date(data.univ2.timestamp * 1000),
+			timestamp: new Date(data.timestamp * 1000),
 		})
     }
 
 	public harvest(mgr: UniV2PositionManager, aave: AAVEPositionManager, farmMgr: CamelotFarm, data: DataUpdate) {
 		// Add rewards to lending positions
-		const now = new Date(data.univ2.timestamp * 1000)
+		const now = new Date(data.timestamp * 1000)
 		// console.log(`harvesting!! ${now.toUTCString()}`)
 		const rewards = this.farm.claim() + this.pendingRewards
 		this.pendingRewards = 0
@@ -168,7 +183,7 @@ class CpmmHedgedPosition {
 		const totalAssets = this.estTotalAssets(data)
 		const sharePrice = totalAssets / this.initialInvestment
 		if (sharePrice > this.lastHarvestSharePrice) {
-			const elapsed = data.univ2.timestamp - this.lastHarvest
+			const elapsed = data.timestamp - this.lastHarvest
 			profit = (sharePrice - this.lastHarvestSharePrice) * totalAssets
 			performanceFee = profit * this.performanceFee
 			managementFee = totalAssets * this.managementFee * elapsed / (60 * 60 * 24 * 365)
@@ -180,7 +195,7 @@ class CpmmHedgedPosition {
 			this.aave.redeem('USDC', performanceFee + managementFee)
 		}
 		this.lastHarvestSharePrice = sharePrice
-		this.lastHarvest = data.univ2.timestamp
+		this.lastHarvest = data.timestamp
 		const totalFee = performanceFee + managementFee
 		const harvestLog = {            
 			tags: {
@@ -192,12 +207,12 @@ class CpmmHedgedPosition {
 				profit,
 				sharePrice,
 				totalAssets,
-				elapsed: data.univ2.timestamp - this.start,
+				elapsed: data.timestamp - this.start,
 				totalFee,
 				rewards,
 				gas: HARVEST_COST,
 			},
-			timestamp: new Date(data.univ2.timestamp * 1000),
+			timestamp: new Date(data.timestamp * 1000),
 		}
 		this.rewardsSum += rewards
 		this.fees.managementFee += managementFee
@@ -244,7 +259,7 @@ class CpmmHedgedPosition {
     }
 
 	private apy(data: DataUpdate) {
-		const elapsed = data.univ2.timestamp - this.start
+		const elapsed = data.timestamp - this.start
 		const totalAssets = this.estTotalAssets(data)
 		const profit = totalAssets - this.initialInvestment
 		const apy = profit / this.initialInvestment / (elapsed / (60 * 60 * 24 * 365))
@@ -254,7 +269,7 @@ class CpmmHedgedPosition {
     private async log(data: DataUpdate) {
         if (!this.position) return
 
-		const elapsed = data.univ2.timestamp - this.start
+		const elapsed = data.timestamp - this.start
 		const totalAssets = this.estTotalAssets(data)
 		const profit = totalAssets - this.initialInvestment
 		const apy = profit / this.initialInvestment / (elapsed / (60 * 60 * 24 * 365))
@@ -266,7 +281,7 @@ class CpmmHedgedPosition {
 			const borrowCost = this.aave.interest.cost * data.univ2.close
 			const hourly = {
 				tags: { strategy: this.name},
-				timestamp: new Date(data.univ2.timestamp * 1000),
+				timestamp: new Date(data.timestamp * 1000),
 				fields: {
 					borrowCost,
 					lendIncome: this.aave.interest.income,
@@ -304,7 +319,7 @@ class CpmmHedgedPosition {
 				expenses: this.gasCosts,
 				daoProfit: this.fees.total - this.gasCosts
             },
-            timestamp: new Date(data.univ2.timestamp * 1000),
+            timestamp: new Date(data.timestamp * 1000),
         }
 		// console.log(log)
         try {
@@ -323,7 +338,7 @@ class CpmmHedgedPosition {
 		const harvestCost = this.harvestCount * HARVEST_COST
 		const rebalanceCost = this.rebalanceCount * REBALANCE_COST
 		const totalCost = harvestCost + rebalanceCost
-		const elapsed = data.univ2.timestamp - this.start
+		const elapsed = data.timestamp - this.start
 		const oneDay =  (60 * 60 * 24)
 		const totalAssets = this.estTotalAssets(data)
 		const sharePrice = totalAssets / this.initialInvestment
@@ -355,18 +370,22 @@ class CpmmHedgedPosition {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export class CpmmHedgedStrategy implements Strategy {
+export class CpmmHedgedStrategy {
 	private univ2Manager = new UniV2PositionManager()
 	private aaveManager = new AAVEPositionManager()
 	private farm = new CamelotFarm()
 	private strategies: CpmmHedgedPosition[] = []
-	private lastData!: DataUpdate
-    constructor() {
+	private lastData?: DataSnapshot<Snapshots>
+    constructor(private ids: {
+		aave: string,
+		univ2: string,
+		farm: string,
+	}) {
 		const strategies = [
 			{ name: 'collat_60%', initialInvestment: 1000000, collatRatio: 0.60, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
-			{ name: 'collat_65%', initialInvestment: 1000000, collatRatio: 0.65, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
-			{ name: 'collat_70%', initialInvestment: 1000000, collatRatio: 0.70, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
-			{ name: 'collat_75%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
+			// { name: 'collat_65%', initialInvestment: 1000000, collatRatio: 0.65, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
+			// { name: 'collat_70%', initialInvestment: 1000000, collatRatio: 0.70, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
+			// { name: 'collat_75%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
 		]
 		this.strategies = strategies.map(s => new CpmmHedgedPosition(s.name, s))
     }
@@ -380,24 +399,49 @@ export class CpmmHedgedStrategy implements Strategy {
 
     public async after() {
 		this.strategies.forEach(s => {
-			console.log(s.summary(this.lastData))
+			const data = this.getDataUpdate(this.lastData!)
+			console.log(s.summary(data))
 		})
         console.log('Back test finished')
     }
 
-    public async onData(data: DataUpdate) {
-		this.lastData = data
-		await this.univ2Manager.update(data.univ2)
-		await this.farm.update(data.univ2, data.farm)
+    public async onData(snapshot: DataSnapshot<Snapshots>) {
+		this.lastData = {...snapshot}
+
+		// Univ2 Position Update
+		const univ2Snap = {
+			timestamp: snapshot.timestamp,
+			data: snapshot.data[this.ids.univ2] as any
+		}
+		await this.univ2Manager.update(univ2Snap)
+
+		// Farm Position Update
+		await this.farm.update(univ2Snap, {
+			timestamp: snapshot.timestamp,
+			data: snapshot.data[this.ids.farm] as any
+		})
 		
-		if (data.aave) {
-			await this.aaveManager.update(data.aave)
+		// AAVE Position Update
+		if (snapshot.data[this.ids.aave]) {
+			await this.aaveManager.update({
+				timestamp: snapshot.timestamp,
+				data: snapshot.data[this.ids.aave] as any
+			})
 		}
 
 		// Procress the strategy
+		const data = this.getDataUpdate(snapshot)
 		for (const strat of this.strategies) {
 			await wait(1)
 			await strat.process(this.univ2Manager, this.aaveManager, this.farm, data)
 		}
     }
+
+	private getDataUpdate(snapshot: DataSnapshot<Snapshots>) {
+		const farm = snapshot.data[this.ids.farm]?.find((e: any) => e.symbol === 'WETH/USDC')! as CamelotFarmRewardsSnapshot
+		const aave = snapshot.data[this.ids.aave] as AavePoolSnapshot[]
+		const univ2 = snapshot.data[this.ids.univ2].find((e: any) => e.symbol === 'WETH/USDC') as Univ2PoolSnapshot
+		const timestamp = snapshot.timestamp
+		return { timestamp, farm, aave, univ2 }
+	}
 }

@@ -1,5 +1,5 @@
 import * as process from 'process'
-import '../data/config.js'
+import './config.js'
 
 import { ethers } from "ethers";
 

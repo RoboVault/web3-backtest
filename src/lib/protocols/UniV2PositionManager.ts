@@ -1,4 +1,10 @@
-import { UniV2Data } from "./datasource/univ2DataSource.js"
+import { Univ2PoolSnapshot } from "../datasource/camelotDex.js"
+
+
+type Snapshot = {
+	timestamp: number,
+	data: Univ2PoolSnapshot[]
+}
 
 export class UniV2Position {
     // pool!: ethers.Contract
@@ -12,12 +18,14 @@ export class UniV2Position {
 	public reserves0
 	public reserves1
 	public lpTokens
+	public symbol: string
 
     constructor(
         public amount0: number, 
         public amount1: number, 
-        public data: UniV2Data,
+        public data: Univ2PoolSnapshot,
     ) {
+		this.symbol = data.symbol
 		this.lpTokens = (amount0 / data.reserves0) * data.totalSupply
 		this.totalSupply = data.totalSupply
 		this.valueUsd = amount1 * 2
@@ -25,7 +33,7 @@ export class UniV2Position {
 		this.reserves1 = amount1
 	}
 
-    public processData(lastData: UniV2Data, data: UniV2Data) {
+    public processData(data: Univ2PoolSnapshot) {
 		const pc = this.lpTokens / data.totalSupply
 		this.totalSupply = data.totalSupply
 		this.valueUsd = pc * data.reserves1 * 2
@@ -44,10 +52,8 @@ export class UniV2Position {
 	}
 }
 
-
-
 export class UniV2PositionManager {
-    lastData?: UniV2Data
+    lastData!: Snapshot
     positions: UniV2Position[] = []
 
     constructor() {
@@ -55,21 +61,24 @@ export class UniV2PositionManager {
     }   
 
 
-    public update(data: UniV2Data): boolean {
+    public update(snapshot: Snapshot): boolean {
         if (!this.lastData) {
-            this.lastData = data
+            this.lastData = snapshot
             return false
         }
 
         
         for (const pos of this.positions) {
-            pos.processData(this.lastData, data)
+			const pair = snapshot.data.find(p => p.symbol === pos.symbol)!
+            pos.processData(pair)
         }
-        this.lastData = data
+
+        this.lastData = snapshot
         return true
     }
 
     public addLiquidity(
+		symbol: string,
         amount0: number,
         amount1: number, 
     ): UniV2Position {
@@ -77,7 +86,8 @@ export class UniV2PositionManager {
             throw new Error('wow')
 		console.log('openning positions with ')
 		console.log(amount0, amount1)
-		const pos = new UniV2Position(amount0, amount1, this.lastData)
+		const pair = this.lastData.data.find(p => p.symbol === symbol)!
+		const pos = new UniV2Position(amount0, amount1, pair)		
 		this.positions.push(pos)
 		return pos
     }

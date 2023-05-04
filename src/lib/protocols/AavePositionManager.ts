@@ -1,4 +1,10 @@
-import { AAVEData, UniV2Data } from "./datasource/univ2DataSource.js"
+import { AavePoolSnapshot } from "../datasource/Aave.js"
+
+
+type Snapshot = {
+	timestamp: number
+	data: AavePoolSnapshot[]
+}
 
 export class AAVEPosition {
 	public borrows: { [key: string]: number } = {}
@@ -64,7 +70,7 @@ export class AAVEPosition {
 }
 
 export class AAVEPositionManager {
-	private lastData!: AAVEData
+	private lastData!: Snapshot
 	private rates: { [key: string]: number }
     positions: AAVEPosition[] = []
 	
@@ -76,21 +82,23 @@ export class AAVEPositionManager {
 		}
     }
 
-    public update(data: AAVEData): boolean {
+    public update(snapshot: Snapshot): boolean {
         if (!this.lastData) {
-            this.lastData = data
+            this.lastData = snapshot
             return false
         }
-		const elapsed = data.timestamp - this.lastData.timestamp
+		const elapsed = snapshot.timestamp - this.lastData.timestamp
+		const usdc = snapshot.data.find(e => e.underlying === 'USDC')
+		const weth = snapshot.data.find(e => e.underlying === 'WETH')
 		this.rates = {
-			'USDC': data.usdcIncomeRate - 1,
-			'ETH': data.ethDebtRate - 1,
+			'USDC': usdc!.incomeRate - 1,
+			'ETH': weth!.debtRate - 1,
 		}
         for (const pos of this.positions) {
             pos.process(elapsed, this.rates)
         }
 
-        this.lastData = data
+        this.lastData = snapshot
         return true
     }
 
