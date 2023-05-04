@@ -11,14 +11,14 @@ Web3 Backtester pull desired historic data using (arkiver)[https://github.com/Ro
 Datasources are specified with a simple configuration
 ```ts 
 const sources: DataSourceInfo[] = [
-	{
-		chain: 'arbitrum',
-		protocol: 'camelot-dex',
-		resoution: '1m',
-		config: {
-			pairs: [USDCWETH]
-		}
-	},
+    {
+        chain: 'arbitrum',
+        protocol: 'camelot-dex',
+        resoution: '1m',
+        config: {
+            pairs: [USDCWETH]
+        }
+    },
 ]
 ```
 Supported sources are detailed (below)[#Data Sources Supported]
@@ -35,7 +35,7 @@ const position = univ2.addLiquidity('WETH/USDC', 1, 1900);
 and as cycles pass in the backtest, the position can be monitored and altered
 ```ts
 if (position.valueUsd < 2500) {
-	{ token0, token1 } = position.close()
+    { token0, token1 } = position.close()
 }
 ```
 
@@ -60,30 +60,30 @@ Here's an example that creates a dummy backtest for a 10 day period, using Camel
 
 ```ts
 const main = async () => {
-	const USDCWETH = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
+    const USDCWETH = '0x794a61358D6845594F94dc1DB02A252b5b4814aD'
 
-	const bt = await Backtest.create(
-		new Date('2023-01-01'), 
-		new Date('2023-01-02'), 
-		[{
-			chain: 'arbitrum',
-			protocol: 'camelot-dex',
-			resoution: '1m',
-			config: {
-				pairs: [USDCWETH]
-			}
-		}]
-	)
+    const bt = await Backtest.create(
+        new Date('2023-01-01'), 
+        new Date('2023-01-02'), 
+        [{
+            chain: 'arbitrum',
+            protocol: 'camelot-dex',
+            resoution: '1m',
+            config: {
+                pairs: [USDCWETH]
+            }
+        }]
+    )
 
-	bt.onData(async (update: DataSnapshot<Univ2PoolSnapshot>) => {
-		console.log(`we have data for ${update.timestamp}!`)
-	})
+    bt.onData(async (update: DataSnapshot<Univ2PoolSnapshot>) => {
+        console.log(`we have data for ${update.timestamp}!`)
+    })
 
-	bt.onAfter(async () => {
-		console.log('backtest complete!')
-	})
+    bt.onAfter(async () => {
+        console.log('backtest complete!')
+    })
 
-	bt.run()
+    bt.run()
 }
 
 main()
