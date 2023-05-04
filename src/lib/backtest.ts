@@ -1,25 +1,21 @@
-import EventEmitter from "events"
 import { DataSourceStore } from "./datasource/datasource.js"
-import { DataSource, DataSourceInfo, Resolution } from "./datasource/types.js"
+import { DataSnapshot, DataSource, DataSourceInfo, Resolution } from "./datasource/types.js"
 
-type Context = {
-	
-}
-
-
-export class Backtest extends EventEmitter {
+export class Backtest {
+	private onDataHandler?: (update: DataSnapshot<any>) => Promise<void>
+	private onBeforeHandler?: () => Promise<void>
+	private onAfterHandler?: () => Promise<void>
 
     constructor(
 		private start: Date,
 		private end: Date,
-        private datasources: DataSource[]
+        public readonly sources: DataSource[]
     ) {
-		super()
     }
 
-	public static async create(start: Date, end: Date, sources: DataSourceInfo[]): Promise<Backtest> {
-		const datasources = sources.map((source) => DataSourceStore.get(source))
-		const bt = new Backtest(start, end, datasources)
+	public static async create(start: Date, end: Date, sourceConfig: DataSourceInfo[]): Promise<Backtest> {
+		const sources = sourceConfig.map((source) => DataSourceStore.get(source))
+		const bt = new Backtest(start, end, sources)
 		return bt
 	}
 	
@@ -32,13 +28,26 @@ export class Backtest extends EventEmitter {
 		}
 	}
 
+	public onBefore(handler: () => Promise<void>) {
+		this.onBefore = handler
+	}
+
+	public onData<T = any>(handler: (update: DataSnapshot<T>) => Promise<void>) {
+		this.onDataHandler = handler
+	}
+
+	public onAfter(handler: () => Promise<void>) {
+		this.onAfterHandler = handler
+	}
+
     public async run() {
         // Initialise the goodz
-        await Promise.all(this.datasources.map(e => e.init()))
-		await this.emit('before')
+        await Promise.all(this.sources.map(e => e.init()))
+		if (this.onBeforeHandler)
+			await this.onBeforeHandler()
 
         // sort the datasources from high res to low res
-		const datasources = this.datasources.sort((a, b) => {
+		const sources = this.sources.sort((a, b) => {
 			const aRes = Backtest.ResToSeconds(a.info.resoution)
 			const bRes = Backtest.ResToSeconds(b.info.resoution)
 			return aRes > bRes ? 1 : -1
@@ -52,20 +61,28 @@ export class Backtest extends EventEmitter {
 		let from = start
 		let to = end
 
+		const formatTime = (time: number) => {
+			const t = (new Date(time * 1000)).toISOString().replace(':00.000Z','').split('T')
+			return `${t[0]} ${t[1]}`
+		}
+
 		// use the first data source as the lead because it'll have the highest resolution
-		const lead = datasources[0]
-		const others = datasources.slice(1)
+		const lead = sources[0]
+		const others = sources.slice(1)
 		do {
 			const data = await lead.fetch(from, end, limit)
-			to = data[data.length - 1].timestamp
+			if (data.length === 0) break
 
+			to = data[data.length - 1].timestamp
+			console.log(`Fetching data from ${formatTime(from)} to ${formatTime(to)}`)
 			const allData = [
 				data,
 				...await Promise.all(others.map(ds => ds.fetch(from, to, limit)))
 			]
+			from = to
 
 			// merge all timestamps
-			const timestamps = Array.prototype.concat.apply(this, allData.map(e => e.map(e => e.timestamp))) as number[]
+			const timestamps = Array.prototype.concat.apply([], allData.map(e => e.map(e => e.timestamp))) as number[]
 			const unique = Array.from(new Set(timestamps)).sort((a, b) => a - b)
 
 			const mergedData = unique.map(ts => {
@@ -78,12 +95,17 @@ export class Backtest extends EventEmitter {
 			})
 
 			// emit each of the snapshots
-			for (const snapshot of mergedData) {
-				await this.emit('data', snapshot)
+			for (const snap of mergedData) {
+				if (this.onDataHandler)
+					await this.onDataHandler(snap)
 			}
 
 			// End when we run out of data
             finished = data.length < 10
 		} while (!finished)
+
+		if (this.onAfterHandler)
+			await this.onAfterHandler()
     }
+
 }

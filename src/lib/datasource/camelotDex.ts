@@ -9,6 +9,7 @@ export type Univ2PoolSnapshot = {
 	reserves0: number
 	reserves1: number
 	totalSupply: number
+	close: number
 }
 
 export type Univ2Snapshot = DataSnapshot<Univ2PoolSnapshot>
@@ -85,6 +86,7 @@ export class CamelotDexDataSource implements DataSource<Univ2Snapshot> {
 				reserves0: e.reserves0,
 				reserves1: e.reserves1,
 				totalSupply: e.totalSupply,
+				close: e.reserves1 / e.reserves0,
 			}]
 			return ret
 		})

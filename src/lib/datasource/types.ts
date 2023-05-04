@@ -1,4 +1,5 @@
 export abstract class DataSource<T = DataSnapshot<any>> {
+	abstract get id(): string
 	abstract get info(): DataSourceInfo
 	abstract resolutions(): Resolution[]
     abstract init(): Promise<void>
