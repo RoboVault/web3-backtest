@@ -3,6 +3,8 @@
 
 Web3 Backtest is a generic Backtesting library for DeFi trading strategies. The library simplifies pullling historic data, simulating protocols, backtest metrics, charting and analytics. 
 
+![Grafana Screenshot](./img/architecture.png)
+
 ## Historic Data
 Web3 Backtester pull desired historic data using (arkiver)[https://github.com/RoboVault/robo-arkiver]. All data is formatted into snaphots with resolutions of 1m, 1h, or 1day. transaction- or block-resolution may be added in the future.  
 
@@ -42,6 +44,8 @@ Simulators are in the early stages, the API will change. See (Supported Position
 ## Data storage and Analytics
 
 There is a docker-compose.yml file that will spin up an influx db and a local instance of grafana so you can store any data you like during the backtest and have plenty of charting flexibility with grafana. 
+
+![Grafana Screenshot](./img/grafana.png)
 
 
 ## Simplifying Code Structure
