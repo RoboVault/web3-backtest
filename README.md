@@ -6,7 +6,7 @@ Web3 Backtest is a generic Backtesting library for DeFi trading strategies. The 
 ![Grafana Screenshot](./img/architecture.png)
 
 ## Historic Data
-Web3 Backtester pull desired historic data using (arkiver)[https://github.com/RoboVault/robo-arkiver]. All data is formatted into snaphots with resolutions of 1m, 1h, or 1day. transaction- or block-resolution may be added in the future.  
+Web3 Backtester pull desired historic data using [arkiver](https://github.com/RoboVault/robo-arkiver). All data is formatted into snaphots with resolutions of 1m, 1h, or 1day. transaction- or block-resolution may be added in the future.  
 
 Datasources are specified with a simple configuration
 ```ts 
@@ -21,7 +21,7 @@ const sources: DataSourceInfo[] = [
     },
 ]
 ```
-Supported sources are detailed (below)[#Data Sources Supported]
+Supported sources are detailed [below](#Data Sources Supported)
 
 ## Position Simulation
 
@@ -39,7 +39,7 @@ if (position.valueUsd < 2500) {
 }
 ```
 
-Simulators are in the early stages, the API will change. See (Supported Positions Simulators)[#Position-Simulators]
+Simulators are in the early stages, the API will change. See [Supported Positions Simulators](#Position-Simulators)
 
 ## Data storage and Analytics
 
