@@ -37,7 +37,7 @@ export class CamelotFarmDataSource implements DataSource<CamelotFarmSnapshot> {
 		if (this.config.pools[0] !== USDCWETH)
 			throw new Error('Invalid pools for Camelot Farm - Only ETHUSDC is supported currently')
 
-		const url = 'https://data.arkiver.net/s_battenally/cpmm_v2/graphql'
+		const url = 'https://data.staging.arkiver.net/s_battenally/cpmm_v2/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
 
