@@ -22,7 +22,7 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 	public readonly id: string
 	constructor(public info: DataSourceInfo) {
 		this.id = info.id || 'aave'
-		const url = 'https://data.arkiver.net/s_battenally/cpmm_v2/graphql'
+		const url = 'https://data.staging.arkiver.net/s_battenally/cpmm_v2/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
 
