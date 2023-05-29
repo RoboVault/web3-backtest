@@ -15,6 +15,7 @@ export type Protocols =
 	| 'aave' 
 	| 'camelot-dex'
 	| 'camelot-farm'
+	| 'velodrome-dex'
 
 export type Resolution = '1m' | '1h' | '1d'
 

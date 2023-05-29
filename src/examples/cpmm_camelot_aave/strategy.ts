@@ -1,6 +1,6 @@
 import { CamelotFarmRewardsSnapshot } from "../../lib/datasource/camelotFarm.js";
 import { Univ2PoolSnapshot } from "../../lib/datasource/camelotDex.js";
-import { AavePoolSnapshot } from "../../lib/datasource/Aave.js";
+import { AavePoolSnapshot } from "../../lib/datasource/aave.js";
 import { UniV2Position, UniV2PositionManager } from "../../lib/protocols/UniV2PositionManager.js";
 import { AAVEPosition, AAVEPositionManager } from "../../lib/protocols/AavePositionManager.js";
 import { CamelotFarm, FarmPosition } from "../../lib/protocols/CamelotFarm.js";
@@ -89,8 +89,8 @@ class CpmmHedgedPosition {
 		farm: CamelotFarm, 
 		data: DataUpdate
 	) {
-		if (data.timestamp  % (60 * 10) === 0)
-        	this.log(data)
+		// if (data.timestamp  % (60 * 10) === 0)
+		this.log(data)
 
         if (!this.firstPosition) {
             this.openFirstPosition(mgr, aave, farm, data)
@@ -235,7 +235,6 @@ class CpmmHedgedPosition {
 			this.aave.lent('USDC') - 
 			(this.aave.borrowed('ETH') * data.univ2.close) + 
 			this.farm.pendingRewards
-		// console.log(totalAssets, this.position.valueUsd, this.aave.lent('USDC'), (this.aave.borrowed('ETH') * data.close))
         return totalAssets
     }
 
@@ -391,7 +390,7 @@ export class CpmmHedgedStrategy {
 		this.strategies = strategies.map(s => new CpmmHedgedPosition(s.name, s))
     }
 
-    public async before() {
+    public async p() {
         await Log.dropMeasurement()
         await Harvest.dropMeasurement()
         await Rebalance.dropMeasurement()

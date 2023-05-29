@@ -3,26 +3,41 @@ import { gql, GraphQLClient } from "graphql-request";
 
 export type AavePoolSnapshot = {
 	underlying: string
-	incomeRate: number
-	debtRate: number
+	liquidityRate: number
+	variableBorrowRate: number
+    totalSupply: number
+    totalDebt: number
 }
 export type AaveSnapshot = DataSnapshot<AavePoolSnapshot> 
 
 type HourData = {
-	timestamp: number
-	usdcIncomeRate: number
-	ethDebtRate: number
-	rewardTokenPrice: number
-	rewardsPerSecond: number
+	pool: string
+    timestamp: number
+    liquidityRate: number
+    variableBorrowRate: number
+    totalSupply: number
+    totalDebt: number
+	underlying: string
+}
+
+type AAVEPool = {
+	_id: string
+    protocol: string
+    network: string
+    underlyingSymbol: string
+    underlying: string
 }
 
 
 export class AaveDataSource implements DataSource<AaveSnapshot> {
 	private client: GraphQLClient
 	public readonly id: string
+	public poolSymbols: string[] // Underlying Symbols
+	public pools: AAVEPool[] = []
 	constructor(public info: DataSourceInfo) {
 		this.id = info.id || 'aave'
-		const url = 'https://data.staging.arkiver.net/s_battenally/cpmm_v2/graphql'
+		this.poolSymbols = info.config.pools
+		const url = 'https://data.arkiver.net/robolabs/aave-hourly-data/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
 
@@ -35,44 +50,62 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 	}
 
 	public async init() {
-
+		// need to get the ids of the pools
+		this.pools = await Promise.all(this.poolSymbols.map(async e => {
+			const sym = `"${e}"`
+			const query = gql`query MyQuery {
+				Pool(filter: {underlyingSymbol: ${sym}}) {
+					_id
+					protocol
+					network
+					underlyingSymbol
+					underlying
+				}
+			  }
+			`
+			return (await this.client.request(query)).Pool
+		}))
 	}
 
-	public async fetch(from: number, to: number, limit?: number): Promise<AaveSnapshot[]> {
+	public async fetchPool(from: number, to: number, pool: AAVEPool, limit?: number): Promise<HourData[]> {
+		const poolId = `"${pool._id}"`
 		const query = gql`query MyQuery {
 			HourDatas (
 				sort: TIMESTAMP_ASC
-				filter: {_operators: {timestamp: {gt: ${from}, lt: ${to}}}}
+				filter: {_operators: {timestamp: {gt: ${from}, lt: ${to}}}, pool: ${poolId}}
 				${limit ? `limit: ${limit}` : ``}
 			) {
+				pool
 				timestamp
-				usdcIncomeRate
-				ethDebtRate
-				rewardTokenPrice
-				rewardsPerSecond
+				liquidityRate
+				variableBorrowRate
+				totalSupply
+				totalDebt
 			}
 		  }
 		`
-
-		const raw = (await this.client.request(query)).HourDatas
-		return this.prep(raw)
+		return (await this.client.request(query)).HourDatas.map((e: any) => { 
+			return { ...e, underlying: pool.underlying}
+		})
 	}
 
-	private prep(raw: HourData[]): AaveSnapshot[] {
-		return raw.map(e => {
+	public async fetch(from: number, to: number, limit?: number): Promise<AaveSnapshot[]> {
+		const hourDatas = await Promise.all(this.pools.map(async pool => {
+			return this.fetchPool(from, to, pool, limit)
+		}))
+		return this.prep(hourDatas)
+	}
+
+	private prep(raw: HourData[][]): AaveSnapshot[] {
+		const ts = raw[0].map(e => e.timestamp)
+		return ts.map(e => {
 			const ret: AaveSnapshot = {
-				timestamp: e.timestamp,
+				timestamp: e,
 				data: {}
 			}
-			ret.data[this.id] = [{
-				underlying: 'USDC',
-				incomeRate: e.usdcIncomeRate,
-				debtRate: 0,
-			},{
-				underlying: 'WETH',
-				incomeRate: 0,
-				debtRate: e.ethDebtRate,
-			}]
+			ret.data[this.id] = raw.map((data: HourData[]) => {
+				return { ...data.find(snap => snap.timestamp === e)! }
+			})
 			return ret
 		})
 	}
