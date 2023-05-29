@@ -1,4 +1,4 @@
-import { AavePoolSnapshot } from "../datasource/Aave.js"
+import { AavePoolSnapshot } from "../datasource/aave.js"
 
 
 type Snapshot = {
@@ -6,12 +6,16 @@ type Snapshot = {
 	data: AavePoolSnapshot[]
 }
 
+type Rates = { [key: string]: {
+	supply: number,
+	borrow: number,
+} }
 export class AAVEPosition {
 	public borrows: { [key: string]: number } = {}
 	public lends: { [key: string]: number } = {}
 	public interest = { cost: 0, income: 0 }
 
-    constructor(public rates: { [key: string]: number }) {
+    constructor(public rates: Rates) {
 	}
 
 	public lent(token: string) {
@@ -46,21 +50,21 @@ export class AAVEPosition {
 		this.borrows[token] = now + amount
     }
 
-    public process(elapsed: number, rates: { [key: string]: number }) {
+    public process(elapsed: number, rates: Rates) {
 		this.rates = rates
 		let income = 0
 		let cost = 0
 		
 		// WARN this is broken for generic borrows. Only works for USDC
 		for (const borrow of Object.keys(this.borrows)) {
-			const rate = this.rates[borrow]
+			const rate = this.rates[borrow].borrow
 			const interest = this.borrows[borrow] * rate * elapsed / (60 * 60 * 24 * 365)
 			this.borrows[borrow] -= interest
 			cost += interest
 		}
 
 		for (const lend of Object.keys(this.lends)) {
-			const rate = this.rates[lend]
+			const rate = this.rates[lend].supply
 			const interest = this.lends[lend] * rate * elapsed / (60 * 60 * 24 * 365)
 			this.lends[lend] += interest
 			income += interest
@@ -71,14 +75,15 @@ export class AAVEPosition {
 
 export class AAVEPositionManager {
 	private lastData!: Snapshot
-	private rates: { [key: string]: number }
+	private rates: Rates
     positions: AAVEPosition[] = []
 	
 	
     constructor() {
 		this.rates = {
-			'USDC': 0, // 2%
-			'ETH': 0, // 1%
+			LUSD: { supply: 0, borrow: 0 },
+			WETH: { supply: 0, borrow: 0 },
+			USDC: { supply: 0, borrow: 0 },
 		}
     }
 
@@ -88,12 +93,14 @@ export class AAVEPositionManager {
             return false
         }
 		const elapsed = snapshot.timestamp - this.lastData.timestamp
-		const usdc = snapshot.data.find(e => e.underlying === 'USDC')
-		const weth = snapshot.data.find(e => e.underlying === 'WETH')
-		this.rates = {
-			'USDC': usdc!.incomeRate - 1,
-			'ETH': weth!.debtRate - 1,
+
+		for (const pool of snapshot.data) {
+			this.rates[pool.underlying] = {
+				supply: pool.liquidityRate,
+				borrow: pool.variableBorrowRate,
+			}
 		}
+
         for (const pos of this.positions) {
             pos.process(elapsed, this.rates)
         }

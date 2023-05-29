@@ -1,11 +1,11 @@
-import { CamelotFarmRewardsSnapshot } from "../../lib/datasource/camelotFarm.js";
-import { Univ2PoolSnapshot } from "../../lib/datasource/camelotDex.js";
-import { AavePoolSnapshot } from "../../lib/datasource/aave.js";
-import { UniV2Position, UniV2PositionManager } from "../../lib/protocols/UniV2PositionManager.js";
-import { AAVEPosition, AAVEPositionManager } from "../../lib/protocols/AavePositionManager.js";
-import { CamelotFarm, FarmPosition } from "../../lib/protocols/CamelotFarm.js";
-import { Measurement, Schema } from "../../lib/utils/timeseriesdb.js";
-import { DataSnapshot } from "../../lib/datasource/types.js";
+import { CamelotFarmRewardsSnapshot } from "../../../lib/datasource/camelotFarm.js";
+import { Univ2PoolSnapshot } from "../../../lib/datasource/camelotDex.js";
+import { AavePoolSnapshot } from "../../../lib/datasource/aave.js";
+import { UniV2Position, UniV2PositionManager } from "../../../lib/protocols/UniV2PositionManager.js";
+import { AAVEPosition, AAVEPositionManager } from "../../../lib/protocols/AavePositionManager.js";
+import { CamelotFarm, FarmPosition } from "../../../lib/protocols/CamelotFarm.js";
+import { Measurement, Schema } from "../../../lib/utils/timeseriesdb.js";
+import { DataSnapshot } from "../../../lib/datasource/types.js";
 
 interface ILogAny extends Schema {
     tags: any
@@ -35,7 +35,7 @@ type DataUpdate = {
 	farm?: CamelotFarmRewardsSnapshot,
 }
 
-class CpmmHedgedPosition {
+class Position {
     public position!: UniV2Position
     public aave!: AAVEPosition
 	public farm!: FarmPosition
@@ -75,7 +75,7 @@ class CpmmHedgedPosition {
 		performanceFee: number,
 		managementFee: number,
 	}) {
-		this.symbol = 'WETH/USDC'
+		this.symbol = 'WETH/LUSD'
         this.initialInvestment = options.initialInvestment
         this.debtRatioRange = options.debtRatioRange
         this.collatRatio = options.collatRatio
@@ -89,8 +89,8 @@ class CpmmHedgedPosition {
 		farm: CamelotFarm, 
 		data: DataUpdate
 	) {
-		// if (data.timestamp  % (60 * 10) === 0)
-		this.log(data)
+		if (data.timestamp  % (60 * 10) === 0)
+        	this.log(data)
 
         if (!this.firstPosition) {
             this.openFirstPosition(mgr, aave, farm, data)
@@ -118,8 +118,8 @@ class CpmmHedgedPosition {
 		this.lastHarvestSharePrice = 1
 		const { borrow, lend } = this.calcLenderAmounts(this.initialInvestment, data)
 		this.aave = aave.create()
-		this.aave.lend('USDC', lend)
-		this.aave.borrow('ETH', borrow)
+		this.aave.lend('LUSD', lend)
+		this.aave.borrow('WETH', borrow)
         this.firstPosition = true  
 		// console.log(borrow, lend)
 		this.start = data.timestamp
@@ -130,7 +130,7 @@ class CpmmHedgedPosition {
 			borrow,
             borrow * data.univ2.close,
         )
-		this.farm = farmMgr.stake(this.position.lpTokens, this.symbol)
+		// this.farm = farmMgr.stake(this.position.lpTokens, this.symbol)
     }
 
     public rebalanceDebt(mgr: UniV2PositionManager, aave: AAVEPositionManager, farmMgr: CamelotFarm, data: DataUpdate) {
@@ -143,20 +143,20 @@ class CpmmHedgedPosition {
         
         // Update Lend
 		const { borrow, lend } = this.calcLenderAmounts(totalAssets, data)
-		this.pendingRewards = this.farm.pendingRewards
+		// this.pendingRewards = this.farm.pendingRewards
         // Close this position
         mgr.close(this.position)
         aave.close(this.aave)
-		farmMgr.close(this.farm)
+		// farmMgr.close(this.farm)
 		this.aave = aave.create()
-		this.aave.lend('USDC', lend)
-		this.aave.borrow('ETH', borrow)
+		this.aave.lend('LUSD', lend)
+		this.aave.borrow('WETH', borrow)
         this.position = mgr.addLiquidity(
 			this.symbol,
 			borrow,
             borrow * data.univ2.close,
         )
-		this.farm = farmMgr.stake(this.position.lpTokens, this.symbol)
+		// this.farm = farmMgr.stake(this.position.lpTokens, this.symbol)
 		this.gasCosts += REBALANCE_COST
 		Rebalance.writePoint({
 			tags: { strategy: this.name },
@@ -171,10 +171,10 @@ class CpmmHedgedPosition {
 		// Add rewards to lending positions
 		const now = new Date(data.timestamp * 1000)
 		// console.log(`harvesting!! ${now.toUTCString()}`)
-		const rewards = this.farm.claim() + this.pendingRewards
+		const rewards = 0;//this.farm.claim() + this.pendingRewards
 		this.pendingRewards = 0
 		if (rewards > 0)
-			this.aave.lend('USDC', rewards)
+			this.aave.lend('LUSD', rewards)
 		let performanceFee = 0
 		let managementFee = 0
 		let profit = 0
@@ -192,7 +192,7 @@ class CpmmHedgedPosition {
 				performanceFee = 0	
 			}
 
-			this.aave.redeem('USDC', performanceFee + managementFee)
+			this.aave.redeem('LUSD', performanceFee + managementFee)
 		}
 		this.lastHarvestSharePrice = sharePrice
 		this.lastHarvest = data.timestamp
@@ -226,16 +226,22 @@ class CpmmHedgedPosition {
 
 
     public borrowInWant(data: DataUpdate) {
-		return (this.aave.borrowed('ETH') * data.univ2.close)
+		return (this.aave.borrowed('WETH') * data.univ2.close)
 	}
 
     public estTotalAssets(data: DataUpdate) {
-		const totalAssets = 
-			this.position.valueUsd + 
-			this.aave.lent('USDC') - 
-			(this.aave.borrowed('ETH') * data.univ2.close) + 
-			this.farm.pendingRewards
-        return totalAssets
+		const lp = this.position.valueUsd
+		const lend = this.aave.lent('LUSD')
+		const debt = (this.aave.borrowed('WETH') * data.univ2.close)
+
+		const totalAssets = lp + lend - debt// + this.farm.pendingRewards
+		// console.log('lp:  ', this.position.valueUsd)
+		// console.log('lend:', lend)
+		// console.log('debt:', debt)
+		// console.log('close', data.univ2.close)
+		// console.log()
+		
+		return totalAssets
     }
 
     private calcLenderAmounts(totalAssets: number, data: DataUpdate) {
@@ -254,7 +260,7 @@ class CpmmHedgedPosition {
     private calcCollatRatio(data: DataUpdate): number {
         if (!this.position)
             return 1
-        return this.borrowInWant(data) / this.aave.lent('USDC')
+        return this.borrowInWant(data) / this.aave.lent('LUSD')
     }
 
 	private apy(data: DataUpdate) {
@@ -267,6 +273,7 @@ class CpmmHedgedPosition {
 
     private async log(data: DataUpdate) {
         if (!this.position) return
+		// console.log('log')
 
 		const elapsed = data.timestamp - this.start
 		const totalAssets = this.estTotalAssets(data)
@@ -285,8 +292,8 @@ class CpmmHedgedPosition {
 					borrowCost,
 					lendIncome: this.aave.interest.income,
 					net: this.aave.interest.income - borrowCost,
-					rateUSDC: this.aave.rates.USDC,
-					rateETH: this.aave.rates.ETH,
+					rateLUSD: this.aave.rates.LUSD.supply,
+					rateETH: this.aave.rates.WETH.borrow,
 				}
 			}
 			await AAVE.writePoint(hourly)
@@ -299,14 +306,14 @@ class CpmmHedgedPosition {
             fields: {
 				...data.univ2,
                 ...this.position.snapshot,
-				lend: this.aave.lent('USDC'),
-				borrow: this.aave.borrowed('ETH'),
+				lend: this.aave.lent('LUSD'),
+				borrow: this.aave.borrowed('WETH'),
 				borrowInWant: this.borrowInWant(data),
 				price: data.univ2.close,
 				totalAssets,
                 debtRatio: this.calcDebtRatio(data),
 				collatRatio: this.calcCollatRatio(data),
-				pendingRewards: this.farm.pendingRewards,
+				// pendingRewards: this.farm.pendingRewards,
 				profit,
 				apy,
 				drawdown,
@@ -320,6 +327,8 @@ class CpmmHedgedPosition {
             },
             timestamp: new Date(data.timestamp * 1000),
         }
+		if (this.rebalanceCount >= 3)
+			process.exit()
 		// console.log(log)
         try {
             await Log.writePoint(log)
@@ -369,28 +378,28 @@ class CpmmHedgedPosition {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export class CpmmHedgedStrategy {
+export class LiquityHedgedStrategy {
 	private univ2Manager = new UniV2PositionManager()
 	private aaveManager = new AAVEPositionManager()
 	private farm = new CamelotFarm()
-	private strategies: CpmmHedgedPosition[] = []
+	private strategies: Position[] = []
 	private lastData?: DataSnapshot<Snapshots>
     constructor(private ids: {
 		aave: string,
 		univ2: string,
-		farm: string,
+		// farm: string,
 	}) {
 		const strategies = [
-			{ name: 'collat_60%', initialInvestment: 1000000, collatRatio: 0.60, debtRatioRange: 0.015, performanceFee: 0.2, managementFee: 0.01 },
-			{ name: 'collat_65%', initialInvestment: 1000000, collatRatio: 0.65, debtRatioRange: 0.02, performanceFee: 0.2, managementFee: 0.01 },
-			{ name: 'collat_70%', initialInvestment: 1000000, collatRatio: 0.70, debtRatioRange: 0.03, performanceFee: 0.2, managementFee: 0.01 },
-			{ name: 'collat_75%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.04, performanceFee: 0.2, managementFee: 0.01 },
-			{ name: 'collat_80%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
+			{ name: 'debt_2%', initialInvestment: 1000000, collatRatio: 0.60, debtRatioRange: 0.02, performanceFee: 0.2, managementFee: 0.01 },
+			// { name: 'collat_65%', initialInvestment: 1000000, collatRatio: 0.65, debtRatioRange: 0.02, performanceFee: 0.2, managementFee: 0.01 },
+			// { name: 'collat_70%', initialInvestment: 1000000, collatRatio: 0.70, debtRatioRange: 0.03, performanceFee: 0.2, managementFee: 0.01 },
+			// { name: 'collat_75%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.04, performanceFee: 0.2, managementFee: 0.01 },
+			// { name: 'collat_80%', initialInvestment: 1000000, collatRatio: 0.75, debtRatioRange: 0.05, performanceFee: 0.2, managementFee: 0.01 },
 		]
-		this.strategies = strategies.map(s => new CpmmHedgedPosition(s.name, s))
+		this.strategies = strategies.map(s => new Position(s.name, s))
     }
 
-    public async p() {
+    public async before() {
         await Log.dropMeasurement()
         await Harvest.dropMeasurement()
         await Rebalance.dropMeasurement()
@@ -404,8 +413,11 @@ export class CpmmHedgedStrategy {
 		})
         console.log('Back test finished')
     }
-
+	public maxDiff = 0
     public async onData(snapshot: DataSnapshot<Snapshots>) {
+		// console.log(snapshot)
+		if (snapshot.data[this.ids.univ2] === undefined)
+			return
 		this.lastData = {...snapshot}
 
 		// Univ2 Position Update
@@ -416,10 +428,10 @@ export class CpmmHedgedStrategy {
 		await this.univ2Manager.update(univ2Snap)
 
 		// Farm Position Update
-		await this.farm.update(univ2Snap, {
-			timestamp: snapshot.timestamp,
-			data: snapshot.data[this.ids.farm] as any
-		})
+		// await this.farm.update(univ2Snap, {
+		// 	timestamp: snapshot.timestamp,
+		// 	data: snapshot.data[this.ids.farm] as any
+		// })
 		
 		// AAVE Position Update
 		if (snapshot.data[this.ids.aave]) {
@@ -438,10 +450,12 @@ export class CpmmHedgedStrategy {
     }
 
 	private getDataUpdate(snapshot: DataSnapshot<Snapshots>) {
-		const farm = snapshot.data[this.ids.farm]?.find((e: any) => e.symbol === 'WETH/USDC')! as CamelotFarmRewardsSnapshot
+		// console.log(snapshot)
+		// const farm = snapshot.data[this.ids.farm]?.find((e: any) => e.symbol === 'WETH/LUSD')! as CamelotFarmRewardsSnapshot
 		const aave = snapshot.data[this.ids.aave] as AavePoolSnapshot[]
-		const univ2 = snapshot.data[this.ids.univ2].find((e: any) => e.symbol === 'WETH/USDC') as Univ2PoolSnapshot
+		const univ2 = snapshot.data[this.ids.univ2].find((e: any) => e.symbol === 'WETH/LUSD') as Univ2PoolSnapshot
 		const timestamp = snapshot.timestamp
-		return { timestamp, farm, aave, univ2 }
+		// return { timestamp, farm, aave, univ2 }
+		return { timestamp, aave, univ2 }	
 	}
 }

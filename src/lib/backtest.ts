@@ -29,7 +29,7 @@ export class Backtest {
 	}
 
 	public onBefore(handler: () => Promise<void>) {
-		this.onBefore = handler
+		this.onBeforeHandler = handler
 	}
 
 	public onData<T = any>(handler: (update: DataSnapshot<T>) => Promise<void>) {
@@ -41,6 +41,7 @@ export class Backtest {
 	}
 
     public async run() {
+		console.log('here')
         // Initialise the goodz
         await Promise.all(this.sources.map(e => e.init()))
 		if (this.onBeforeHandler)
@@ -53,14 +54,13 @@ export class Backtest {
 			return aRes > bRes ? 1 : -1
 		})
 
-		let start = this.start.getTime() / 1000
-		let end = this.end.getTime() / 1000
+		let start = Math.round(this.start.getTime() / 1000)
+		let end = Math.round(this.end.getTime() / 1000)
 
-		const limit = 500
+		const limit = 1000
 		let finished = false
 		let from = start
 		let to = end
-
 		const formatTime = (time: number) => {
 			const t = (new Date(time * 1000)).toISOString().replace(':00.000Z','').split('T')
 			return `${t[0]} ${t[1]}`
@@ -72,7 +72,7 @@ export class Backtest {
 		do {
 			const data = await lead.fetch(from, end, limit)
 			if (data.length === 0) break
-
+			
 			to = data[data.length - 1].timestamp
 			console.log(`Fetching data from ${formatTime(from)} to ${formatTime(to)}`)
 			const allData = [
