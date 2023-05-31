@@ -2,6 +2,7 @@ import { AaveDataSource } from "./aave.js";
 import { AaveArbitrumDataSource } from "./aaveArbitrum.js";
 import { CamelotDexDataSource } from "./camelotDex.js";
 import { CamelotFarmDataSource } from "./camelotFarm.js";
+import { CurveDexDataSource } from "./curveDex.js";
 import { DataSource, DataSourceInfo } from "./types.js";
 import { VelodromeDexDataSource } from "./velodromeDex.js";
 
@@ -9,7 +10,7 @@ type DataSourceEntry = DataSourceInfo & {
 	createSource: (info: DataSourceInfo) => DataSource
 }
 
-
+// TODO - Temporary solution, this needs to be more generic. 
 export const DataSourcesRepo: DataSourceEntry[] = [
 	{
 		chain: 'arbitrum',
@@ -40,5 +41,11 @@ export const DataSourcesRepo: DataSourceEntry[] = [
 		protocol: 'velodrome-dex',
 		resoution: '1m',
 		createSource: VelodromeDexDataSource.create
+	},
+	{
+		chain: 'ethereum',
+		protocol: 'curve-dex',
+		resoution: '1m',
+		createSource: CurveDexDataSource.create
 	},
 ]

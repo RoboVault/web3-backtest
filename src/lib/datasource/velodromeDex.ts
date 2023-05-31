@@ -47,7 +47,7 @@ export class VelodromeDexDataSource implements DataSource<Univ2Snapshot> {
 		const config = info.config as SourceConfig
 		if (config.pairs[0] !== WETH_LUSD)
 			throw new Error('Only USDCLUSD supported by VelodromeDexDataSource currently')
-		const url = 'https://data.arkiver.net/robolabs/velo-minutely/graphql'
+		const url = 'https://data.staging.arkiver.net/robolabs/velo-minutely/graphql'
 		this.client = new GraphQLClient(url, { headers: {} })
 	}
 

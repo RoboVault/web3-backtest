@@ -16,6 +16,7 @@ export type Protocols =
 	| 'camelot-dex'
 	| 'camelot-farm'
 	| 'velodrome-dex'
+	| 'curve-dex'
 
 export type Resolution = '1m' | '1h' | '1d'
 

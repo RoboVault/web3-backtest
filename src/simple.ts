@@ -1,5 +1,5 @@
 import { Backtest } from "./lib/backtest.js"
-import { AavePoolSnapshot } from "./lib/datasource/Aave.js"
+import { AavePoolSnapshot } from "./lib/datasource/aave.js"
 import { Univ2PoolSnapshot } from "./lib/datasource/camelotDex.js"
 import { CamelotFarmRewardsSnapshot } from "./lib/datasource/camelotFarm.js"
 import { DataSnapshot, DataSourceInfo } from "./lib/datasource/types.js"
