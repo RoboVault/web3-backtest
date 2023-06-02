@@ -174,7 +174,7 @@ npm install
 Run the sample backtest
 
 ```
-ts-node ./src/index.ts
+ts-node ./src/simple.ts
 ```
 
 or run the larger example (required influx). First copy the .env template, then run
