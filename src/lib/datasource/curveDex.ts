@@ -39,11 +39,6 @@ type Snapshot = {
     gaugeTotalSupply: number
 }
 
-const  POOL_LOOKUP: any = {
-	'0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7': '3Crv',
-	'0xed279fdd11ca84beef15af5d39bb4d4bee23f0ca': 'LUSD3CRV-f',
-}
-
 type Token = {
 	symbol: string
 	address: string
@@ -57,6 +52,7 @@ export class CurveDexDataSource implements DataSource<CurveSnaphot> {
 	constructor(public info: DataSourceInfo) {
 		this.id = info.id || 'curve'
 		const url = 'https://data.staging.arkiver.net/s_battenally/curve-snapshots/graphql'
+		// const url = 'http://0.0.0.0:4000/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
 
@@ -86,16 +82,17 @@ export class CurveDexDataSource implements DataSource<CurveSnaphot> {
 				_id
 				tokens
 				address
+				symbol
 			}
-		}`)).CurvePools as { tokens: string[], address: string, _id: string }[]
+		}`)).CurvePools as { tokens: string[], address: string, _id: string, symbol: string }[]
 	
 		rawPools.forEach(pool => {
-			this.pools[pool._id] = { 
-				symbol: POOL_LOOKUP[pool.address]!, 
+			this.pools[pool._id] = {  
 				...pool,
 				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e)!),
 			} 
 		})
+		console.log(rawPools.map(e => e.symbol))
 	}
 
 	public async fetch(from: number, to: number, limit?: number): Promise<CurveSnaphot[]> {

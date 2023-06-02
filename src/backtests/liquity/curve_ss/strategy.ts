@@ -2,6 +2,8 @@
 import { Measurement, Schema } from "../../../lib/utils/timeseriesdb.js";
 import { CurvePosition, CurvePositionManager } from "../../../lib/protocols/CurvePositionManager.js";
 import { CurveSnaphot } from "../../../lib/datasource/curveDex.js";
+import { stringify } from 'csv-stringify/sync';
+import fs from 'fs/promises'
 
 interface ILogAny extends Schema {
     tags: any
@@ -11,6 +13,33 @@ interface ILogAny extends Schema {
 const Log = new Measurement<ILogAny, any, any>('ssc_lusd_strategy')
 
 const HARVEST_PERIOD = 60 * 60 * 24 // 1 day
+const TWO_WEEKS = 60 * 60 * 24 * 14
+const ONE_YEAR = 60 * 60 * 24 * 14
+
+class Stats {
+	// Calculate the average of all the numbers
+	static mean(values: number[]) {
+		const mean = (values.reduce((sum, current) => sum + current)) / values.length;
+		return mean;
+	};
+
+	// Calculate variance
+	static variance(values: number[]) {
+		const average = Stats.mean(values);
+		const squareDiffs = values.map((value) => {
+			const diff = value - average;
+			return diff * diff;
+		});
+		const variance = Stats.mean(squareDiffs);
+		return variance;
+	};
+
+	// Calculate stand deviation
+	static stddev(variance: number) {
+		return Math.sqrt(variance);
+	};
+}
+
 
 class SingleSidedCurve {
 
@@ -20,6 +49,9 @@ class SingleSidedCurve {
 	public lastHarvest: number = 0
 	public claimed = 0
 	public idle = 0 // idle assets
+	public maxDrawdown = 0
+	public series: any[] = []
+	count = 0;
 
     constructor(
 		public name: string, 
@@ -39,6 +71,10 @@ class SingleSidedCurve {
 		curve: CurvePositionManager,
 		data: CurveSnaphot,
 	) {
+		if (!this.pool(data)) {
+			console.log('missing data for ' + this.name)
+			return
+		}
 		// open the first position
         if (!this.pos) {
 			const pool = this.pool(data)
@@ -72,16 +108,18 @@ class SingleSidedCurve {
 	}
 
 	private apy(data: CurveSnaphot) {
-		const pool = this.pool(data)
 		const elapsed = data.timestamp - this.start
-		const TWO_WEEKS = 60 * 60 * 24 * 14
-		const ONE_YEAR = 60 * 60 * 24 * 14
 		if (elapsed < TWO_WEEKS)
 			return 0
 		const totalAssets = this.estTotalAssets(data)
 		const profit = totalAssets - this.initial
-		const apy = profit / this.initial / (elapsed / ONE_YEAR)
+		const apy = ((totalAssets / this.initial) ^ ( ONE_YEAR / elapsed)) - 1 
 		return apy
+	}
+
+	private apr(data: CurveSnaphot) {
+		const elapsed = data.timestamp - this.start
+		return this.claimed / this.initial / (elapsed / ONE_YEAR)
 	}
 
     public async log(data: CurveSnaphot) {
@@ -96,6 +134,7 @@ class SingleSidedCurve {
 		this.highest = this.highest < totalAssets ? totalAssets : this.highest
 		const drawdown = -(this.highest - totalAssets) / this.highest
 		const { tokens: _t, prices: _p, reserves: _r, ...poolSnap} = pool as any
+		this.maxDrawdown = Math.max(this.maxDrawdown, -drawdown)
 
 		const apy = this.apy(data)
         const log = {
@@ -116,15 +155,29 @@ class SingleSidedCurve {
             },
             timestamp: new Date(data.timestamp * 1000),
         }
-		if (apy !== 0)
-			log.fields.apy = apy
-		// console.log(log)
-        try {
-            await Log.writePoint(log)
-        } catch(e) {
-			await wait(10)
-            await Log.writePoint(log)
-        }
+		if (this.count++ % 24 === 0) {
+			this.count = 0
+			if (apy !== 0)
+				log.fields.apy = apy
+			// console.log(log)
+			try {
+				await Log.writePoint(log)
+			} catch(e) {
+				await wait(10)
+				await Log.writePoint(log)
+			}
+		}
+
+		this.series.push({
+			name: this.name,
+			timestamp: data.timestamp,
+			aum: totalAssets,
+			rewards: this.claimed,
+			lpAmount: this.pos.lpAmount,
+			...tokens,
+			...prices,
+			...this.pos.snapshot,
+		})
 
     }
 
@@ -132,7 +185,29 @@ class SingleSidedCurve {
 		this.idle = await curve.close(this.pos, this.tokenIndex)
 		console.log(this.idle)
 		console.log('Strategy closing position', this.estTotalAssets(data))
+		const variance = Stats.variance(this.series.map(e => e.aum))
+		const stddev = Stats.stddev(variance)
+
+		// Create summary
+		const toDate = (time: number) => (new Date(time * 1000)).toISOString().replace(':00.000Z','').replace('T', ' ')
+		return {
+			name: this.name, 
+			symbol: this.poolSymbol,
+			initial: this.initial,
+			aum: this.estTotalAssets(data),
+			roi: (this.estTotalAssets(data) - this.initial) / this.initial,
+			apy: this.apy(data),
+			apr: this.apr(data),
+			drawdown: this.maxDrawdown,
+			rewards: this.claimed,
+			start: toDate(this.start),
+			end: toDate(data.timestamp),
+			daysElapsed: (data.timestamp - this.start) / (60 * 60 * 24), // days
+			variance,
+			stddev,
+		}
 	}
+
 
 }
 
@@ -146,7 +221,8 @@ export class SingleSidedCurveStrategy {
 	private strategies: SingleSidedCurve[] = []
     constructor() {
 		const strategies = [
-			{ name: '10k', pool: 'LUSD3CRV-f', initialInvestment: 10_000, tokenIndex: 0},
+			{ initialInvestment: 100_000, tokenIndex: 0, name: 'A: LUSD/3Pool', pool: 'LUSD3CRV-f' },
+			{ initialInvestment: 100_000, tokenIndex: 0, name: 'B: bLUSD/LUSD3', pool: 'bLUSDLUSD3-f' },
 		]
 		this.strategies = strategies.map(s => new SingleSidedCurve(s.name, s.tokenIndex, s.pool, s.initialInvestment))
     }
@@ -156,12 +232,14 @@ export class SingleSidedCurveStrategy {
     }
 
     public async after() {
-		await Promise.all(this.strategies.map(s => s.end(this.curve, this.lastData)))
-		// this.strategies.forEach(s => {
-		// 	const data = this.getDataUpdate(this.lastData!)
-		// 	console.log(s.summary(data))
-		// })
-        // console.log('Back test finished')
+		const summary = await Promise.all(this.strategies.map(s => s.end(this.curve, this.lastData)))
+		console.log(summary)
+		const csv = stringify(summary, { header: true })
+		fs.writeFile('./curve_ss.csv', csv)
+
+		const series = this.strategies.map(s => s.series).flat()
+		const seriesCsv = stringify(series, { header: true })
+		fs.writeFile('./curve_ss_series.csv', seriesCsv)
     }
 
     public async onData(snapshot: CurveSnaphot) {
