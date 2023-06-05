@@ -452,7 +452,6 @@ export class CpmmHedgedStrategy {
   }
 
   public async before() {
-    console.log('drop measurement', Log.name);
     await Log.dropMeasurement();
     await Harvest.dropMeasurement();
     await Rebalance.dropMeasurement();
