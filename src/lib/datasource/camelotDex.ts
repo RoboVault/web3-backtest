@@ -37,7 +37,7 @@ export class CamelotDexDataSource implements DataSource<Univ2Snapshot> {
 		const config = info.config as SourceConfig
 		if (config.pairs[0] !== USDCWETH)
 			throw new Error('Only USDCWETH supported by CamelotDexDataSource currently')
-		const url = 'https://data.staging.arkiver.net/s_battenally/cpmm_v2/graphql'
+		const url = 'https://data.staging.arkiver.net/s_battenally/cpmm_v2/graphql?apiKey=29718b18-f0c1-466a-ac6d-d1db84d41a66'
 		this.client = new GraphQLClient(url, { headers: {} })
 	}
 
