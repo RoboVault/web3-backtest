@@ -10,13 +10,8 @@ import {
   AAVEPositionManager,
 } from '../../lib/protocols/AavePositionManager.js';
 import { CamelotFarm, FarmPosition } from '../../lib/protocols/CamelotFarm.js';
-import { Measurement, Schema } from '../../lib/utils/timeseriesdb.js';
+import { Measurement, ILogAny } from '../../lib/utils/timeseriesdb.js';
 import { DataSnapshot } from '../../lib/datasource/types.js';
-
-interface ILogAny extends Schema {
-  tags: any;
-  fields: any;
-}
 
 const Log = new Measurement<ILogAny, any, any>('cpmm_strategy');
 const Harvest = new Measurement<ILogAny, any, any>('cpmm_harvest');

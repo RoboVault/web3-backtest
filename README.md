@@ -197,7 +197,9 @@ Your grafana instance is a fresh instance so there will be no dashboards, you'll
 | user           | admin                |
 | password       | admin                |
 
-See the /grafana folder, it contains dashboard json files for all examples.
+To input the above data, go to: http://localhost:3000/ then click on the hamburger menu on the left. Proceed to connections then data sources then click "Add new data source" button. Search for InfluxDB and enter the aforementioned fields.
+
+To add an example dashboard, navigate to Dashboards -> New -> Import and paste the json files provided in the `/grafana` folder.
 
 # Robo Labs
 
