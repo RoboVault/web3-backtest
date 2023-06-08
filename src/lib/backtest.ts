@@ -67,7 +67,7 @@ export class Backtest {
     let start = this.start.getTime() / 1000;
     let end = this.end.getTime() / 1000;
 
-    const limit = 1000;
+    const limit = 500;
     let finished = false;
     let from = start;
     let to = end;

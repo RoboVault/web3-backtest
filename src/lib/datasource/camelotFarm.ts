@@ -44,7 +44,8 @@ export class CamelotFarmDataSource implements DataSource<CamelotFarmSnapshot> {
         'Invalid pools for Camelot Farm - Only ETHUSDC is supported currently',
       );
 
-    const url = 'https://data.staging.arkiver.net/s_battenally/cpmm_v2/graphql';
+    const url =
+      'https://data.staging.arkiver.net/s_battenally/cpmm_v2/graphql?apiKey=29718b18-f0c1-466a-ac6d-d1db84d41a66';
     this.client = new GraphQLClient(url, { headers: {} });
   }
 
