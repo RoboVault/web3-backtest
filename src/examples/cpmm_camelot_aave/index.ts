@@ -35,7 +35,8 @@ const main = async () => {
   const bt = await Backtest.create(
     // new Date('2023-03-01'),
     new Date('2023-05-01'),
-    new Date(), // Now
+    new Date('2023-05-15'),
+    // new Date(), // Now
     sources,
   );
 
@@ -51,8 +52,10 @@ const main = async () => {
     await strategy.onData(snapshot);
     // await waitFor(100);
   });
+  const now = Date.now();
   bt.onAfter(async () => {
     await strategy.after();
+    console.log('done', Math.round((new Date().getTime() - now) / 1000), 's');
   });
 
   // Run

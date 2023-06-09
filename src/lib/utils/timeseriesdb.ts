@@ -70,6 +70,7 @@ interface IQueryOptions<T> {
 export class Measurement<T extends Schema, Fields, Tags> {
   public timeseriesDB: typeof TimeSeriesDB.db;
   public name: string;
+  public nrequests: number = 0;
   constructor(measurement: string) {
     this.timeseriesDB = TimeSeriesDB.db;
     this.name = measurement;
@@ -83,7 +84,9 @@ export class Measurement<T extends Schema, Fields, Tags> {
     points.forEach((e: any) => {
       e.tags.env = Settings.environment();
     });
+    this.nrequests++;
     await this.timeseriesDB.writePoints(pts as Influx.IPoint[]);
+    this.nrequests--;
   }
 
   public async writePoint(point: T) {

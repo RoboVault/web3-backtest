@@ -90,7 +90,14 @@ class CpmmHedgedPosition {
     farm: CamelotFarm,
     data: DataUpdate,
   ) {
-    if (data.timestamp % (60 * 10) === 0) this.log(data);
+    if (data.timestamp % (60 * 10) === 0) {
+      // we allow up to x parallel requests to speed things up
+      if (Log.nrequests > 25) {
+        await this.log(data);
+      } else {
+        this.log(data);
+      }
+    }
 
     if (!this.firstPosition) {
       this.openFirstPosition(mgr, aave, farm, data);
@@ -102,14 +109,14 @@ class CpmmHedgedPosition {
       ) {
         console.log('\n************* rebalancing debt! *************');
         console.log((debtRatio * 100).toFixed(2));
-        this.rebalanceDebt(mgr, aave, farm, data);
+        await this.rebalanceDebt(mgr, aave, farm, data);
         console.log('new debt ratio:', this.calcDebtRatio(data));
       }
 
       const sinceLastHarvest = data.timestamp - this.lastHarvest;
       const harvestInterval = 60 * 60 * 24; // one day
       if (sinceLastHarvest >= harvestInterval) {
-        this.harvest(mgr, aave, farm, data);
+        await this.harvest(mgr, aave, farm, data);
       }
     }
   }
@@ -142,7 +149,7 @@ class CpmmHedgedPosition {
     this.farm = farmMgr.stake(this.position.lpTokens, this.symbol);
   }
 
-  public rebalanceDebt(
+  public async rebalanceDebt(
     mgr: UniV2PositionManager,
     aave: AAVEPositionManager,
     farmMgr: CamelotFarm,
@@ -172,7 +179,7 @@ class CpmmHedgedPosition {
     );
     this.farm = farmMgr.stake(this.position.lpTokens, this.symbol);
     this.gasCosts += REBALANCE_COST;
-    Rebalance.writePoint({
+    await Rebalance.writePoint({
       tags: { strategy: this.name },
       fields: {
         gas: REBALANCE_COST,
@@ -181,7 +188,7 @@ class CpmmHedgedPosition {
     });
   }
 
-  public harvest(
+  public async harvest(
     mgr: UniV2PositionManager,
     aave: AAVEPositionManager,
     farmMgr: CamelotFarm,
@@ -239,7 +246,7 @@ class CpmmHedgedPosition {
     this.fees.total += totalFee;
     this.gasCosts += HARVEST_COST;
     // console.log(harvestLog)
-    Harvest.writePoint(harvestLog);
+    await Harvest.writePoint(harvestLog);
     this.harvestCount++;
   }
 
@@ -341,15 +348,17 @@ class CpmmHedgedPosition {
       timestamp: new Date(data.timestamp * 1000),
     };
     // console.log(log)
-    try {
-      await Log.writePoint(log);
-    } catch (e) {
-      console.log(log);
-      console.log('Log Failed');
-      await wait(10);
-      await Log.writePoint(log);
-      // throw new Error('Log Failed')
-    }
+
+    const writePoint = async (log: any) => {
+      try {
+        await Log.writePoint(log);
+      } catch (e) {
+        console.log('Log Failed');
+        await wait(100);
+        await writePoint(log);
+      }
+    };
+    await writePoint(log);
   }
 
   public summary(data: DataUpdate) {
@@ -488,7 +497,6 @@ export class CpmmHedgedStrategy {
     // Procress the strategy
     const data = this.getDataUpdate(snapshot);
     for (const strat of this.strategies) {
-      await wait(1);
       await strat.process(this.univ2Manager, this.aaveManager, this.farm, data);
     }
   }
