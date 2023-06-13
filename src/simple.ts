@@ -3,7 +3,6 @@ import { AavePoolSnapshot } from './lib/datasource/Aave.js';
 import { Univ2PoolSnapshot } from './lib/datasource/camelotDex.js';
 import { CamelotFarmRewardsSnapshot } from './lib/datasource/camelotFarm.js';
 import { DataSnapshot, DataSourceInfo } from './lib/datasource/types.js';
-import { waitFor } from './lib/utils/utility.js';
 
 type Snapshots =
   | CamelotFarmRewardsSnapshot
@@ -48,8 +47,6 @@ const main = async () => {
   bt.onData(async (update: DataSnapshot<Snapshots>) => {
     console.log(`we have data for ${update.timestamp}!`);
     console.log(update.data);
-    // add timeout to avoid too many requests error
-    await waitFor(5);
   });
 
   bt.onAfter(async () => {

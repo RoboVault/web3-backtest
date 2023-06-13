@@ -1,6 +1,5 @@
 import { Backtest } from '../../lib/backtest.js';
 import { DataSourceInfo } from '../../lib/datasource/types.js';
-import { waitFor } from '../../lib/utils/utility.js';
 import { CpmmHedgedStrategy } from './strategy.js';
 
 const main = async () => {
@@ -33,8 +32,7 @@ const main = async () => {
   ];
 
   const bt = await Backtest.create(
-    // new Date('2023-03-01'),
-    new Date('2023-05-01'),
+    new Date('2023-01-01'),
     new Date(), // Now
     sources,
   );
@@ -48,11 +46,8 @@ const main = async () => {
   bt.onBefore(strategy.before.bind(this));
   bt.onData(async (snapshot: any) => {
     await strategy.onData(snapshot);
-    // await waitFor(100);
   });
-  bt.onAfter(async () => {
-    await strategy.after();
-  });
+  bt.onAfter(strategy.after.bind(strategy));
 
   // Run
   await bt.run();
