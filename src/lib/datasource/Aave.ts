@@ -60,8 +60,7 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 			}
 		  }
 		`;
-
-    const raw = ((await this.client.request(query)) as any).HourDatas;
+    const raw = (await this.client.request(query)).HourDatas;
     return this.prep(raw);
   }
 
