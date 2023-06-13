@@ -1,7 +1,7 @@
 //import { CurveStableSwapAbi } from "../abis/CurveStableSwapAbi.js"
 import { VelodromeRouterAbi } from "../abis/VelodromeRouter.js"
 import { VelodromePoolSnapshot, VelodromeSnaphot } from "../datasource/velodromeDex.js"
-import { ethers } from "ethers"
+import { ethers, BigNumber} from "ethers"
 import { toBigNumber, toNumber } from "../utils/utility.js"
 import { Curve2CryptoAbi } from "../abis/Curve2CryptoAbi.js"
 import { VelodromePairFactoryAbi } from "../abis/VelodromePairFactoryAbi.js"
@@ -65,54 +65,51 @@ export class VelodromePosition {
 		return amountA * reserveB / reserveA;
 	}
 
+	static getAmountOut(router: any, amount: BigNumber, tokenIn: string, tokenOut: string){
+			return router.getAmountOut(amount, tokenIn, tokenOut)
+	}
+
+	static getDepositRatio(data: VelodromePoolSnapshot) {
+		const reserveA = data.tokens[0].reserve
+		const reserveB = data.tokens[1].reserve
+		let amountAOptimal=this.quoteLiquidity(1, reserveA, reserveB )
+		let amountBOptimal=this.quoteLiquidity(1, reserveB, reserveA)
+		let depositA = 1
+		let depositB = 1
+		let ratio = 0
+		if (amountBOptimal <= 1){
+			depositB = amountBOptimal
+			ratio = amountBOptimal
+		} else {
+			depositA = amountAOptimal
+			ratio = amountAOptimal
+		}
+		const ratioA = depositB / (ratio + 1)
+		const ratioB = depositA / (ratio + 1)
+		return [ratioA, ratioB]
+	}
+
 	static async open(data: VelodromePoolSnapshot, amount: number, tokenIndex: number) {
 		if(tokenIndex > 1)
 			throw new Error('Invalid Token Index!')
 		console.log('openning position')
 
-		console.log("velodrome: ")
-		//console.log(data)]
-		const reserveA = data.tokens[0].reserve
-		const reserveB = data.tokens[1].reserve
-		let amountOptimal = []
-		amountOptimal.push(this.quoteLiquidity(1, reserveA, reserveB ))
-		amountOptimal.push(this.quoteLiquidity(1, reserveB, reserveA))
-		let depositA = 1
-		let depositB = 1
-		let ratio = 0
-		if (amountOptimal[1] <= 1){
-			depositB = amountOptimal[1]
-			ratio = amountOptimal[1]
-		} else {
-			depositA = amountOptimal[0]
-			ratio = amountOptimal[0]
-		}
-		const ratioA = depositB / (ratio + 1)
-		const ratioB = depositA / (ratio + 1)
-		
-		//const ratios = [ 0.5741067417692928, 0.4258932582307073 ]
-		const ratios = [ratioA, ratioB]
+		const ratios = this.getDepositRatio(data)
 		const prices = [data.tokens[0].price, data.tokens[1].price]
-		console.log(prices)
-		const amounts = data.tokens.map((e, i) => Math.floor((amount*ratios[i])))//prices[i]))
-		const swapAmount = amount-amounts[tokenIndex]
-		console.log(`diff manager: ${swapAmount}`)
+		const amounts = data.tokens.map((e, i) => Math.floor((amount)*ratios[i]))
+		
+		const swapAmount = Math.floor((amount/prices[tokenIndex]))-amounts[tokenIndex]
+		console.log(`swap amount: ${swapAmount}`)
+		const amountOut = await this.getAmountOut(this.router(), ethers.utils.parseUnits(swapAmount.toString(), data.tokens[tokenIndex].decimals), data.tokens[tokenIndex].address, data.tokens[tokenIndex==1 ? 0:1].address)
+		console.log(`amountOut: ${Number(amountOut[0])}`)
 		const pairFee = (await this.getFee(true))/10000 // TODO: add stable as param to parent function
 		const swapFee = swapAmount*pairFee
-		amounts[tokenIndex==1 ? 0:1] = swapAmount-swapFee
-		console.log(`pair fee: ${pairFee}`)
-		
-		console.log(`computed swap fee: ${swapFee}`)
-		const ABRatio =  ratioA/ratioB
-		console.log()
+		amounts[tokenIndex==1 ? 0:1] = swapAmount-swapFee // TODO use calcTokenOut
 		const lpPercent = ((swapAmount-swapFee)/data.tokens[tokenIndex==1 ? 0:1].reserve)
-		console.log(`111amounts[0]: ${amounts[0].toString()}`)
-		console.log(`swapAmount: ${swapAmount}`)
-		//amounts[tokenIndex==1 ? 0:1] = Math.floor((amounts[tokenIndex==1 ? 0:1] - swapAmount))
 		const lpEstimated = lpPercent*(data.totalSupply * (10 ** 18))
-		//console.log(`lpTokens = ${lpPercent*data.totalSupply}`)
-		console.log(`estilpAmount: ${lpEstimated}`)
+		console.log(`estimated lp: ${lpEstimated}`)
 
+		// for checking
 		const amountsBigInt = []
 		if(tokenIndex == 0){
 			amountsBigInt.push(toBigNumber(amounts[0] - swapFee, data.tokens[0].decimals))
@@ -131,6 +128,26 @@ export class VelodromePosition {
 		console.log(lpAcountBigInt["amountB"].toString())
 		console.log(`reallpAmount: ${lpAcountBigInt["liquidity"].toString()}`)
 		//const lpAmount = toNumber(lpAcountBigInt["liquidity"], 18)
+
+		// const reserveA = data.tokens[0].reserve //USDC
+		// const reserveB = data.tokens[1].reserve //LUSD
+		// console.log(`reserveA: ${reserveA}`)
+		// console.log(`reserveB: ${reserveB}`)
+		// const spot = reserveA / (reserveB + reserveA)
+		// console.log(`spot: ${spot}`)
+		// const amountA = amount * reserveA / (reserveA + spot * reserveB);
+		// const amountB = (amount - amountA) / spot
+		// const amountADecimals = Math.floor(amountA * (10**data.tokens[0].decimals))
+		// const amountBDecimals = Math.floor(amountB * (10**data.tokens[1].decimals))
+		// const liquidity = (amountB) / (reserveB + amountB) // Can just do amountA/reserveA or amountB/reserveB
+		// console.log(`amountA: ${amountA}, amountB: ${amountB * spot}`)
+		// console.log(`ratio: ${amountA / reserveA}, amountB: ${amountB / reserveB}`)
+		// console.log(`liquidity: ${liquidity}`)
+		// console.log(`liquidity after Fee: ${liquidity * (1 - 0.0005)}`)
+		// console.log(`amountAdecimals: ${amountADecimals}, amountBdecimals: ${amountBDecimals}`)
+		// const lpAcountBigInt = await VelodromePosition.calc_token_amount(data, [toBigNumber(amountADecimals), toBigNumber(amountBDecimals)] , true)
+		// console.log(`real lp: ${(lpAcountBigInt["liquidity"]/(10**18)).toString()}`)
+
 		const lpAmount = 1
 		return new VelodromePosition(data, lpAmount)
 	}
