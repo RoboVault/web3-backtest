@@ -1,106 +1,139 @@
 import { DataSnapshot, DataSource, DataSourceInfo, Resolution } from "./types.js";
 import { gql, GraphQLClient } from "graphql-request";
 
-export type Univ2PoolSnapshot = {
-	address: string
-	token0: string
-	token1: string
+export type VelodromePoolSnapshot = {
+	block: number
+	timestamp: number
+	pool: string
 	symbol: string
-	reserves0: number
-	reserves1: number
+	tokens: {
+		symbol: string
+		address: string
+		decimals: number
+		reserve: number
+		price: number
+	}[]
 	totalSupply: number
-	close: number
+	price: number
 }
 
-export type Univ2Snapshot = DataSnapshot<Univ2PoolSnapshot>
+export type VelodromeSnaphot = DataSnapshot<VelodromePoolSnapshot> 
 
-type SourceConfig = {
-	pairs: string[]
+type Snapshot = {
+	block: number,
+	pool: string,
+	reserves: number[],
+	prices: number[],
+	timestamp: number,
+	res: '1h' | '1m',
+	totalSupply: number,
 }
 
-type MinuteData = {
-    totalSupply: number
-    timestamp: number
-    reserves1: number
-    reserves0: number
-    pair: string
-    address: string
+type Token = {
+	symbol: string
+	address: string
+	decimals: number
 }
 
-const WETH_LUSD = '0x91e0fc1e4d32cc62c4f9bc11aca5f3a159483d31'
-const PAIR_ID = '\"6461ccd4a40e99fb8f2cb798\"' // todo, make generic and fetch in init()
-
-// 
-const TokensLookup = {
-	'WETH': '0x4200000000000000000000000000000000000006',
-	'LUSD': '0xc40F949F8a4e094D1b49a23ea9241D289B7b2819',
-}
-
-export class VelodromeDexDataSource implements DataSource<Univ2Snapshot> {
-	public static readonly defaultId = 'velodromeDex'
-	public readonly id: string
+export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 	private client: GraphQLClient
-
+	private pools: {[key: string]: { tokens: Token[], address: string, symbol: string}} = {}
+	public readonly id: string
 	constructor(public info: DataSourceInfo) {
-		this.id = info.id || VelodromeDexDataSource.defaultId
-		// only supports WETH/USDC right now
-		const config = info.config as SourceConfig
-		if (config.pairs[0] !== WETH_LUSD)
-			throw new Error('Only USDCLUSD supported by VelodromeDexDataSource currently')
-		const url = 'https://data.staging.arkiver.net/robolabs/velo-minutely/graphql'
-		this.client = new GraphQLClient(url, { headers: {} })
+		this.id = info.id || 'velodrome'
+		//const url = 'https://data.staging.arkiver.net/s_battenally/curve-snapshots/graphql'
+		const url = 'http://0.0.0.0:4000/graphql'
+        this.client = new GraphQLClient(url, { headers: {} })
 	}
 
 	public resolutions(): Resolution[] {
-		return ['1m']
+		return ['1h']
 	}	
 
 	public static create(info: DataSourceInfo) {
 		return new VelodromeDexDataSource(info)
 	}
 
-	public async init() {
-
+	private async getTokens() {
+		return ((await this.client.request(gql`query MyQuery {
+			Tokens {
+				_id
+				symbol
+				address
+				decimals
+			}
+		}`)) as any).Tokens as { symbol: string, address: string, decimals: number, _id: string }[]
 	}
 
-	public async fetch(from: number, to: number, limit?: number): Promise<Univ2Snapshot[]> {
-		const query = gql`query MyQuery {
-			MinuteDatas (
-				sort: TIMESTAMP_ASC
-				filter: {_operators: {timestamp: {gt: ${from}, lt: ${to}}}, pair: ${PAIR_ID}}
-				limit: ${limit}
-			) {
-				totalSupply
-				timestamp
-				reserves1
-				reserves0
-				pair
+	public async init() {
+		const tokens = await this.getTokens()
+		const rawPools = ((await this.client.request(gql`query MyQuery {
+			AmmPools {
+				_id
+				tokens
 				address
+				symbol
+			}
+		}`)) as any).AmmPools as { tokens: string[], address: string, _id: string, symbol: string }[]
+	
+		rawPools.forEach(pool => {
+			this.pools[pool._id] = {  
+				...pool,
+				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e)!),
+			} 
+		})
+		console.log(rawPools.map(e => e.symbol))
+	}
+
+	public async fetch(from: number, to: number, limit?: number): Promise<VelodromeSnaphot[]> {
+		const query = gql`query MyQuery {
+			Snapshots (
+				sort: TIMESTAMP_ASC
+				filter: {_operators: {timestamp: {gt: ${from}, lt: ${to}}}}
+				${limit ? `limit: ${limit}` : ``}
+			) {
+				pool
+				timestamp
+				totalSupply
+				reserves
+				block
+				prices
 			}
 		  }
 		`
 
-		const raw = (await this.client.request(query)).MinuteDatas
+		const raw = ((await this.client.request(query)) as any).Snapshots
 		return this.prep(raw)
 	}
 
-	private prep(raw: MinuteData[]): Univ2Snapshot[] {
-		return raw.map(e => {
-			const ret: Univ2Snapshot = {
-				timestamp: e.timestamp,
-				data: {}
-			}
-			ret.data[this.id] = [{
-				address: e.address,
-				token0: 'WETH',
-				token1: 'LUSD',
-				symbol: 'WETH/LUSD',
-				reserves0: e.reserves0,
-				reserves1: e.reserves1,
-				totalSupply: e.totalSupply,
-				close: e.reserves1 / e.reserves0,
-			}]
+	private prep(raw: Snapshot[]): VelodromeSnaphot[] {
+		// combine snapshots on the same time
+		const timestamps = raw.map((e: Snapshot) => e.timestamp)
+		const unique = Array.from(new Set(timestamps)).sort((a, b) => a - b)
+		const ret = unique.map((timestamp: number) => {
+			const ret: VelodromeSnaphot = { timestamp, data: {} }
+			ret.data[this.id] = raw.filter(e => e.timestamp === timestamp).map((snap: Snapshot) => {
+				const pool = this.pools[snap.pool]!
+				const tokens = pool.tokens.map((e: Token, i: number) => {
+					return {
+						...e,
+						reserve: snap.reserves[i],
+						price: snap.prices[i]
+					}
+				})
+				const price = tokens.reduce((acc, token) => acc + (token.reserve * token.price), 0) / snap.totalSupply
+				return {
+					...snap,
+					timestamp,
+					pool: pool.address,
+					tokens,
+					symbol: pool.symbol,
+					price,
+					block: snap.block,
+				}
+			})
 			return ret
 		})
+		return ret
 	}
 }

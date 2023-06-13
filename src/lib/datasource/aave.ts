@@ -63,7 +63,7 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 				}
 			  }
 			`
-			return (await this.client.request(query)).Pool
+			return ((await this.client.request(query)) as any).Pool
 		}))
 	}
 
@@ -84,7 +84,7 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 			}
 		  }
 		`
-		return (await this.client.request(query)).HourDatas.map((e: any) => { 
+		return ((await this.client.request(query)) as any).HourDatas.map((e: any) => { 
 			return { ...e, underlying: pool.underlying}
 		})
 	}

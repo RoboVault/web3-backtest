@@ -65,26 +65,26 @@ export class CurveDexDataSource implements DataSource<CurveSnaphot> {
 	}
 
 	private async getTokens() {
-		return (await this.client.request(gql`query MyQuery {
+		return ((await this.client.request(gql`query MyQuery {
 			Tokens {
 				_id
 				symbol
 				address
 				decimals
 			}
-		}`)).Tokens as { symbol: string, address: string, decimals: number, _id: string }[]
+		}`)) as any).Tokens as { symbol: string, address: string, decimals: number, _id: string }[]
 	}
 
 	public async init() {
 		const tokens = await this.getTokens()
-		const rawPools = (await this.client.request(gql`query MyQuery {
+		const rawPools = ((await this.client.request(gql`query MyQuery {
 			CurvePools {
 				_id
 				tokens
 				address
 				symbol
 			}
-		}`)).CurvePools as { tokens: string[], address: string, _id: string, symbol: string }[]
+		}`)) as any).CurvePools as { tokens: string[], address: string, _id: string, symbol: string }[]
 	
 		rawPools.forEach(pool => {
 			this.pools[pool._id] = {  
@@ -117,7 +117,7 @@ export class CurveDexDataSource implements DataSource<CurveSnaphot> {
 		  }
 		`
 
-		const raw = (await this.client.request(query)).Snapshots
+		const raw = ((await this.client.request(query)) as any).Snapshots
 		return this.prep(raw)
 	}
 
