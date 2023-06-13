@@ -17,11 +17,11 @@ export class Backtest {
     public readonly sources: DataSource[],
   ) {}
 
-  public static async create<T>(
+  public static async create(
     start: Date,
     end: Date,
     sourceConfig?: DataSourceInfo[],
-    _sources?: DataSource<DataSnapshot<any>>[],
+    _sources?: DataSource[],
   ): Promise<Backtest> {
     const sources =
       _sources || sourceConfig?.map((source) => DataSourceStore.get(source));
