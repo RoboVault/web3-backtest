@@ -6,6 +6,10 @@ import {
   Resolution,
 } from './datasource/types.js';
 
+const toElapsed = (start: number) => {
+  return ((Date.now() - start) / 1000).toFixed(2) + 's';
+};
+
 export class Backtest {
   private onDataHandler?: (update: DataSnapshot<any>) => Promise<void>;
   private onBeforeHandler?: () => Promise<void>;
@@ -94,10 +98,12 @@ export class Backtest {
       console.log(
         `Fetching data from ${formatTime(from)} to ${formatTime(to)}`,
       );
+      const start = Date.now();
       const allData = [
         data,
         ...(await Promise.all(others.map((ds) => ds.fetch(from, to, limit)))),
       ];
+      console.log(`data fetch elapsed ${toElapsed(start)}`);
       from = to;
 
       // merge all timestamps

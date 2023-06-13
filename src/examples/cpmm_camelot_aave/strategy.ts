@@ -12,11 +12,13 @@ import {
 import { CamelotFarm, FarmPosition } from '../../lib/protocols/CamelotFarm.js';
 import { Measurement, ILogAny } from '../../lib/utils/timeseriesdb.js';
 import { DataSnapshot } from '../../lib/datasource/types.js';
+import { InfluxBatcher } from '../../lib/utils/influxBatcher.js';
 
-const Log = new Measurement<ILogAny, any, any>('cpmm_strategy');
-const Harvest = new Measurement<ILogAny, any, any>('cpmm_harvest');
-const Rebalance = new Measurement<ILogAny, any, any>('cpmm_rebalance');
-const AAVE = new Measurement<ILogAny, any, any>('cpmm_aave');
+const LOG_BATCH_LIMIT = 1000;
+const Log = new InfluxBatcher<ILogAny, any, any>('cpmm_strategy');
+const Harvest = new InfluxBatcher<ILogAny, any, any>('cpmm_harvest');
+const Rebalance = new InfluxBatcher<ILogAny, any, any>('cpmm_rebalance');
+const AAVE = new InfluxBatcher<ILogAny, any, any>('cpmm_aave');
 
 const REBALANCE_COST = 5;
 const HARVEST_COST = 5;
@@ -90,14 +92,7 @@ class CpmmHedgedPosition {
     farm: CamelotFarm,
     data: DataUpdate,
   ) {
-    if (data.timestamp % (60 * 10) === 0) {
-      // we allow up to x parallel requests to speed things up
-      if (Log.nrequests > 25) {
-        await this.log(data);
-      } else {
-        this.log(data);
-      }
-    }
+    if (data.timestamp % (60 * 10) === 0) await this.log(data);
 
     if (!this.firstPosition) {
       this.openFirstPosition(mgr, aave, farm, data);
@@ -179,13 +174,16 @@ class CpmmHedgedPosition {
     );
     this.farm = farmMgr.stake(this.position.lpTokens, this.symbol);
     this.gasCosts += REBALANCE_COST;
-    await Rebalance.writePoint({
-      tags: { strategy: this.name },
-      fields: {
-        gas: REBALANCE_COST,
+    await Rebalance.writePointBatched(
+      {
+        tags: { strategy: this.name },
+        fields: {
+          gas: REBALANCE_COST,
+        },
+        timestamp: new Date(data.timestamp * 1000),
       },
-      timestamp: new Date(data.timestamp * 1000),
-    });
+      LOG_BATCH_LIMIT,
+    );
   }
 
   public async harvest(
@@ -246,7 +244,7 @@ class CpmmHedgedPosition {
     this.fees.total += totalFee;
     this.gasCosts += HARVEST_COST;
     // console.log(harvestLog)
-    await Harvest.writePoint(harvestLog);
+    await Harvest.writePointBatched(harvestLog, LOG_BATCH_LIMIT);
     this.harvestCount++;
   }
 
@@ -316,7 +314,7 @@ class CpmmHedgedPosition {
           rateETH: this.aave.rates.ETH,
         },
       };
-      await AAVE.writePoint(hourly);
+      await AAVE.writePointBatched(hourly, LOG_BATCH_LIMIT);
     }
 
     const log = {
@@ -348,17 +346,15 @@ class CpmmHedgedPosition {
       timestamp: new Date(data.timestamp * 1000),
     };
     // console.log(log)
-
-    const writePoint = async (log: any) => {
-      try {
-        await Log.writePoint(log);
-      } catch (e) {
-        console.log('Log Failed');
-        await wait(100);
-        await writePoint(log);
-      }
-    };
-    await writePoint(log);
+    try {
+      await Log.writePointBatched(log, LOG_BATCH_LIMIT);
+    } catch (e) {
+      console.log(log);
+      console.log('Log Failed');
+      await wait(10);
+      await Log.writePointBatched(log, LOG_BATCH_LIMIT);
+      // throw new Error('Log Failed')
+    }
   }
 
   public summary(data: DataUpdate) {
@@ -463,6 +459,12 @@ export class CpmmHedgedStrategy {
   }
 
   public async after() {
+    await Promise.all([
+      Log.exec(),
+      Harvest.exec(),
+      Rebalance.exec(),
+      AAVE.exec(),
+    ]);
     this.strategies.forEach((s) => {
       const data = this.getDataUpdate(this.lastData!);
       console.log(s.summary(data));

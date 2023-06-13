@@ -1,6 +1,5 @@
 import { Backtest } from '../../lib/backtest.js';
 import { DataSourceInfo } from '../../lib/datasource/types.js';
-import { waitFor } from '../../lib/utils/utility.js';
 import { CpmmHedgedStrategy } from './strategy.js';
 
 const main = async () => {
@@ -33,10 +32,9 @@ const main = async () => {
   ];
 
   const bt = await Backtest.create(
-    // new Date('2023-03-01'),
-    new Date('2023-05-01'),
-    new Date('2023-05-16'),
-    // new Date(), // Now
+    new Date('2023-01-01'),
+    // new Date('2023-05-16'), // Now
+    new Date(),
     sources,
   );
 
@@ -46,24 +44,14 @@ const main = async () => {
     aave: bt.sources[1].id,
     farm: bt.sources[2].id,
   });
-  // this causes a race condition with db initialization
-  // bt.onBefore(strategy.before.bind(this));
-  bt.onData(async (snapshot: any) => {
-    await strategy.onData(snapshot);
-    // await waitFor(100);
-  });
-  const now = Date.now();
-  bt.onAfter(async () => {
-    await strategy.after();
-    console.log(
-      'done',
-      Math.round((new Date().getTime() - now) / 100) / 10,
-      's',
-    );
-  });
+  bt.onBefore(strategy.before.bind(strategy));
+  bt.onData(strategy.onData.bind(strategy));
+  bt.onAfter(strategy.after.bind(strategy));
 
   // Run
+  const start = Date.now();
   await bt.run();
+  console.log(`elaspsed ${(Date.now() - start) / 1000} seconds`);
 };
 
 main();
