@@ -33,7 +33,7 @@ const main = async () => {
 
   const bt = await Backtest.create(
     new Date('2023-01-01'),
-    new Date('2023-01-02'), // Now
+    new Date('2023-01-16'), // Now
     sources,
   );
 
@@ -50,7 +50,7 @@ const main = async () => {
   // Run
   const start = Date.now();
   await bt.run();
-  console.log(`elaspsed ${(Date.now() - start) / 1000} seconds`)
+  console.log(`elaspsed ${(Date.now() - start) / 1000} seconds`);
 };
 
 main();

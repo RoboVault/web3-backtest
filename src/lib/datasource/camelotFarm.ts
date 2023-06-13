@@ -77,7 +77,7 @@ export class CamelotFarmDataSource implements DataSource<CamelotFarmSnapshot> {
 		  }
 		`;
 
-    const raw = (await this.client.request(query)).HourDatas;
+    const raw = ((await this.client.request(query)) as any).HourDatas;
     return this.prep(raw);
   }
 

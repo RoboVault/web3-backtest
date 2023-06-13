@@ -19,7 +19,7 @@ interface ILogAny extends Schema {
   fields: any;
 }
 
-const LOG_BATCH_LIMIT = 10000;
+const LOG_BATCH_LIMIT = 1000;
 const Log = new InfluxBatcher<ILogAny, any, any>('cpmm_strategy');
 const Harvest = new InfluxBatcher<ILogAny, any, any>('cpmm_harvest');
 const Rebalance = new InfluxBatcher<ILogAny, any, any>('cpmm_rebalance');
@@ -97,7 +97,7 @@ class CpmmHedgedPosition {
     farm: CamelotFarm,
     data: DataUpdate,
   ) {
-    if (data.timestamp % (60 * 10) === 0) this.log(data);
+    if (data.timestamp % (60 * 10) === 0) await this.log(data);
 
     if (!this.firstPosition) {
       this.openFirstPosition(mgr, aave, farm, data);
@@ -109,14 +109,14 @@ class CpmmHedgedPosition {
       ) {
         console.log('\n************* rebalancing debt! *************');
         console.log((debtRatio * 100).toFixed(2));
-        this.rebalanceDebt(mgr, aave, farm, data);
+        await this.rebalanceDebt(mgr, aave, farm, data);
         console.log('new debt ratio:', this.calcDebtRatio(data));
       }
 
       const sinceLastHarvest = data.timestamp - this.lastHarvest;
       const harvestInterval = 60 * 60 * 24; // one day
       if (sinceLastHarvest >= harvestInterval) {
-        this.harvest(mgr, aave, farm, data);
+        await this.harvest(mgr, aave, farm, data);
       }
     }
   }
@@ -149,7 +149,7 @@ class CpmmHedgedPosition {
     this.farm = farmMgr.stake(this.position.lpTokens, this.symbol);
   }
 
-  public rebalanceDebt(
+  public async rebalanceDebt(
     mgr: UniV2PositionManager,
     aave: AAVEPositionManager,
     farmMgr: CamelotFarm,
@@ -179,16 +179,19 @@ class CpmmHedgedPosition {
     );
     this.farm = farmMgr.stake(this.position.lpTokens, this.symbol);
     this.gasCosts += REBALANCE_COST;
-    Rebalance.writePointBatched({
-      tags: { strategy: this.name },
-      fields: {
-        gas: REBALANCE_COST,
+    Rebalance.writePointBatched(
+      {
+        tags: { strategy: this.name },
+        fields: {
+          gas: REBALANCE_COST,
+        },
+        timestamp: new Date(data.timestamp * 1000),
       },
-      timestamp: new Date(data.timestamp * 1000),
-    }, LOG_BATCH_LIMIT);
+      LOG_BATCH_LIMIT,
+    );
   }
 
-  public harvest(
+  public async harvest(
     mgr: UniV2PositionManager,
     aave: AAVEPositionManager,
     farmMgr: CamelotFarm,
@@ -461,12 +464,12 @@ export class CpmmHedgedStrategy {
   }
 
   public async after() {
-	await Promise.all([
-		Log.exec(),
-		Harvest.exec(),
-		Rebalance.exec(),
-		AAVE.exec(),
-	])
+    await Promise.all([
+      Log.exec(),
+      Harvest.exec(),
+      Rebalance.exec(),
+      AAVE.exec(),
+    ]);
     this.strategies.forEach((s) => {
       const data = this.getDataUpdate(this.lastData!);
       console.log(s.summary(data));
