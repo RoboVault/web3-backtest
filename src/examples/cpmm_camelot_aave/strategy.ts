@@ -179,7 +179,7 @@ class CpmmHedgedPosition {
     );
     this.farm = farmMgr.stake(this.position.lpTokens, this.symbol);
     this.gasCosts += REBALANCE_COST;
-    Rebalance.writePointBatched(
+    await Rebalance.writePointBatched(
       {
         tags: { strategy: this.name },
         fields: {
@@ -249,7 +249,7 @@ class CpmmHedgedPosition {
     this.fees.total += totalFee;
     this.gasCosts += HARVEST_COST;
     // console.log(harvestLog)
-    Harvest.writePointBatched(harvestLog, LOG_BATCH_LIMIT);
+    await Harvest.writePointBatched(harvestLog, LOG_BATCH_LIMIT);
     this.harvestCount++;
   }
 
