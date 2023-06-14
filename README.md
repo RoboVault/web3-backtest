@@ -201,6 +201,8 @@ To input the above data, go to: http://localhost:3000/ then click on the hamburg
 
 To add an example dashboard, navigate to Dashboards -> New -> Import and paste the json files provided in the `/grafana` folder.
 
+__NOTE:__ If Grafana failed to connect to localhost, try setting connection mode to `server` use container name for the URL field. URL: http://influxdb:8086/
+
 # Robo Labs
 
 If your looking for someone to use this library and write custom back tests for you, hit up [Robo Labs](https://www.robolabs.biz/) on Twitter [@robolabs_biz](https://twitter.com/robolabs_biz).
