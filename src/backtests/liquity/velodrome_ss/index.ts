@@ -18,7 +18,7 @@ const main = async () => {
 	]
 
 	const bt = await Backtest.create(
-		new Date('2023-06-09'), 
+		new Date('2023-03-11'), 
 		// new Date('2023-01-05'), 
         new Date(), // Now
 		sources

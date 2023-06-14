@@ -96,60 +96,27 @@ export class VelodromePosition {
 
 		const ratios = this.getDepositRatio(data)
 		const prices = [data.tokens[0].price, data.tokens[1].price]
+		const spotA = await this.getAmountOut(this.router(), toBigNumber(10**6), data.tokens[0].address, data.tokens[1].address)
+		const spotB = await this.getAmountOut(this.router(), toBigNumber(10**18), data.tokens[1].address, data.tokens[0].address)
+		console.log(`spotA: ${spotA[0] / (10**data.tokens[1].decimals)}`)
+		console.log(`spotB: ${spotB[0] / (10**data.tokens[0].decimals)}`)
+		console.log(`prices: ${prices}`)
 		const amounts = data.tokens.map((e, i) => Math.floor((amount)*ratios[i]))
-		
 		const swapAmount = Math.floor((amount/prices[tokenIndex]))-amounts[tokenIndex]
-		console.log(`swap amount: ${swapAmount}`)
 		const amountOut = await this.getAmountOut(this.router(), ethers.utils.parseUnits(swapAmount.toString(), data.tokens[tokenIndex].decimals), data.tokens[tokenIndex].address, data.tokens[tokenIndex==1 ? 0:1].address)
-		console.log(`amountOut: ${Number(amountOut[0])}`)
-		const pairFee = (await this.getFee(true))/10000 // TODO: add stable as param to parent function
-		const swapFee = swapAmount*pairFee
-		amounts[tokenIndex==1 ? 0:1] = swapAmount-swapFee // TODO use calcTokenOut
-		const lpPercent = ((swapAmount-swapFee)/data.tokens[tokenIndex==1 ? 0:1].reserve)
-		const lpEstimated = lpPercent*(data.totalSupply * (10 ** 18))
-		console.log(`estimated lp: ${lpEstimated}`)
+		const slippage = amounts[tokenIndex==1 ? 0:1] - (amountOut[0] / (10 ** data.tokens[tokenIndex==1 ? 0:1].decimals))
+		console.log(`slippage: ${slippage}`)
+		amounts[tokenIndex==1 ? 0:1] = amountOut[0] / (10 ** data.tokens[tokenIndex==1 ? 0:1].decimals)
+		const lpPercent = ((amounts[tokenIndex==1 ? 0:1])/data.tokens[tokenIndex==1 ? 0:1].reserve)
+		const lpEstimated = lpPercent*(data.totalSupply)
+		//console.log(data)
+		let usdDiff = (amount - (slippage/prices[tokenIndex==1 ? 0:1]))-(lpEstimated*data.price)
+		let lusdDiff = usdDiff/prices[tokenIndex]
+		console.log(`usdDiff: ${usdDiff}`)
+		console.log(`lusdDiff: ${lusdDiff}`)
+		console.log(`lpEstimated: ${lpEstimated}`)
 
-		// for checking
-		const amountsBigInt = []
-		if(tokenIndex == 0){
-			amountsBigInt.push(toBigNumber(amounts[0] - swapFee, data.tokens[0].decimals))
-			amountsBigInt.push(toBigNumber(amounts[1], data.tokens[1].decimals))
-		}
-		if(tokenIndex == 1){
-			amountsBigInt.push(toBigNumber(amounts[0], data.tokens[0].decimals))
-			amountsBigInt.push(toBigNumber(amounts[1]-swapFee, data.tokens[1].decimals))
-		}
-		console.log(`amount[0]: ${amounts[0]}`)
-		console.log(`amount[1]: ${amounts[1]-swapFee}`)
-
-		const lpAcountBigInt = await VelodromePosition.calc_token_amount(data, amountsBigInt , true)
-		console.log(`tokenIndex: ${tokenIndex}`)
-		console.log(lpAcountBigInt["amountA"].toString())
-		console.log(lpAcountBigInt["amountB"].toString())
-		console.log(`reallpAmount: ${lpAcountBigInt["liquidity"].toString()}`)
-		//const lpAmount = toNumber(lpAcountBigInt["liquidity"], 18)
-
-		// const reserveA = data.tokens[0].reserve //USDC
-		// const reserveB = data.tokens[1].reserve //LUSD
-		// console.log(`reserveA: ${reserveA}`)
-		// console.log(`reserveB: ${reserveB}`)
-		// const spot = reserveA / (reserveB + reserveA)
-		// console.log(`spot: ${spot}`)
-		// const amountA = amount * reserveA / (reserveA + spot * reserveB);
-		// const amountB = (amount - amountA) / spot
-		// const amountADecimals = Math.floor(amountA * (10**data.tokens[0].decimals))
-		// const amountBDecimals = Math.floor(amountB * (10**data.tokens[1].decimals))
-		// const liquidity = (amountB) / (reserveB + amountB) // Can just do amountA/reserveA or amountB/reserveB
-		// console.log(`amountA: ${amountA}, amountB: ${amountB * spot}`)
-		// console.log(`ratio: ${amountA / reserveA}, amountB: ${amountB / reserveB}`)
-		// console.log(`liquidity: ${liquidity}`)
-		// console.log(`liquidity after Fee: ${liquidity * (1 - 0.0005)}`)
-		// console.log(`amountAdecimals: ${amountADecimals}, amountBdecimals: ${amountBDecimals}`)
-		// const lpAcountBigInt = await VelodromePosition.calc_token_amount(data, [toBigNumber(amountADecimals), toBigNumber(amountBDecimals)] , true)
-		// console.log(`real lp: ${(lpAcountBigInt["liquidity"]/(10**18)).toString()}`)
-
-		const lpAmount = 1
-		return new VelodromePosition(data, lpAmount)
+		return new VelodromePosition(data, lpEstimated)
 	}
 
 	public async close(data: VelodromePoolSnapshot) {

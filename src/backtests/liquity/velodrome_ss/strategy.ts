@@ -99,55 +99,6 @@ class SingleSidedVelodrome {
 			const poolIndex = this.poolIndex(data)
 			const prices = [pool.tokens[0].price, pool.tokens[1].price]
 			const decimals = [pool.tokens[0].decimals, pool.tokens[1].decimals]
-			
-			// const velo = this.router()
-			// const quote = await velo.quoteAddLiquidity(
-			// 	data.data.velodrome[0].tokens[0].address, 
-			// 	data.data.velodrome[0].tokens[1].address, 
-			// 	true, 
-			// 	(10 ** data.data.velodrome[0].tokens[0].decimals).toString() , 
-			// 	(10 ** data.data.velodrome[0].tokens[1].decimals).toString(), 
-			// 	{ blockTag: velodrome.lastData.data.velodrome[0].block }
-			// )
-			// const amountA = toNumber(quote['amountA'], data.data.velodrome[0].tokens[0].decimals)
-			// const amountB = toNumber(quote['amountB'], data.data.velodrome[0].tokens[1].decimals)
-			// console.log(`amountA: ${amountA/prices[0]}`)
-			// console.log(`amountB: ${amountB/prices[1]}`)
-			// const ABRatio = amountA/amountB
-			// const BDenominator = ABRatio + 1
-			// console.log(`abratio: ${ABRatio}`)
-			// const calculatedAmountA = (ABRatio*(1/BDenominator))
-			// const calculatedAmountB = (1/BDenominator)
-			// console.log(`ModifiedamountA: ${calculatedAmountA}`)
-			// console.log(`ModifiedamountB: ${calculatedAmountB}`)
-			// //const ratios = [calculatedAmountA, calculatedAmountB]
-			// console.log(ratios)
-			// console.log(`deposit A: ${Math.floor(((this.initial)*ratios[0])/prices[0] )}`)
-			// console.log(`deposit B: ${Math.floor(((this.initial)*ratios[1])/prices[1] )}`)
-			//const Boptimal = this.quoteLiquidity((10 ** data.data.velodrome[0].tokens[1].decimals), this.pos.reserves[1], this.pos.reserves[0])
-			//console.log(`Boptimal: ${Boptimal}`)
-
-			// console.log("velodrome: ")
-			// const reserveA = velodrome.lastData.data.velodrome[poolIndex].tokens[0].reserve
-			// const reserveB = velodrome.lastData.data.velodrome[poolIndex].tokens[1].reserve
-			// let amountAOptimal = this.quoteLiquidity(1, reserveA, reserveB )
-			// let amountBOptimal = this.quoteLiquidity(1, reserveB, reserveA)
-			// let depositA = 1
-			// let depositB = 1
-			// let ratio = 0
-			// if (amountBOptimal <= 1){
-			// 	depositB = amountBOptimal
-			// 	ratio = amountBOptimal
-
-			// } else {
-			// 	depositA = amountAOptimal
-			// 	ratio = amountAOptimal
-			// }
-			// const ratioA = depositB / (ratio + 1)
-			// const ratioB = depositA / (ratio + 1)
-			// //const ratios = [ 0.5741067417692928, 0.4258932582307073 ]
-			// ratios = [ratioA, ratioB]
-			// const amounts = pool.tokens.map((e, i) => Math.floor(((this.initial)*ratios[i])/prices[i]))
 			console.log(prices)
 			console.log(pool.tokens[0].symbol)
 			console.log(pool.tokens[1].symbol)
@@ -183,6 +134,7 @@ class SingleSidedVelodrome {
 		const totalAssets = this.estTotalAssets(data)
 		const profit = totalAssets - this.initial
 		const apy = ((totalAssets / this.initial) ^ ( ONE_YEAR / elapsed)) - 1 
+		console.log(`apy: ${apy}`)
 		return apy
 	}
 
@@ -204,6 +156,7 @@ class SingleSidedVelodrome {
 		const drawdown = -(this.highest - totalAssets) / this.highest
 		const { tokens: _t, prices: _p, reserves: _r, ...poolSnap} = pool as any
 		this.maxDrawdown = Math.max(this.maxDrawdown, -drawdown)
+		const profit = totalAssets - this.initial
 
 		const apy = this.apy(data)
         const log = {
@@ -221,6 +174,7 @@ class SingleSidedVelodrome {
 				...poolSnap,
 				highest: this.highest,
 				aum: totalAssets,
+				profit
             },
             timestamp: new Date(data.timestamp * 1000),
         }
@@ -230,6 +184,7 @@ class SingleSidedVelodrome {
 				log.fields.apy = apy
 			// console.log(log)
 			try {
+				//console.log(log)
 				await Log.writePoint(log)
 			} catch(e) {
 				await wait(10)
