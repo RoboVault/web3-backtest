@@ -1,0 +1,44 @@
+name: Test
+on:
+  pull_request:
+    branches: [main]
+    
+jobs:
+  # Label of the container job
+  container-job:
+    runs-on: ubuntu-latest
+    container: node:10.18-jessie
+
+    services:
+      db-timeseries:
+        image: influxdb:1.5.2
+        env:
+          INFLUXDB_HTTP_AUTH_ENABLED: 'true'
+          INFLUXDB_ADMIN_USER: admin
+          INFLUXDB_ADMIN_PASSWORD: admin
+          INFLUXDB_DB: influxdb
+        ports:
+          - 8086:8086
+
+      grafana:
+        image: grafana/grafana
+        ports:
+          - 3000:3000
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - run: npm ci
+      - name: Run Tests
+        run: npm run test
+        env:
+          INFLUX_HOST: 'localhost'
+          INFLUX_DATABASE: 'backtest'
+          INFLUX_USER: 'admin'
+          INFLUX_PASSWORD: 'admin'
+          INFLUX_PROTOCOL: 'http'
