@@ -41,7 +41,7 @@ export class Backtest {
   }
 
   public onBefore(handler: () => Promise<void>) {
-    this.onBefore = handler;
+    this.onBeforeHandler = handler;
   }
 
   public onData<T = any>(handler: (update: DataSnapshot<T>) => Promise<void>) {

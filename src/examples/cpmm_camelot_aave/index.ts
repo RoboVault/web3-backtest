@@ -47,7 +47,7 @@ const main = async () => {
   bt.onData(async (snapshot: any) => {
     await strategy.onData(snapshot);
   });
-  bt.onAfter(strategy.after.bind(this));
+  bt.onAfter(strategy.after.bind(strategy));
 
   // Run
   await bt.run();

@@ -78,7 +78,7 @@ export class CamelotDexDataSource implements DataSource<Univ2Snapshot> {
 		  }
 		`;
 
-    const raw = (await this.client.request(query)).MinuteDatas;
+    const raw = ((await this.client.request(query)) as any).MinuteDatas;
     return this.prep(raw);
   }
 
