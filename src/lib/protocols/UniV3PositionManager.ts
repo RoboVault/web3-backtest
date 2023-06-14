@@ -1,9 +1,15 @@
 import { TickMath, FullMath, tickToPrice, Tick } from '@uniswap/v3-sdk';
 import { ethers } from 'ethers';
-import { Numbers } from '../utils/utility';
+import { Numbers } from '../utils/utility.js';
 import { PoolHourData, UniV3DataSource } from './datasource/univ3datasource';
 import * as jsbi from 'jsbi';
-import { calculateL, getXLP, getXReal, getYLP, getYReal } from './UniV3Utils';
+import {
+  calculateL,
+  getXLP,
+  getXReal,
+  getYLP,
+  getYReal,
+} from './UniV3Utils.js';
 const JSBI: any = jsbi; // Hack because JSBIs types are broken
 
 const getTickFromPrice = (price: any, pool: any, baseSelected = 0) => {

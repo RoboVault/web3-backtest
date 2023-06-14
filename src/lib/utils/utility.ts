@@ -41,3 +41,6 @@ export class Numbers {
     return Math.round(number * factorOfTen) / factorOfTen;
   }
 }
+
+export const waitFor = (delay: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, delay));

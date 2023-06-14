@@ -10,14 +10,9 @@ import {
   AAVEPositionManager,
 } from '../../lib/protocols/AavePositionManager.js';
 import { CamelotFarm, FarmPosition } from '../../lib/protocols/CamelotFarm.js';
-import { Measurement, Schema } from '../../lib/utils/timeseriesdb.js';
+import { ILogAny } from '../../lib/utils/timeseriesdb.js';
 import { DataSnapshot } from '../../lib/datasource/types.js';
 import { InfluxBatcher } from '../../lib/utils/influxBatcher.js';
-
-interface ILogAny extends Schema {
-  tags: any;
-  fields: any;
-}
 
 const LOG_BATCH_LIMIT = 1000;
 const Log = new InfluxBatcher<ILogAny, any, any>('cpmm_strategy');
