@@ -17,7 +17,7 @@ const Log = new Measurement<ILogAny, any, any>('ssc_lusd_strategy')
 
 const HARVEST_PERIOD = 60 * 60 * 24 // 1 day
 const TWO_WEEKS = 60 * 60 * 24 * 14
-const ONE_YEAR = 60 * 60 * 24 * 14
+const ONE_YEAR = 60 * 60 * 24 * 365
 
 const RPC = "https://optimism-mainnet.infura.io/v3/5e5034092e114ffbb3d812b6f7a330ad"
 const VELODROME_ROUTER = "0x9c12939390052919aF3155f41Bf4160Fd3666A6f"
@@ -109,7 +109,7 @@ class SingleSidedVelodrome {
         }
 
 		if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
-			this.harvest(data)
+			await this.harvest(data)
 		}
 
 		// always log data
@@ -120,27 +120,29 @@ class SingleSidedVelodrome {
 		return this.claimed + this.pos.valueUsd + this.idle
 	}
 
-	private harvest(data: VelodromeSnaphot) {
+	private async harvest(data: VelodromeSnaphot) {
 		const pool = this.pool(data)
-		const claimed = this.pos.claim(pool)
+		const claimed = await this.pos.claim(pool)
 		this.claimed += claimed
 		this.lastHarvest = data.timestamp
 	}
 
 	private apy(data: VelodromeSnaphot) {
 		const elapsed = data.timestamp - this.start
+		//console.log(`start    : ${this.start}`)
+		//console.log(`timestamp: ${data.timestamp}`)
 		if (elapsed < TWO_WEEKS)
 			return 0
 		const totalAssets = this.estTotalAssets(data)
-		const profit = totalAssets - this.initial
-		const apy = ((totalAssets / this.initial) ^ ( ONE_YEAR / elapsed)) - 1 
-		console.log(`apy: ${apy}`)
+		const apy = ((totalAssets / this.initial) ** ( ONE_YEAR / elapsed)) - 1
+		console.log(`logging apy: ${apy}`) 
+		console.log(`apy totalAssets: ${totalAssets}`)
 		return apy
 	}
 
 	private apr(data: VelodromeSnaphot) {
 		const elapsed = data.timestamp - this.start
-		return this.claimed / this.initial / (elapsed / ONE_YEAR)
+		return ((this.estTotalAssets(data) / this.initial)-1) / (elapsed / ONE_YEAR)
 	}
 
     public async log(data: VelodromeSnaphot) {

@@ -41,7 +41,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 	public readonly id: string
 	constructor(public info: DataSourceInfo) {
 		this.id = info.id || 'velodrome'
-		const url = 'https://data.staging.arkiver.net/robolabs/velodrome-snapshots/graphql'
+		const url = 'https://data.staging.arkiver.net/natebrune/velodrome-snapshots-incentives/graphql'
 		//const url = 'http://0.0.0.0:4000/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}

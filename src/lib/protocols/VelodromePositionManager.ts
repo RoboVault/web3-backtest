@@ -5,6 +5,7 @@ import { ethers, BigNumber} from "ethers"
 import { toBigNumber, toNumber } from "../utils/utility.js"
 import { Curve2CryptoAbi } from "../abis/Curve2CryptoAbi.js"
 import { VelodromePairFactoryAbi } from "../abis/VelodromePairFactoryAbi.js"
+import { gql, GraphQLClient } from "graphql-request";
 
 const RPC = "https://optimism-mainnet.infura.io/v3/5e5034092e114ffbb3d812b6f7a330ad"
 const VELODROME_ROUTER = "0x9c12939390052919aF3155f41Bf4160Fd3666A6f"
@@ -17,6 +18,7 @@ export class VelodromePosition {
 	public reserves: number[]
 	public price: number
 	public stakeTimestamp: number = 0
+	//public lpStaked: number = 0
 
     private constructor(
         public data: VelodromePoolSnapshot,
@@ -96,32 +98,31 @@ export class VelodromePosition {
 
 		const ratios = this.getDepositRatio(data)
 		const prices = [data.tokens[0].price, data.tokens[1].price]
+		console.log(`prices: ${prices}`)
 		const spotA = await this.getAmountOut(this.router(), toBigNumber(10**6), data.tokens[0].address, data.tokens[1].address)
 		const spotB = await this.getAmountOut(this.router(), toBigNumber(10**18), data.tokens[1].address, data.tokens[0].address)
-		console.log(`spotA: ${spotA[0] / (10**data.tokens[1].decimals)}`)
-		console.log(`spotB: ${spotB[0] / (10**data.tokens[0].decimals)}`)
-		console.log(`prices: ${prices}`)
 		const amounts = data.tokens.map((e, i) => Math.floor((amount)*ratios[i]))
 		const swapAmount = Math.floor((amount/prices[tokenIndex]))-amounts[tokenIndex]
 		const amountOut = await this.getAmountOut(this.router(), ethers.utils.parseUnits(swapAmount.toString(), data.tokens[tokenIndex].decimals), data.tokens[tokenIndex].address, data.tokens[tokenIndex==1 ? 0:1].address)
 		const slippage = amounts[tokenIndex==1 ? 0:1] - (amountOut[0] / (10 ** data.tokens[tokenIndex==1 ? 0:1].decimals))
-		console.log(`slippage: ${slippage}`)
 		amounts[tokenIndex==1 ? 0:1] = amountOut[0] / (10 ** data.tokens[tokenIndex==1 ? 0:1].decimals)
 		const lpPercent = ((amounts[tokenIndex==1 ? 0:1])/data.tokens[tokenIndex==1 ? 0:1].reserve)
 		const lpEstimated = lpPercent*(data.totalSupply)
-		//console.log(data)
 		let usdDiff = (amount - (slippage/prices[tokenIndex==1 ? 0:1]))-(lpEstimated*data.price)
 		let lusdDiff = usdDiff/prices[tokenIndex]
-		console.log(`usdDiff: ${usdDiff}`)
-		console.log(`lusdDiff: ${lusdDiff}`)
-		console.log(`lpEstimated: ${lpEstimated}`)
+		// console.log(`spotA: ${spotA[0] / (10**data.tokens[1].decimals)}`)
+		// console.log(`spotB: ${spotB[0] / (10**data.tokens[0].decimals)}`)
+		
+		// console.log(`slippage: ${slippage}`)
+		// console.log(`usdDiff: ${usdDiff}`)
+		// console.log(`lusdDiff: ${lusdDiff}`)
+		// console.log(`lpEstimated: ${lpEstimated}`)
 
 		return new VelodromePosition(data, lpEstimated)
 	}
 
 	public async close(data: VelodromePoolSnapshot) {
 		const lpTokensBN = toBigNumber(this.lpAmount, 18)
-		console.log(`lptokensbn: ${lpTokensBN}`)
 		const tokenAmounts = await VelodromePosition.calc_withdraw_one_coin(data, lpTokensBN, true)		
 
 		const price0 = data.tokens[0].price
@@ -154,12 +155,37 @@ export class VelodromePosition {
 		}
 	}
 
-	public pendingRewards(data: VelodromePoolSnapshot) {
-		return 0
+	public async pendingRewards(data: VelodromePoolSnapshot) {
+		//const url = 'http://0.0.0.0:4000/graphql'
+		const url = 'https://data.staging.arkiver.net/natebrune/velodrome-snapshots-incentives/graphql'
+		let client: GraphQLClient = new GraphQLClient(url, { headers: {} })
+		const rawFarmSnapshots = await ((await client.request(gql`query MyQuery {
+		FarmSnapshots(
+			filter: {block: ${data.block}, poolAddress: "${data.pool}"}
+		) {
+			rewardPerToken
+			rewardTokenUSDPrices
+		}}`)) as any).FarmSnapshots as { rewardPerToken: number[], rewardTokenUSDPrices: number[] }[]
+		const lastFarmSnapshot = await ((await client.request(gql`query MyQuery {
+			FarmSnapshots(
+				filter: {_operators: {timestamp: {lte: ${this.stakeTimestamp}}}}
+				limit: 1
+				sort: TIMESTAMP_DESC
+			  ) {
+				rewardPerToken
+				rewardTokenUSDPrices
+				timestamp
+			}}`)) as any).FarmSnapshots as { rewardPerToken: number[], rewardTokenUSDPrices: number[], timestamp: number }[]
+		const thisRewardsPerToken = rawFarmSnapshots[0].rewardPerToken[0]
+		const lastRewardsPerToken = lastFarmSnapshot[0].rewardPerToken[0]
+		const lpPercent = this.lpAmount/1
+		const posVeloEarned = (lpPercent * (thisRewardsPerToken-lastRewardsPerToken)) / (10**18)
+		const dollarsEarned = posVeloEarned*rawFarmSnapshots[0].rewardTokenUSDPrices[0]
+		return dollarsEarned
 	}
 
-	public claim(data: VelodromePoolSnapshot) {
-		const rewardsUSD = this.pendingRewards(data)
+	public async claim(data: VelodromePoolSnapshot) {
+		const rewardsUSD = await this.pendingRewards(data)
 		this.stakeTimestamp = data.timestamp
 		return rewardsUSD
 	}
@@ -207,7 +233,6 @@ export class VelodromePositionManager {
     public close(pos: VelodromePosition){
 			const idx = this.positions.indexOf(pos)
 			this.positions.splice(idx, 1)
-			console.log(this.lastData)
 			const pair = this.lastData.data.velodrome.find(p => p.symbol === pos.symbol)!
 			return pos.close(pair)
     }
