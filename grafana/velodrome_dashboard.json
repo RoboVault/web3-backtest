@@ -1317,6 +1317,227 @@
         "gridPos": {
           "h": 8,
           "w": 12,
+          "x": 0,
+          "y": 24
+        },
+        "id": 10,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "apy"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "apy"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "C",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "apy"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "MAI, USD+, USDC APY",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
           "x": 12,
           "y": 24
         },
@@ -1487,13 +1708,13 @@
       "list": []
     },
     "time": {
-      "from": "2023-03-15T14:32:44.413Z",
-      "to": "2023-06-20T01:50:48.221Z"
+      "from": "now-90d",
+      "to": "now"
     },
     "timepicker": {},
     "timezone": "",
     "title": "Strategies",
     "uid": "a2b8c090-680c-43a5-8a4e-494d72ddf799",
-    "version": 1,
+    "version": 2,
     "weekStart": ""
   }
