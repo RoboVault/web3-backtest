@@ -414,7 +414,7 @@
             ]
           }
         ],
-        "title": "Profit",
+        "title": "MAI, USD+, USDC Profit",
         "type": "timeseries"
       },
       {
@@ -834,7 +834,7 @@
             ]
           }
         ],
-        "title": "AUM",
+        "title": "MAI, USD+, USDC AUM",
         "type": "timeseries"
       },
       {
@@ -1254,7 +1254,7 @@
             ]
           }
         ],
-        "title": "Dawdowns",
+        "title": "MAI, USD+, USDC Drawdowns",
         "type": "timeseries"
       },
       {
@@ -1696,7 +1696,7 @@
             ]
           }
         ],
-        "title": "Value LP",
+        "title": "MAI, USD+, USDC Value LP",
         "type": "timeseries"
       }
     ],
