@@ -41,7 +41,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 	public readonly id: string
 	constructor(public info: DataSourceInfo) {
 		this.id = info.id || 'velodrome'
-		const url = 'https://data.staging.arkiver.net/natebrune/velodrome-snapshots-incentives/graphql'
+		const url = 'https://data.staging.arkiver.net/natebrune/velodrome-snapshots-incentives-3/graphql'
 		//const url = 'http://0.0.0.0:4000/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
@@ -70,16 +70,20 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 		const rawPools = ((await this.client.request(gql`query MyQuery {
 			AmmPools {
 				_id
-				tokens
+				tokens {
+					_id
+					address
+				}
 				address
 				symbol
 			}
-		}`)) as any).AmmPools as { tokens: string[], address: string, _id: string, symbol: string }[]
-	
+		}`)) as any).AmmPools as { tokens: any[], address: string, _id: string, symbol: string }[]
+		
 		rawPools.forEach(pool => {
+			//pool.tokens.map(e => console.log(e._id))
 			this.pools[pool._id] = {  
 				...pool,
-				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e)!),
+				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e._id)!),
 			} 
 		})
 		console.log(rawPools.map(e => e.symbol))
@@ -122,6 +126,9 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 					}
 				})
 				const price = tokens.reduce((acc, token) => acc + (token.reserve * token.price), 0) / snap.totalSupply
+				// console.log(tokens)
+				// console.log(`price: ${price} `)
+				// console.log(`totSupply: ${snap.totalSupply}`)
 				return {
 					...snap,
 					timestamp,

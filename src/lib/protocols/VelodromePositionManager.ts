@@ -22,7 +22,7 @@ export class VelodromePosition {
 
     private constructor(
         public data: VelodromePoolSnapshot,
-        public lpAmount: number,
+        public lpAmount: number
     ) {
 		this.symbol = data.symbol
 		this.stakeTimestamp = data.timestamp
@@ -91,34 +91,39 @@ export class VelodromePosition {
 		return [ratioA, ratioB]
 	}
 
-	static async open(data: VelodromePoolSnapshot, amount: number, tokenIndex: number) {
+	static async open(data: VelodromePoolSnapshot, amount: number, tokenIndex: number): Promise<[VelodromePosition, number]> {
 		if(tokenIndex > 1)
 			throw new Error('Invalid Token Index!')
-		console.log('openning position')
-
+		const otherTokenIndex = tokenIndex==1 ? 0:1
 		const ratios = this.getDepositRatio(data)
-		const prices = [data.tokens[0].price, data.tokens[1].price]
-		console.log(`prices: ${prices}`)
-		const spotA = await this.getAmountOut(this.router(), toBigNumber(10**6), data.tokens[0].address, data.tokens[1].address)
-		const spotB = await this.getAmountOut(this.router(), toBigNumber(10**18), data.tokens[1].address, data.tokens[0].address)
+		const spotA = await this.getAmountOut(this.router(), toBigNumber(10**data.tokens[0].decimals), data.tokens[0].address, data.tokens[1].address)
+		const spotB = await this.getAmountOut(this.router(), toBigNumber(10**data.tokens[1].decimals), data.tokens[1].address, data.tokens[0].address)
+		const spotANormal = spotA[0]/(10 ** data.tokens[1].decimals)
+		const spotBNormal = spotB[0]/(10 ** data.tokens[0].decimals)
+		const priceTokens = [spotANormal, spotBNormal]
+		const pricesUSD = [spotANormal/spotBNormal, spotBNormal/spotANormal]
 		const amounts = data.tokens.map((e, i) => Math.floor((amount)*ratios[i]))
-		const swapAmount = Math.floor((amount/prices[tokenIndex]))-amounts[tokenIndex]
-		const amountOut = await this.getAmountOut(this.router(), ethers.utils.parseUnits(swapAmount.toString(), data.tokens[tokenIndex].decimals), data.tokens[tokenIndex].address, data.tokens[tokenIndex==1 ? 0:1].address)
-		const slippage = amounts[tokenIndex==1 ? 0:1] - (amountOut[0] / (10 ** data.tokens[tokenIndex==1 ? 0:1].decimals))
-		amounts[tokenIndex==1 ? 0:1] = amountOut[0] / (10 ** data.tokens[tokenIndex==1 ? 0:1].decimals)
-		const lpPercent = ((amounts[tokenIndex==1 ? 0:1])/data.tokens[tokenIndex==1 ? 0:1].reserve)
+		const swapAmount = (amount-amounts[tokenIndex])/(pricesUSD[tokenIndex])
+		const amountOut = await this.getAmountOut(this.router(), ethers.utils.parseUnits(swapAmount.toString(), data.tokens[tokenIndex].decimals), data.tokens[tokenIndex].address, data.tokens[otherTokenIndex].address)
+		amounts[otherTokenIndex] = amountOut[0] / (10 ** data.tokens[otherTokenIndex].decimals)
+		const lpPercent = ((amounts[otherTokenIndex])/data.tokens[otherTokenIndex].reserve)
 		const lpEstimated = lpPercent*(data.totalSupply)
-		let usdDiff = (amount - (slippage/prices[tokenIndex==1 ? 0:1]))-(lpEstimated*data.price)
-		let lusdDiff = usdDiff/prices[tokenIndex]
-		// console.log(`spotA: ${spotA[0] / (10**data.tokens[1].decimals)}`)
-		// console.log(`spotB: ${spotB[0] / (10**data.tokens[0].decimals)}`)
 		
-		// console.log(`slippage: ${slippage}`)
-		// console.log(`usdDiff: ${usdDiff}`)
-		// console.log(`lusdDiff: ${lusdDiff}`)
-		// console.log(`lpEstimated: ${lpEstimated}`)
+		const swapAmount18 = (swapAmount * (10**18))
+		const amountOut18 = (amountOut[0] * (10**(18-Number(data.tokens[otherTokenIndex].decimals))))
+		const slippage =  (swapAmount18 - amountOut18)/(10**18)
 
-		return new VelodromePosition(data, lpEstimated)
+		// const amountsReal: BigNumber[] = []
+		// amountsReal[otherTokenIndex] = toBigNumber(amountOut[0])
+		// amountsReal[tokenIndex] = toBigNumber((amounts[tokenIndex] / pricesUSD[tokenIndex]) *(10 ** data.tokens[tokenIndex].decimals))
+		// console.log(`lpEstimated: ${lpEstimated}`)
+		// const realLP = await this.calc_token_amount(data, amountsReal, true)
+		// console.log(`realLP: ${realLP}`)
+		const lpValueUSD = lpEstimated*data.price
+		const idle = amount-lpValueUSD-(slippage>0 ? slippage : 0)
+		
+
+		return [new VelodromePosition(data, lpEstimated), idle]
 	}
 
 	public async close(data: VelodromePoolSnapshot) {
@@ -157,7 +162,7 @@ export class VelodromePosition {
 
 	public async pendingRewards(data: VelodromePoolSnapshot) {
 		//const url = 'http://0.0.0.0:4000/graphql'
-		const url = 'https://data.staging.arkiver.net/natebrune/velodrome-snapshots-incentives/graphql'
+		const url = 'https://data.staging.arkiver.net/natebrune/velodrome-snapshots-incentives-3/graphql'
 		let client: GraphQLClient = new GraphQLClient(url, { headers: {} })
 		const rawFarmSnapshots = await ((await client.request(gql`query MyQuery {
 		FarmSnapshots(
@@ -168,7 +173,7 @@ export class VelodromePosition {
 		}}`)) as any).FarmSnapshots as { rewardPerToken: number[], rewardTokenUSDPrices: number[] }[]
 		const lastFarmSnapshot = await ((await client.request(gql`query MyQuery {
 			FarmSnapshots(
-				filter: {_operators: {timestamp: {lte: ${this.stakeTimestamp}}}}
+				filter: {poolAddress: "${data.pool}", _operators: {timestamp: {lte: ${this.stakeTimestamp}}}}
 				limit: 1
 				sort: TIMESTAMP_DESC
 			  ) {
@@ -178,10 +183,10 @@ export class VelodromePosition {
 			}}`)) as any).FarmSnapshots as { rewardPerToken: number[], rewardTokenUSDPrices: number[], timestamp: number }[]
 		const thisRewardsPerToken = rawFarmSnapshots[0].rewardPerToken[0]
 		const lastRewardsPerToken = lastFarmSnapshot[0].rewardPerToken[0]
-		const lpPercent = this.lpAmount/1
+		const lpPercent = this.lpAmount / this.totalSupply
 		const posVeloEarned = (lpPercent * (thisRewardsPerToken-lastRewardsPerToken)) / (10**18)
 		const dollarsEarned = posVeloEarned*rawFarmSnapshots[0].rewardTokenUSDPrices[0]
-		return dollarsEarned
+		return dollarsEarned*(1-lpPercent)
 	}
 
 	public async claim(data: VelodromePoolSnapshot) {
@@ -219,14 +224,14 @@ export class VelodromePositionManager {
 		symbol: string,
 		amount: number,
 		tokenIndex: number
-    ): Promise<VelodromePosition> {
+    ): Promise<[VelodromePosition, number]> {
         if (!this.lastData)
             throw new Error('wow')
 		
 		const pair = this.lastData.data.velodrome.find(p => p.symbol === symbol)!
-		const pos = await VelodromePosition.open(pair, amount, tokenIndex)
+		let [pos, idle] = await VelodromePosition.open(pair, amount, tokenIndex)
 		this.positions.push(pos)
-		return pos
+		return [pos, idle]
     }
 
 	// Assumes exiting into 1 token

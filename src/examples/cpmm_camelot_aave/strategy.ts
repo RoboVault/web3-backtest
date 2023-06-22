@@ -169,8 +169,6 @@ class CpmmHedgedPosition {
 
 	public harvest(mgr: UniV2PositionManager, aave: AAVEPositionManager, farmMgr: CamelotFarm, data: DataUpdate) {
 		// Add rewards to lending positions
-		const now = new Date(data.timestamp * 1000)
-		// console.log(`harvesting!! ${now.toUTCString()}`)
 		const rewards = this.farm.claim() + this.pendingRewards
 		this.pendingRewards = 0
 		if (rewards > 0)

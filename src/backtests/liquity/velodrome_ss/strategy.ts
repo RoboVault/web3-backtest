@@ -54,7 +54,7 @@ class SingleSidedVelodrome {
 	public highest: number
 	public lastHarvest: number = 0
 	public claimed = 0
-	public idle = 0 // idle assets
+	public idle: number = 0 // idle assets
 	public maxDrawdown = 0
 	public series: any[] = []
 	count = 0;
@@ -102,10 +102,12 @@ class SingleSidedVelodrome {
 			console.log(prices)
 			console.log(pool.tokens[0].symbol)
 			console.log(pool.tokens[1].symbol)
-            this.pos = await velodrome.addLiquidity(this.poolSymbol, this.initial, 1)
+            let [pos, idle] = await velodrome.addLiquidity(this.poolSymbol, this.initial, 1)
+			this.pos = pos
+			this.idle = idle
 			this.start = data.timestamp
 			this.lastHarvest = this.start
-			this.idle = this.initial - this.pos.valueUsd
+			//this.idle = this.initial - this.pos.valueUsd
         }
 
 		if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
@@ -129,14 +131,10 @@ class SingleSidedVelodrome {
 
 	private apy(data: VelodromeSnaphot) {
 		const elapsed = data.timestamp - this.start
-		//console.log(`start    : ${this.start}`)
-		//console.log(`timestamp: ${data.timestamp}`)
 		if (elapsed < TWO_WEEKS)
 			return 0
 		const totalAssets = this.estTotalAssets(data)
 		const apy = ((totalAssets / this.initial) ** ( ONE_YEAR / elapsed)) - 1
-		console.log(`logging apy: ${apy}`) 
-		console.log(`apy totalAssets: ${totalAssets}`)
 		return apy
 	}
 
@@ -184,9 +182,7 @@ class SingleSidedVelodrome {
 			this.count = 0
 			if (apy !== 0)
 				log.fields.apy = apy
-			// console.log(log)
 			try {
-				//console.log(log)
 				await Log.writePoint(log)
 			} catch(e) {
 				await wait(10)
@@ -208,8 +204,7 @@ class SingleSidedVelodrome {
     }
 
 	public async end(curve: VelodromePositionManager, data: VelodromeSnaphot) {
-		this.idle = await curve.close(this.pos)
-		console.log(this.idle)
+		this.idle = this.idle + await curve.close(this.pos)
 		console.log('Strategy closing position', this.estTotalAssets(data))
 		const variance = Stats.variance(this.series.map(e => e.aum))
 		const stddev = Stats.stddev(variance)
@@ -248,6 +243,8 @@ export class SingleSidedVelodromeStrategy {
     constructor() {
 		const strategies = [
 			{ initialInvestment: 100_000, name: 'A: sAMM-USDC/LUSD', pool: 'sAMM-USDC/LUSD' },
+			{ initialInvestment: 100_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
+			{ initialInvestment: 100_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
 		]
 		this.strategies = strategies.map(s => new SingleSidedVelodrome(s.name, s.pool, s.initialInvestment))
     }
