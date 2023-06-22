@@ -242,9 +242,9 @@ export class SingleSidedVelodromeStrategy {
 	private strategies: SingleSidedVelodrome[] = []
     constructor() {
 		const strategies = [
-			{ initialInvestment: 100_000, name: 'A: sAMM-USDC/LUSD', pool: 'sAMM-USDC/LUSD' },
-			{ initialInvestment: 100_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
-			{ initialInvestment: 100_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
+			{ initialInvestment: 10_000, name: 'A: sAMM-USDC/LUSD', pool: 'sAMM-USDC/LUSD' },
+			{ initialInvestment: 10_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
+			{ initialInvestment: 10_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
 		]
 		this.strategies = strategies.map(s => new SingleSidedVelodrome(s.name, s.pool, s.initialInvestment))
     }
@@ -271,7 +271,7 @@ export class SingleSidedVelodromeStrategy {
 
 		// Process the strategy
 		for (const strat of this.strategies) {
-			// await wait(1)
+			await wait(1)
 			await strat.process(this.curve, snapshot)
 		}
     }

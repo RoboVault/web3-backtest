@@ -120,10 +120,13 @@ export class VelodromePosition {
 		// const realLP = await this.calc_token_amount(data, amountsReal, true)
 		// console.log(`realLP: ${realLP}`)
 		const lpValueUSD = lpEstimated*data.price
-		const idle = amount-lpValueUSD-(slippage>0 ? slippage : 0)
+		const lpValuewithPrice = (amount-(slippage>0 ? slippage : 0))/data.price
+		//console.log(`lpEstimated: ${lpEstimated}`)
+		//console.log(`lpValuewithPrice: ${lpValuewithPrice}`)
+		//const idle = amount-lpValueUSD-(slippage>0 ? slippage : 0)
 		
 
-		return [new VelodromePosition(data, lpEstimated), idle]
+		return [new VelodromePosition(data, lpValuewithPrice), 0]
 	}
 
 	public async close(data: VelodromePoolSnapshot) {
