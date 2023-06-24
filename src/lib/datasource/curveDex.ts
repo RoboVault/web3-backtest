@@ -80,16 +80,18 @@ export class CurveDexDataSource implements DataSource<CurveSnaphot> {
 		const rawPools = ((await this.client.request(gql`query MyQuery {
 			CurvePools {
 				_id
-				tokens
+				tokens {
+					_id
+				}
 				address
 				symbol
 			}
-		}`)) as any).CurvePools as { tokens: string[], address: string, _id: string, symbol: string }[]
+		}`)) as any).CurvePools as { tokens: [{_id: string }], address: string, _id: string, symbol: string }[]
 	
 		rawPools.forEach(pool => {
 			this.pools[pool._id] = {  
 				...pool,
-				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e)!),
+				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e._id)!),
 			} 
 		})
 		console.log(rawPools.map(e => e.symbol))
