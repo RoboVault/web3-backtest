@@ -1,7 +1,7 @@
 import { DataSnapshot, DataSource, DataSourceInfo, Resolution } from "./types.js";
 import { gql, GraphQLClient } from "graphql-request";
 
-export type VelodromePoolSnapshot = {
+export type Uni3PoolSnapshot = {
 	block: number
 	timestamp: number
 	pool: string
@@ -10,23 +10,25 @@ export type VelodromePoolSnapshot = {
 		symbol: string
 		address: string
 		decimals: number
-		reserve: number
+		//reserve: number
 		price: number
 	}[]
 	totalSupply: number
-	price: number
+	//price: number
+	sqrtPriceX96: number
 }
 
-export type VelodromeSnaphot = DataSnapshot<VelodromePoolSnapshot> 
+export type Uni3Snaphot = DataSnapshot<Uni3PoolSnapshot> 
 
 type Snapshot = {
 	block: number,
 	pool: string,
-	reserves: number[],
+	//reserves: number[],
 	prices: number[],
 	timestamp: number,
 	res: '1h' | '1m',
 	totalSupply: number,
+	sqrtPriceX96: number
 }
 
 type Token = {
@@ -35,14 +37,14 @@ type Token = {
 	decimals: number
 }
 
-export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
+export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 	private client: GraphQLClient
 	private pools: {[key: string]: { tokens: Token[], address: string, symbol: string}} = {}
 	public readonly id: string
 	constructor(public info: DataSourceInfo) {
-		this.id = info.id || 'velodrome'
-		const url = 'https://data.staging.arkiver.net/robolabs/velodrome-snapshots-incentives-4/graphql'
-		//const url = 'http://0.0.0.0:4000/graphql'
+		this.id = info.id || 'uni3'
+		//const url = 'https://data.staging.arkiver.net/robolabs/velodrome-snapshots-incentives-4/graphql'
+		const url = 'http://0.0.0.0:4000/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
 
@@ -51,7 +53,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 	}	
 
 	public static create(info: DataSourceInfo) {
-		return new VelodromeDexDataSource(info)
+		return new Uni3DexDataSource(info)
 	}
 
 	private async getTokens() {
@@ -64,16 +66,18 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 			}
 		}`)) as any).Tokens as { symbol: string, address: string, decimals: number, _id: string }[]
 	}
-
+	
+	// to patch use
+	// tokens {
+	// 	_id
+	// 	address
+	// }
 	public async init() {
 		const tokens = await this.getTokens()
 		const rawPools = ((await this.client.request(gql`query MyQuery {
 			AmmPools {
 				_id
-				tokens {
-					_id
-					address
-				}
+				tokens 
 				address
 				symbol
 			}
@@ -83,13 +87,13 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 			//pool.tokens.map(e => console.log(e._id))
 			this.pools[pool._id] = {  
 				...pool,
-				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e._id)!),
+				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e)!), // e._id to patch
 			} 
 		})
 		console.log(rawPools.map(e => e.symbol))
 	}
 
-	public async fetch(from: number, to: number, limit?: number): Promise<VelodromeSnaphot[]> {
+	public async fetch(from: number, to: number, limit?: number): Promise<Uni3Snaphot[]> {
 		const query = gql`query MyQuery {
 			Snapshots (
 				sort: TIMESTAMP_ASC
@@ -99,9 +103,9 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 				pool
 				timestamp
 				totalSupply
-				reserves
 				block
 				prices
+				sqrtPriceX96
 			}
 		  }
 		`
@@ -110,22 +114,22 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 		return this.prep(raw)
 	}
 
-	private prep(raw: Snapshot[]): VelodromeSnaphot[] {
+	private prep(raw: Snapshot[]): Uni3Snaphot[] {
 		// combine snapshots on the same time
 		const timestamps = raw.map((e: Snapshot) => e.timestamp)
 		const unique = Array.from(new Set(timestamps)).sort((a, b) => a - b)
 		const ret = unique.map((timestamp: number) => {
-			const ret: VelodromeSnaphot = { timestamp, data: {} }
+			const ret: Uni3Snaphot = { timestamp, data: {} }
 			ret.data[this.id] = raw.filter(e => e.timestamp === timestamp).map((snap: Snapshot) => {
 				const pool = this.pools[snap.pool]!
 				const tokens = pool.tokens.map((e: Token, i: number) => {
 					return {
 						...e,
-						reserve: snap.reserves[i],
+						//reserve: snap.reserves[i],
 						price: snap.prices[i]
 					}
 				})
-				const price = tokens.reduce((acc, token) => acc + (token.reserve * token.price), 0) / snap.totalSupply
+				//const price = tokens.reduce((acc, token) => acc + (token.reserve * token.price), 0) / snap.totalSupply
 				// console.log(tokens)
 				// console.log(`price: ${price} `)
 				// console.log(`totSupply: ${snap.totalSupply}`)
@@ -135,7 +139,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 					pool: pool.address,
 					tokens,
 					symbol: pool.symbol,
-					price,
+					//price,
 					block: snap.block,
 				}
 			})

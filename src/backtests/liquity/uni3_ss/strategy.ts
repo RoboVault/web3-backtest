@@ -1,7 +1,7 @@
 
 import { Measurement, Schema } from "../../../lib/utils/timeseriesdb.js";
-import { VelodromePosition, VelodromePositionManager } from "../../../lib/protocols/VelodromePositionManager.js";
-import { VelodromeSnaphot } from "../../../lib/datasource/velodromeDex.js";
+import { Uni3Position, Uni3PositionManager } from "../../../lib/protocols/UNIV3PositionManager.js";
+import { Uni3Snaphot } from "../../../lib/datasource/uni3Dex.js";
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises'
 import { ethers } from "ethers"
@@ -47,9 +47,9 @@ class Stats {
 }
 
 
-class SingleSidedVelodrome {
+class SingleSidedUniswap {
 
-	public pos!: VelodromePosition
+	public pos!: Uni3Position
 	public start!: number
 	public highest: number
 	public lastHarvest: number = 0
@@ -68,11 +68,13 @@ class SingleSidedVelodrome {
 		// this.symbol = 'WETH/USDC'
     }
 
-	public pool(data: VelodromeSnaphot) {
-		return data.data.velodrome.find(p => p.symbol === this.poolSymbol)!
+	public pool(data: Uni3Snaphot) {
+		console.log(`getPool`)
+		console.log(data.data.uni3)
+		return data.data.uni3.find(p => p.symbol === this.poolSymbol)!
 	}
 
-	public poolIndex(data: VelodromeSnaphot) {
+	public poolIndex(data: Uni3Snaphot) {
 		return data.data.velodrome.findIndex(p => p.symbol === this.poolSymbol)!
 	}
 
@@ -86,8 +88,8 @@ class SingleSidedVelodrome {
 	}
 
 	public async process(
-		velodrome: VelodromePositionManager,
-		data: VelodromeSnaphot,
+		uni: Uni3PositionManager,
+		data: Uni3Snaphot,
 	) {
 		if (!this.pool(data)) {
 			console.log('missing data for ' + this.name)
@@ -96,18 +98,19 @@ class SingleSidedVelodrome {
 		// open the first position
         if (!this.pos) {
 			const pool = this.pool(data)
-			const poolIndex = this.poolIndex(data)
+			// const poolIndex = this.poolIndex(data)
 			const prices = [pool.tokens[0].price, pool.tokens[1].price]
 			const decimals = [pool.tokens[0].decimals, pool.tokens[1].decimals]
 			console.log(prices)
 			console.log(pool.tokens[0].symbol)
 			console.log(pool.tokens[1].symbol)
-            let [pos, idle] = await velodrome.addLiquidity(this.poolSymbol, this.initial, 1)
-			this.pos = pos
-			this.idle = idle
-			this.start = data.timestamp
-			this.lastHarvest = this.start
-			//this.idle = this.initial - this.pos.valueUsd
+			let [pos, idle] = await uni.addLiquidity(pool.symbol, this.initial, 0)
+            // //let [pos, idle] = await velodrome.addLiquidity(this.poolSymbol, this.initial, 1)
+			// this.pos = pos
+			// this.idle = idle
+			// this.start = data.timestamp
+			// this.lastHarvest = this.start
+			// //this.idle = this.initial - this.pos.valueUsd
         }
 
 		if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
@@ -118,18 +121,18 @@ class SingleSidedVelodrome {
 		await this.log(data)
     }
 
-	private estTotalAssets(data: VelodromeSnaphot) {
-		return this.claimed + this.pos.valueUsd + this.idle
+	private estTotalAssets(data: Uni3Snaphot) {
+		return 0 //this.claimed + this.pos.valueUsd + this.idle
 	}
 
-	private async harvest(data: VelodromeSnaphot) {
+	private async harvest(data: Uni3Snaphot) {
 		const pool = this.pool(data)
 		const claimed = await this.pos.claim(pool)
 		this.claimed += claimed
 		this.lastHarvest = data.timestamp
 	}
 
-	private apy(data: VelodromeSnaphot) {
+	private apy(data: Uni3Snaphot) {
 		const elapsed = data.timestamp - this.start
 		if (elapsed < TWO_WEEKS)
 			return 0
@@ -138,12 +141,12 @@ class SingleSidedVelodrome {
 		return apy
 	}
 
-	private apr(data: VelodromeSnaphot) {
+	private apr(data: Uni3Snaphot) {
 		const elapsed = data.timestamp - this.start
 		return ((this.estTotalAssets(data) / this.initial)-1) / (elapsed / ONE_YEAR)
 	}
 
-    public async log(data: VelodromeSnaphot) {
+    public async log(data: Uni3Snaphot) {
 		const tokens: any = {}
 		const prices: any = {}
 		const pool = this.pool(data)
@@ -195,7 +198,7 @@ class SingleSidedVelodrome {
 			timestamp: data.timestamp,
 			aum: totalAssets,
 			rewards: this.claimed,
-			lpAmount: this.pos.lpAmount,
+			//lpAmount: this.pos.lpAmount,
 			...tokens,
 			...prices,
 			...this.pos.snapshot,
@@ -203,8 +206,8 @@ class SingleSidedVelodrome {
 
     }
 
-	public async end(curve: VelodromePositionManager, data: VelodromeSnaphot) {
-		this.idle = this.idle + await curve.close(this.pos, true)
+	public async end(uni: Uni3PositionManager, data: Uni3Snaphot) {
+		// this.idle = this.idle + await uni.close(this.pos)
 		console.log('Strategy closing position', this.estTotalAssets(data))
 		const variance = Stats.variance(this.series.map(e => e.aum))
 		const stddev = Stats.stddev(variance)
@@ -234,19 +237,19 @@ class SingleSidedVelodrome {
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-export class SingleSidedVelodromeStrategy {
-	private curve = new VelodromePositionManager()
-	private lastData!: VelodromeSnaphot
+export class SingleSidedUniswapStrategy {
+	private uni = new Uni3PositionManager()
+	private lastData!: Uni3Snaphot
 	// private aaveManager = new AAVEPositionManager()
 	// private farm = new CamelotFarm()
-	private strategies: SingleSidedVelodrome[] = []
+	private strategies: SingleSidedUniswap[] = []
     constructor() {
 		const strategies = [
-			{ initialInvestment: 10_000, name: 'A: sAMM-USDC/LUSD', pool: 'sAMM-USDC/LUSD' },
-			{ initialInvestment: 10_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
-			{ initialInvestment: 10_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
+			{ initialInvestment: 10_000, name: 'A: UNI3-LUSD/USDC 0.05%', pool: 'UNI3-LUSD/USDC 0.05%' },
+			// { initialInvestment: 10_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
+			// { initialInvestment: 10_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
 		]
-		this.strategies = strategies.map(s => new SingleSidedVelodrome(s.name, s.pool, s.initialInvestment))
+		this.strategies = strategies.map(s => new SingleSidedUniswap(s.name, s.pool, s.initialInvestment))
     }
 
     public async before() {
@@ -254,7 +257,7 @@ export class SingleSidedVelodromeStrategy {
     }
 
     public async after() {
-		const summary = await Promise.all(this.strategies.map(s => s.end(this.curve, this.lastData)))
+		const summary = await Promise.all(this.strategies.map(s => s.end(this.uni, this.lastData)))
 		console.log(summary)
 		const csv = stringify(summary, { header: true })
 		fs.writeFile('./velo_ss.csv', csv)
@@ -264,15 +267,15 @@ export class SingleSidedVelodromeStrategy {
 		fs.writeFile('./velo_ss_series.csv', seriesCsv)
     }
 
-    public async onData(snapshot: VelodromeSnaphot) {
+    public async onData(snapshot: Uni3Snaphot) {
 		this.lastData = snapshot
 		// console.log('onData')
-		this.curve.update(snapshot)
+		this.uni.update(snapshot)
 
 		// Process the strategy
 		for (const strat of this.strategies) {
 			await wait(1)
-			await strat.process(this.curve, snapshot)
+			await strat.process(this.uni, snapshot)
 		}
     }
 }
