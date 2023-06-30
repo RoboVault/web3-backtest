@@ -6,6 +6,10 @@ import {
   Resolution,
 } from './datasource/types.js';
 
+const toElapsed = (start: number) => {
+  return ((Date.now() - start) / 1000).toFixed(2) + 's';
+};
+
 export class Backtest {
   private onDataHandler?: (update: DataSnapshot<any>) => Promise<void>;
   private onBeforeHandler?: () => Promise<void>;
@@ -53,7 +57,6 @@ export class Backtest {
   }
 
   public async run() {
-    console.log('here');
     // Initialise the goodz
     await Promise.all(this.sources.map((e) => e.init()));
     if (this.onBeforeHandler) await this.onBeforeHandler();
@@ -65,13 +68,14 @@ export class Backtest {
       return aRes > bRes ? 1 : -1;
     });
 
-    let start = Math.round(this.start.getTime() / 1000);
-    let end = Math.round(this.end.getTime() / 1000);
+    let start = this.start.getTime() / 1000;
+    let end = this.end.getTime() / 1000;
 
-    const limit = 1000;
+    const limit = 10000;
     let finished = false;
     let from = start;
     let to = end;
+
     const formatTime = (time: number) => {
       const t = new Date(time * 1000)
         .toISOString()
@@ -91,10 +95,12 @@ export class Backtest {
       console.log(
         `Fetching data from ${formatTime(from)} to ${formatTime(to)}`,
       );
+      const start = Date.now();
       const allData = [
         data,
         ...(await Promise.all(others.map((ds) => ds.fetch(from, to, limit)))),
       ];
+      console.log(`data fetch elapsed ${toElapsed(start)}`);
       from = to;
 
       // merge all timestamps

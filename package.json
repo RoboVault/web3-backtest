@@ -58,6 +58,7 @@
     "csv-stringify": "^6.4.0",
     "dotenv": "^16.0.3",
     "ethers": "^5.7.2",
+    "graphql": "^16.6.0",
     "graphql-request": "^5.0.0",
     "influx": "^5.9.3",
     "install": "^0.13.0",
