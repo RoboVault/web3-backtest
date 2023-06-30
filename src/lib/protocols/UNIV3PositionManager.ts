@@ -7,6 +7,9 @@ import { Curve2CryptoAbi } from "../abis/Curve2CryptoAbi.js"
 import { VelodromePairFactoryAbi } from "../abis/VelodromePairFactoryAbi.js"
 import { gql, GraphQLClient } from "graphql-request";
 import { Uni3Quote } from "./Uni3Quote.js"
+import { TickMath, FullMath, tickToPrice, Tick } from "@uniswap/v3-sdk"
+import * as jsbi from 'jsbi'
+const JSBI: any = jsbi // Hack because JSBIs types are broken
 
 const RPC = "https://mainnet.infura.io/v3/5e5034092e114ffbb3d812b6f7a330ad"
 const VELODROME_ROUTER = "0x9c12939390052919aF3155f41Bf4160Fd3666A6f"
@@ -25,7 +28,8 @@ export class Uni3Position {
     private constructor(
         public data: Uni3PoolSnapshot,
         public lpAmount: number,
-        public tokenIndex: number
+        public tokenIndex: number,
+        public rangeSpread: number
     ) {
 		this.symbol = data.symbol
 		this.stakeTimestamp = data.timestamp
@@ -34,7 +38,7 @@ export class Uni3Position {
 		this.valueUsd = 0//this.lpAmount * data.price //TODO Get valueUSD
 		//this.reserves = data.tokens.map(e => e.reserve)
         this.sqrtPriceX96 = data.sqrtPriceX96
-        this.otherTokenIndex = tokenIndex == 0 ? 1 : 0
+        this.otherTokenIndex = tokenIndex==0?1:0
 	}
 
 	static contract(data: Uni3PoolSnapshot): ethers.Contract {
@@ -52,26 +56,77 @@ export class Uni3Position {
 	// 	return new ethers.Contract(VELODROME_FACTORY, VelodromePairFactoryAbi as any, provider)
 	// }
 
-	static async open(data: Uni3PoolSnapshot, amount: number, tokenIndex: number): Promise<[Uni3Position, number]> {
+    static getPriceFromTick(tick: any, pool: any, baseSelected = 0): number {
+        const decimal0 = baseSelected && baseSelected === 1 ? parseInt(pool.tokens[1].decimals) : parseInt(pool.tokens[0].decimals);
+        const decimal1 = baseSelected && baseSelected === 1 ? parseInt(pool.tokens[0].decimals) : parseInt(pool.tokens[1].decimals);
+        const sqrtRatioX96 = TickMath.getSqrtRatioAtTick(tick)
+        const ratioX192 = JSBI.BigInt(JSBI.BigInt(sqrtRatioX96)**JSBI.BigInt(sqrtRatioX96)) //JSBI.multiply(sqrtRatioX96, sqrtRatioX96)
+        const baseAmount = JSBI.BigInt(10 ** decimal1)
+        const shift = JSBI.leftShift(JSBI.BigInt(1), JSBI.BigInt(192))
+        const price = parseFloat(FullMath.mulDivRoundingUp(ratioX192, baseAmount, shift).toString()) / (10 ** decimal0)
+        return price
+    }
+
+    // Calculate the liquidity share for a strategy based on the number of tokens owned 
+    static liquidityForStrategy (price: number, low: number, high: number, tokens0: number, tokens1: number, decimal0: number, decimal1: number): number {
+        const decimal = decimal1 - decimal0;
+        const lowHigh = [(Math.sqrt(low * Math.pow(10, decimal))) * Math.pow(2, 96), (Math.sqrt(high * Math.pow(10, decimal))) * Math.pow(2, 96)];
+    
+        const sPrice = (Math.sqrt(price * Math.pow(10, decimal))) * Math.pow(2, 96);
+        const sLow = Math.min(...lowHigh);
+        const sHigh =  Math.max(...lowHigh);
+        
+        if (sPrice <= sLow) {
+    
+        return tokens0 / (( Math.pow(2, 96) * (sHigh-sLow) / sHigh / sLow) / Math.pow(10, decimal0));
+        
+        } else if (sPrice <= sHigh && sPrice > sLow) {
+    
+        const liq0 = tokens0 / (( Math.pow(2, 96) * (sHigh - sPrice) / sHigh / sPrice) / Math.pow(10, decimal0));
+        const liq1 = tokens1 / ((sPrice - sLow) / Math.pow(2, 96) / Math.pow(10, decimal1));
+        return Math.min(liq1, liq0);
+        }
+        else {
+    
+        return tokens1 / ((sHigh - sLow) / Math.pow(2, 96) / Math.pow(10, decimal1));
+        }
+    }
+
+	static async open(data: Uni3PoolSnapshot, amount: number, tokenIndex: number, rangeSpread: number): Promise<[Uni3Position, number]> {
 		if(tokenIndex > 1)
 			throw new Error('Invalid Token Index!')
 		// Swap to get token0 and token1 to equal the same USD value
-        console.log(data.tokens[tokenIndex])
         const quote = await Uni3Quote.getQuote(data.tokens[tokenIndex].address, data.tokens[tokenIndex].decimals, data.tokens[tokenIndex == 0 ? 1:0].address, data.tokens[tokenIndex == 0 ? 1:0].decimals, 10**data.tokens[tokenIndex].decimals, data.block, data.pool)
-        console.log(`quote: ${quote}`)
-        const initialInWant = (amount/quote) * (10 ** data.tokens[tokenIndex].decimals)
+        const otherTokenQuote = 1/quote
+        const initialInWant = (amount/data.tokens[tokenIndex].price) * (10 ** data.tokens[tokenIndex].decimals)
         const halfInitialInWant = Math.floor(initialInWant/2)
-        const noSlipAmountOut = (halfInitialInWant / (1/quote)) / (10**data.tokens[tokenIndex].decimals)
-        console.log(`noSlipAmountOut: ${noSlipAmountOut}`)
+        const noSlipAmountOut = (halfInitialInWant / otherTokenQuote) / (10**data.tokens[tokenIndex].decimals)
+        //console.log(`noSlipAmountOut: ${noSlipAmountOut}`)
         const realQuote = await Uni3Quote.getQuote(data.tokens[tokenIndex].address, data.tokens[tokenIndex].decimals, data.tokens[tokenIndex == 0 ? 1:0].address, data.tokens[tokenIndex == 0 ? 1:0].decimals, halfInitialInWant, data.block, data.pool)
-        console.log(`realQuote: ${realQuote}`)
+        //console.log(`realQuote: ${realQuote}`)
         //TODO noSlipAmountOut - realQuote is the slippage
-        
-        // Get estimated lp for amount0 and amount1
-        // Create new position with lp amount
-		const liquidity = 0
+        const slippage = noSlipAmountOut-realQuote
+        const slippageUSD = slippage*data.tokens[tokenIndex==0?1:0].price
+        const slippageWant = slippageUSD/data.tokens[tokenIndex].price
+        //console.log(`slippageUSD: ${slippageUSD}`)
+        //console.log(`slippageWant/idle: ${slippageWant}`)
 
-		return [new Uni3Position(data, liquidity, tokenIndex), 0]
+        // Get estimated lp for amount0 and amount1
+        //const token0Quote = Math.floor((tokenIndex==0?quote:otherTokenQuote)* (10 ** data.tokens[1].decimals))
+        const tick = data.tick * -1
+        const priceMagic = this.getPriceFromTick(tick, data, tokenIndex)
+        console.log(`tick: ${tick}`)
+        console.log(`priceMagic: ${priceMagic}`)
+        //console.log(`token0Quote: ${token0Quote}`)
+        // console.log(`halfInitialInWant: ${halfInitialInWant}`)
+        const liquidity = this.liquidityForStrategy(tick, Math.floor(tick*(1-rangeSpread)),tick*(1+rangeSpread), (halfInitialInWant-slippageWant), realQuote, data.tokens[0].decimals,  data.tokens[1].decimals)
+        const normalLiquidity = liquidity/(10**18)
+        console.log(`🤞 liquidity of position: ${normalLiquidity} 🤞`)
+
+        // Create new position with lp amount
+		
+
+		return [new Uni3Position(data, 0, tokenIndex, rangeSpread), 0]
 	}
 
 	public async close(data: Uni3PoolSnapshot) {
@@ -148,13 +203,14 @@ export class Uni3PositionManager {
     public async addLiquidity(
 		symbol: string,
 		amount: number,
-		tokenIndex: number
+		tokenIndex: number,
+        rangeSpread: number
     ): Promise<[Uni3Position, number]> {
         if (!this.lastData)
             throw new Error('wow')
 		
 		const pair = this.lastData.data.uni3.find(p => p.symbol === symbol)!
-		let [pos, idle] = await Uni3Position.open(pair, amount, tokenIndex)
+		let [pos, idle] = await Uni3Position.open(pair, amount, tokenIndex, rangeSpread)
 		this.positions.push(pos)
 		return [pos, idle]
     }

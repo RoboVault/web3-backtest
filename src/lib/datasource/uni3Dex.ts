@@ -15,7 +15,15 @@ export type Uni3PoolSnapshot = {
 	}[]
 	totalSupply: number
 	//price: number
-	sqrtPriceX96: number
+	//sqrtPriceX96: number
+	tick: number
+	feeGrowthGlobal0X128: string
+	feeGrowthGlobal1X128: string
+	low: number
+	high: number
+	totalValueLockedToken0: string
+	totalValueLockedToken1: string
+	totalValueLockedUSD: number
 }
 
 export type Uni3Snaphot = DataSnapshot<Uni3PoolSnapshot> 
@@ -28,7 +36,15 @@ type Snapshot = {
 	timestamp: number,
 	res: '1h' | '1m',
 	totalSupply: number,
-	sqrtPriceX96: number
+	//sqrtPriceX96: number,
+	tick: number,
+	feeGrowthGlobal0X128: string,
+	feeGrowthGlobal1X128: string,
+	low: number,
+	high: number
+	totalValueLockedToken0: string,
+	totalValueLockedToken1: string,
+	totalValueLockedUSD: number
 }
 
 type Token = {
@@ -43,8 +59,8 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 	public readonly id: string
 	constructor(public info: DataSourceInfo) {
 		this.id = info.id || 'uni3'
-		//const url = 'https://data.staging.arkiver.net/robolabs/velodrome-snapshots-incentives-4/graphql'
-		const url = 'http://0.0.0.0:4000/graphql'
+		const url = 'https://data.staging.arkiver.net/robolabs/uniswapv3-3/graphql'
+		//const url = 'http://0.0.0.0:4000/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
 
@@ -66,7 +82,7 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 			}
 		}`)) as any).Tokens as { symbol: string, address: string, decimals: number, _id: string }[]
 	}
-	
+
 	// to patch use
 	// tokens {
 	// 	_id
@@ -77,7 +93,9 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 		const rawPools = ((await this.client.request(gql`query MyQuery {
 			AmmPools {
 				_id
-				tokens 
+				tokens{
+					_id
+				}
 				address
 				symbol
 			}
@@ -87,7 +105,7 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 			//pool.tokens.map(e => console.log(e._id))
 			this.pools[pool._id] = {  
 				...pool,
-				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e)!), // e._id to patch
+				tokens:  pool.tokens.map(e => tokens.find(t => t._id === e._id)!), // e._id to patch
 			} 
 		})
 		console.log(rawPools.map(e => e.symbol))
@@ -105,7 +123,14 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 				totalSupply
 				block
 				prices
-				sqrtPriceX96
+				tick
+				feeGrowthGlobal0X128
+				feeGrowthGlobal1X128
+				low
+				high
+				totalValueLockedToken0
+				totalValueLockedToken1
+				totalValueLockedUSD
 			}
 		  }
 		`
@@ -141,6 +166,13 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 					symbol: pool.symbol,
 					//price,
 					block: snap.block,
+					feeGrowthGlobal0X128: snap.feeGrowthGlobal0X128,
+					feeGrowthGlobal1X128: snap.feeGrowthGlobal1X128,
+					low: snap.low,
+					high: snap.high,
+					totalValueLockedToken0: snap.totalValueLockedToken0,
+					totalValueLockedToken1: snap.totalValueLockedToken1,
+					totalValueLockedUSD: snap.totalValueLockedUSD
 				}
 			})
 			return ret

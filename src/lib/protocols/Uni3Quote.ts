@@ -14,7 +14,7 @@ export class Uni3Quote {
         const quoter = this.quoter()
         const bigNumber = toBigNumber(amountFrom)
         const quote = await quoter.callStatic.quoteExactInputSingle(fromToken, toToken, 500, bigNumber, 0, {blockTag: block})
-        console.log(quote)
+        //console.log(quote)
         return toNumber(quote, toDecimals)
 		// 	abi: Univ3QuoterAbi,
 		// 	address: Univ3QuoterAddress,

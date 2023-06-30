@@ -1,11 +1,11 @@
 
 import { Measurement, Schema } from "../../../lib/utils/timeseriesdb.js";
-import { Uni3Position, Uni3PositionManager } from "../../../lib/protocols/UNIV3PositionManager.js";
+import { UniV3Position, UniV3PositionManager } from "../../../lib/protocols/oldUniV3PositionManager.js";
 import { Uni3Snaphot } from "../../../lib/datasource/uni3Dex.js";
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises'
 import { ethers } from "ethers"
-import { VelodromeRouterAbi } from "../../../lib/abis/VelodromeRouter.js"
+//import { VelodromeRouterAbi } from "../../../lib/abis/VelodromeRouter.js"
 import { toBigNumber, toNumber } from "../../../lib/utils/utility.js"
 
 interface ILogAny extends Schema {
@@ -20,7 +20,7 @@ const TWO_WEEKS = 60 * 60 * 24 * 14
 const ONE_YEAR = 60 * 60 * 24 * 365
 
 const RPC = "https://optimism-mainnet.infura.io/v3/5e5034092e114ffbb3d812b6f7a330ad"
-const VELODROME_ROUTER = "0x9c12939390052919aF3155f41Bf4160Fd3666A6f"
+//const VELODROME_ROUTER = "0x9c12939390052919aF3155f41Bf4160Fd3666A6f"
 
 class Stats {
 	// Calculate the average of all the numbers
@@ -49,7 +49,7 @@ class Stats {
 
 class SingleSidedUniswap {
 
-	public pos!: Uni3Position
+	public pos!: UniV3Position
 	public start!: number
 	public highest: number
 	public lastHarvest: number = 0
@@ -63,7 +63,8 @@ class SingleSidedUniswap {
 		public name: string, 
 		public poolSymbol: string, 
 		public initial: number,
-		public rangeSpread: number
+		public rangeSpread: number,
+		public priceToken: number
 	) {
 		this.highest = initial
 		// this.symbol = 'WETH/USDC'
@@ -81,14 +82,14 @@ class SingleSidedUniswap {
 		return amount * 10**decimals
 	}
 
-	private router() {
-		const provider = new ethers.providers.JsonRpcProvider(RPC)
-		return new ethers.Contract(VELODROME_ROUTER, VelodromeRouterAbi as any, provider)
-	}
+	// private router() {
+	// 	const provider = new ethers.providers.JsonRpcProvider(RPC)
+	// 	return new ethers.Contract(VELODROME_ROUTER, VelodromeRouterAbi as any, provider)
+	// }
 
 	public async process(
-		uni: Uni3PositionManager,
-		data: Uni3Snaphot,
+		uni: UniV3PositionManager,
+		data: Uni3Snaphot
 	) {
 		if (!this.pool(data)) {
 			console.log('missing data for ' + this.name)
@@ -97,39 +98,28 @@ class SingleSidedUniswap {
 		// open the first position
         if (!this.pos) {
 			const pool = this.pool(data)
-			// const poolIndex = this.poolIndex(data)
-			const prices = [pool.tokens[0].price, pool.tokens[1].price]
-			const decimals = [pool.tokens[0].decimals, pool.tokens[1].decimals]
-			console.log(prices)
-			console.log(pool.tokens[0].symbol)
-			console.log(pool.tokens[1].symbol)
-			let [pos, idle] = await uni.addLiquidity(pool.symbol, this.initial, 0, this.rangeSpread)
-            // //let [pos, idle] = await velodrome.addLiquidity(this.poolSymbol, this.initial, 1)
-			// this.pos = pos
-			// this.idle = idle
-			// this.start = data.timestamp
-			// this.lastHarvest = this.start
-			// //this.idle = this.initial - this.pos.valueUsd
+			this.pos = uni.open(this.initial, 10, pool.tokens[0].price, this.priceToken, this.poolSymbol)
         }
 
-		if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
-			await this.harvest(data)
-		}
+	// 	// if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
+	// 	// 	await this.harvest(data)
+	// 	// }
 
 		// always log data
 		await this.log(data)
     }
 
 	private estTotalAssets(data: Uni3Snaphot) {
-		return 0 //this.claimed + this.pos.valueUsd + this.idle
+		return this.pos.valueUsd + this.idle
+		//return 0 //this.claimed + this.pos.valueUsd + this.idle
 	}
 
-	private async harvest(data: Uni3Snaphot) {
-		const pool = this.pool(data)
-		const claimed = await this.pos.claim(pool)
-		this.claimed += claimed
-		this.lastHarvest = data.timestamp
-	}
+	// private async harvest(data: Uni3Snaphot) {
+	// 	const pool = this.pool(data)
+	// 	const claimed = await this.pos.claim(pool)
+	// 	this.claimed += claimed
+	// 	this.lastHarvest = data.timestamp
+	// }
 
 	private apy(data: Uni3Snaphot) {
 		const elapsed = data.timestamp - this.start
@@ -205,7 +195,7 @@ class SingleSidedUniswap {
 
     }
 
-	public async end(uni: Uni3PositionManager, data: Uni3Snaphot) {
+	public async end(uni: UniV3PositionManager, data: Uni3Snaphot) {
 		// this.idle = this.idle + await uni.close(this.pos)
 		console.log('Strategy closing position', this.estTotalAssets(data))
 		const variance = Stats.variance(this.series.map(e => e.aum))
@@ -237,18 +227,18 @@ class SingleSidedUniswap {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export class SingleSidedUniswapStrategy {
-	private uni = new Uni3PositionManager()
+	private uni = new UniV3PositionManager()
 	private lastData!: Uni3Snaphot
 	// private aaveManager = new AAVEPositionManager()
 	// private farm = new CamelotFarm()
 	private strategies: SingleSidedUniswap[] = []
     constructor() {
 		const strategies = [
-			{ initialInvestment: 10_000, name: 'A: UNI3-LUSD/USDC 0.05%', pool: 'UNI3-LUSD/USDC 0.05%', rangeSpread: 0.001 },
+			{ initialInvestment: 10_000, name: 'A: UNI3-LUSD/USDC 0.05%', pool: 'UNI3-LUSD/USDC 0.05%', rangeSpread: 0.001, priceToken: 0 },
 			// { initialInvestment: 10_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
 			// { initialInvestment: 10_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
 		]
-		this.strategies = strategies.map(s => new SingleSidedUniswap(s.name, s.pool, s.initialInvestment, s.rangeSpread))
+		this.strategies = strategies.map(s => new SingleSidedUniswap(s.name, s.pool, s.initialInvestment, s.rangeSpread, s.priceToken))
     }
 
     public async before() {
@@ -269,7 +259,7 @@ export class SingleSidedUniswapStrategy {
     public async onData(snapshot: Uni3Snaphot) {
 		this.lastData = snapshot
 		// console.log('onData')
-		this.uni.update(snapshot)
+		this.uni.processPoolData(snapshot)
 
 		// Process the strategy
 		for (const strat of this.strategies) {
