@@ -134,7 +134,14 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 				totalSupply
 				block
 				prices
-				sqrtPriceX96
+				tick
+				feeGrowthGlobal0X128
+				feeGrowthGlobal1X128
+				low
+				high
+				totalValueLockedToken0
+				totalValueLockedToken1
+				totalValueLockedUSD
 			}
 		  }
 		`;
