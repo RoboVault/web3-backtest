@@ -13,18 +13,33 @@ export class Uni3Quote {
     );
   }
 
-    static async getQuote(fromToken: string, fromDecimals: number, toToken: string, toDecimals:number, amountFrom: number,  block: number, pool: string){
-        const quoter = this.quoter()
-        const bigNumber = toBigNumber(amountFrom)
-        const quote = await quoter.callStatic.quoteExactInputSingle(fromToken, toToken, 500, bigNumber, 0, {blockTag: block})
-        //console.log(quote)
-        return toNumber(quote, toDecimals)
-		// 	abi: Univ3QuoterAbi,
-		// 	address: Univ3QuoterAddress,
-		// 	functionName: "quoteExactInputSingle",
-		// 	args: [fromToken, toToken, 500, ethers.parseUnits('1', fromDecimals), 0],
-		// 	blockNumber: block,
-		// })
-		//return toNumber(result as bigint, toDecimals)
-    }
+  static async getQuote(
+    fromToken: string,
+    fromDecimals: number,
+    toToken: string,
+    toDecimals: number,
+    amountFrom: number,
+    block: number,
+    pool: string,
+  ) {
+    const quoter = this.quoter();
+    const bigNumber = toBigNumber(amountFrom);
+    const quote = await quoter.callStatic.quoteExactInputSingle(
+      fromToken,
+      toToken,
+      500,
+      bigNumber,
+      0,
+      { blockTag: block },
+    );
+    //console.log(quote)
+    return toNumber(quote, toDecimals);
+    // 	abi: Univ3QuoterAbi,
+    // 	address: Univ3QuoterAddress,
+    // 	functionName: "quoteExactInputSingle",
+    // 	args: [fromToken, toToken, 500, ethers.parseUnits('1', fromDecimals), 0],
+    // 	blockNumber: block,
+    // })
+    //return toNumber(result as bigint, toDecimals)
+  }
 }
