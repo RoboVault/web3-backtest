@@ -98,16 +98,17 @@ class SingleSidedUniswap {
       const pool = this.pool(data);
       this.pos = uni.open(
         this.initial,
-        10,
-        pool.tokens[0].price,
+        pool.tokens[0].price*0.9,
+        pool.tokens[0].price*1.1,
         this.priceToken,
         this.poolSymbol,
       );
+	  this.start = data.timestamp;
     }
 
-    // 	// if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
-    // 	// 	await this.harvest(data)
-    // 	// }
+	if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
+		await this.harvest(data)
+	}
 
     // always log data
     await this.log(data);
@@ -118,12 +119,12 @@ class SingleSidedUniswap {
     //return 0 //this.claimed + this.pos.valueUsd + this.idle
   }
 
-  // private async harvest(data: Uni3Snaphot) {
-  // 	const pool = this.pool(data)
-  // 	const claimed = await this.pos.claim(pool)
-  // 	this.claimed += claimed
-  // 	this.lastHarvest = data.timestamp
-  // }
+  private async harvest(data: Uni3Snaphot) {
+  	//const pool = this.pool(data)
+  	//const claimed = await this.pos.claim(pool)
+  	this.claimed = this.pos.claimed
+  	this.lastHarvest = data.timestamp
+  }
 
   private apy(data: Uni3Snaphot) {
     const elapsed = data.timestamp - this.start;
@@ -141,6 +142,7 @@ class SingleSidedUniswap {
   }
 
   public async log(data: Uni3Snaphot) {
+	console.log(`log timestamp: ${Date.now()}`);
     const tokens: any = {};
     const prices: any = {};
     const pool = this.pool(data);
@@ -164,16 +166,17 @@ class SingleSidedUniswap {
       },
       fields: {
         strategy: this.name,
-        ...this.pos.snapshot,
+    	...this.pos.snapshot,
         ...prices,
         rewards: this.claimed,
         drawdown,
-        ...poolSnap,
+        //...poolSnap,
         highest: this.highest,
+		apy, // TODO: get APY
         aum: totalAssets,
         profit,
       },
-      timestamp: new Date(data.timestamp * 1000),
+      timestamp: new Date(data.timestamp * 1000)
     };
     if (this.count++ % 24 === 0) {
       this.count = 0;
@@ -191,7 +194,7 @@ class SingleSidedUniswap {
       timestamp: data.timestamp,
       aum: totalAssets,
       rewards: this.claimed,
-      //lpAmount: this.pos.lpAmount,
+      lpAmount: this.pos.lpAmount,
       ...tokens,
       ...prices,
       ...this.pos.snapshot,
@@ -199,7 +202,10 @@ class SingleSidedUniswap {
   }
 
   public async end(uni: UniV3PositionManager, data: Uni3Snaphot) {
-    // this.idle = this.idle + await uni.close(this.pos)
+	const close = await uni.close(this.pos)
+	console.log(`close: ${close}`)
+	console.log(`idle: ${this.idle}`)
+    this.idle = this.idle + close
     console.log('Strategy closing position', this.estTotalAssets(data));
     const variance = Stats.variance(this.series.map((e) => e.aum));
     const stddev = Stats.stddev(variance);
@@ -240,10 +246,10 @@ export class SingleSidedUniswapStrategy {
   constructor() {
     const strategies = [
       {
-        initialInvestment: 10_000,
+        initialInvestment: 100_000,
         name: 'A: UNI3-LUSD/USDC 0.05%',
         pool: 'UNI3-LUSD/USDC 0.05%',
-        rangeSpread: 0.001,
+        rangeSpread: 0.1,
         priceToken: 0,
       },
       // { initialInvestment: 10_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
@@ -271,11 +277,11 @@ export class SingleSidedUniswapStrategy {
     );
     console.log(summary);
     const csv = stringify(summary, { header: true });
-    fs.writeFile('./velo_ss.csv', csv);
+    fs.writeFile('./uni_ss.csv', csv);
 
     const series = this.strategies.map((s) => s.series).flat();
     const seriesCsv = stringify(series, { header: true });
-    fs.writeFile('./velo_ss_series.csv', seriesCsv);
+    fs.writeFile('./uni_ss_series.csv', seriesCsv);
   }
 
   public async onData(snapshot: Uni3Snaphot) {
