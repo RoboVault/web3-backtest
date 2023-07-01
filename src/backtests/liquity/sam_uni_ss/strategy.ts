@@ -3,7 +3,7 @@ import {
   UniV3Position,
   UniV3PositionManager,
 } from '../../../lib/protocols/oldUniV3PositionManager.js';
-import { Uni3Snaphot } from '../../../lib/datasource/uni3Dex.js';
+import { Uni3Snaphot } from '../../../lib/datasource/univ3Dex.js';
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
 import { ethers } from 'ethers';

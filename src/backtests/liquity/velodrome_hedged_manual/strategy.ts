@@ -8,12 +8,10 @@ import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
 import { ethers } from 'ethers';
 import { VelodromeRouterAbi } from '../../../lib/abis/VelodromeRouter.js';
-//import { toBigNumber, toNumber } from "../../../lib/utils/utility.js"
 import {
-  AAVEPositionManager,
-  AAVEPosition,
-} from '../../../lib/protocols/AavePositionManager.js';
-import { Stats } from './stats.js';
+  CompPositionManager,
+  CompPosition,
+} from '../../../lib/protocols/CompPositionManager.js';
 import { RebalanceScheduler } from './rebalanceScheduler.js';
 
 interface ILogAny extends Schema {
@@ -32,16 +30,40 @@ const RPC =
   'https://optimism-mainnet.infura.io/v3/5e5034092e114ffbb3d812b6f7a330ad';
 const VELODROME_ROUTER = '0x9c12939390052919aF3155f41Bf4160Fd3666A6f';
 
+class Stats {
+  // Calculate the average of all the numbers
+  static mean(values: number[]) {
+    const mean = values.reduce((sum, current) => sum + current) / values.length;
+    return mean;
+  }
+
+  // Calculate variance
+  static variance(values: number[]) {
+    const average = Stats.mean(values);
+    const squareDiffs = values.map((value) => {
+      const diff = value - average;
+      return diff * diff;
+    });
+    const variance = Stats.mean(squareDiffs);
+    return variance;
+  }
+
+  // Calculate stand deviation
+  static stddev(variance: number) {
+    return Math.sqrt(variance);
+  }
+}
 
 const REBALANCE_COST = 0;
 const HARVEST_COST = 0;
 class HedgedVelodrome {
   public pos!: VelodromePosition;
-  public aave!: AAVEPosition;
+  public comp!: CompPosition;
   public start!: number;
   public highest: number;
   public lastHarvest: number = 0;
-  public claimed = 0;
+  public farmRewards = 0;
+  public compRewards = 0;
   public idle: number = 0; // idle assets
   public maxDrawdown = 0;
   public series: any[] = [];
@@ -106,7 +128,7 @@ class HedgedVelodrome {
 
   public borrow(data: VelodromeSnaphot) {
     const pool = this.pool(data);
-    const borrow = this.aave.borrowed(
+    const borrow = this.comp.borrowed(
       pool.tokens[this.tokenIndex == 0 ? 1 : 0].symbol,
     );
     return borrow;
@@ -119,7 +141,7 @@ class HedgedVelodrome {
 
   public lent(data: VelodromeSnaphot) {
     const pool = this.pool(data);
-    return this.aave.lent(pool.tokens[this.tokenIndex].symbol);
+    return this.comp.lent(pool.tokens[this.tokenIndex].symbol);
   }
 
   private calcDebtRatio(data: VelodromeSnaphot): number {
@@ -135,7 +157,7 @@ class HedgedVelodrome {
 
   private async openFirstPosition(
     velodrome: VelodromePositionManager,
-    aave: AAVEPositionManager,
+    comp: CompPositionManager,
     data: VelodromeSnaphot,
   ) {
     const pool = this.pool(data);
@@ -149,9 +171,9 @@ class HedgedVelodrome {
     let amountBorrow = result.borrow;
     const amount0 = this.tokenIndex == 0 ? amountWant : amountBorrow;
     const amount1 = this.tokenIndex == 0 ? amountBorrow : amountWant;
-    this.aave = aave.create();
-    this.aave.lend(pool.tokens[this.tokenIndex].symbol, result.lend);
-    this.aave.borrow(
+    this.comp = comp.create();
+    this.comp.lend(pool.tokens[this.tokenIndex].symbol, result.lend);
+    this.comp.borrow(
       pool.tokens[this.tokenIndex == 0 ? 1 : 0].symbol,
       result.borrow,
     );
@@ -165,10 +187,9 @@ class HedgedVelodrome {
     this.start = data.timestamp;
     this.lastHarvest = this.start;
   }
-
   public async rebalanceDebt(
     mgr: VelodromePositionManager,
-    aave: AAVEPositionManager,
+    comp: CompPositionManager,
     data: VelodromeSnaphot,
   ) {
     this.rebalanceCount++;
@@ -176,12 +197,13 @@ class HedgedVelodrome {
 
     // Close this position
     const mgrClose = await mgr.close(this.pos, false);
-    await aave.close(this.aave);
+    await comp.close(this.comp);
     this.idle = this.idle + mgrClose;
     // Calc total assets
     const totalAssets = this.estTotalAssets(data);
     // compound rewards, subtract gas fees
-    this.claimed = 0;
+    // this.farmRewards = 0;
+    // this.compRewards = 0;
     this.gasCosts = 0;
     const pool = this.pool(data);
 
@@ -196,9 +218,9 @@ class HedgedVelodrome {
     const amount0 = this.tokenIndex == 0 ? amountWant : amountBorrow;
     const amount1 = this.tokenIndex == 0 ? amountBorrow : amountWant;
 
-    this.aave = aave.create();
-    this.aave.lend(pool.tokens[this.tokenIndex].symbol, lend);
-    this.aave.borrow(pool.tokens[this.tokenIndex == 0 ? 1 : 0].symbol, borrow);
+    this.comp = comp.create();
+    this.comp.lend(pool.tokens[this.tokenIndex].symbol, lend);
+    this.comp.borrow(pool.tokens[this.tokenIndex == 0 ? 1 : 0].symbol, borrow);
     let [pos, idle] = await mgr.addLiquidityHedged(
       this.poolSymbol,
       amount0,
@@ -219,7 +241,7 @@ class HedgedVelodrome {
 
   private async checkRebalance(
     mgr: VelodromePositionManager,
-    aave: AAVEPositionManager,
+    comp: CompPositionManager,
     data: VelodromeSnaphot,
   ) {
     const debtRatio = this.calcDebtRatio(data);
@@ -228,15 +250,15 @@ class HedgedVelodrome {
       debtRatio < 1 - this.debtRatioRange
     if (this.scheduler.shouldRebalance(data.timestamp * 1000, triggered)) {
       console.log('\n************* rebalancing debt! *************');
-      console.log((debtRatio * 100).toFixed(2));
-      await this.rebalanceDebt(mgr, aave, data);
-      console.log('new debt ratio:', this.calcDebtRatio(data));
+      // console.log((debtRatio * 100).toFixed(2));
+      await this.rebalanceDebt(mgr, comp, data);
+      // console.log('new debt ratio:', this.calcDebtRatio(data));
     }
   }
 
   public async process(
     velodrome: VelodromePositionManager,
-    aave: AAVEPositionManager,
+    comp: CompPositionManager,
     data: VelodromeSnaphot,
   ) {
     if (!this.pool(data)) {
@@ -245,14 +267,14 @@ class HedgedVelodrome {
     }
     // open the first position
     if (!this.pos) {
-      await this.openFirstPosition(velodrome, aave, data);
+      await this.openFirstPosition(velodrome, comp, data);
       //this.idle = this.initial - this.pos.valueUsd
     } else {
-      await this.checkRebalance(velodrome, aave, data);
+      await this.checkRebalance(velodrome, comp, data);
     }
 
     if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
-      await this.harvest(data);
+      await this.harvest(comp, data);
     }
 
     // always log data
@@ -267,16 +289,18 @@ class HedgedVelodrome {
     const debt =
       pool.tokens[this.tokenIndex == 0 ? 1 : 0].price * this.borrow(data);
 
-    const total =
-      this.claimed + lpUSD + this.idle + lent - debt - this.gasCosts;
+    const total = lpUSD + this.idle + lent - debt - this.gasCosts;
     return total;
   }
 
-  private async harvest(data: VelodromeSnaphot) {
+  private async harvest(comp: CompPositionManager, data: VelodromeSnaphot) {
     const pool = this.pool(data);
-    const claimed = await this.pos.claim(pool);
-    this.claimed += claimed;
+    const farmRewards = await this.pos.claim(pool);
+    this.farmRewards += farmRewards
+    const compRewards = await comp.claim(this.comp, 'LUSD') * pool.tokens[1].price
+    this.compRewards += compRewards;
     this.lastHarvest = data.timestamp;
+    this.idle += farmRewards + compRewards;
   }
 
   private apy(data: VelodromeSnaphot) {
@@ -295,6 +319,7 @@ class HedgedVelodrome {
   }
 
   public async log(data: VelodromeSnaphot) {
+    // console.log('log')
     const tokens: any = {};
     const prices: any = {};
     const pool = this.pool(data);
@@ -308,6 +333,8 @@ class HedgedVelodrome {
     const { tokens: _t, prices: _p, reserves: _r, ...poolSnap } = pool as any;
     this.maxDrawdown = Math.max(this.maxDrawdown, -drawdown);
     const profit = totalAssets - this.initial;
+    const lent = pool.tokens[this.tokenIndex].price * this.lent(data);
+    const debt = pool.tokens[this.tokenIndex == 0 ? 1 : 0].price * this.borrow(data);
 
     const apy = this.apy(data);
     const log = {
@@ -320,13 +347,18 @@ class HedgedVelodrome {
         strategy: this.name,
         ...this.pos.snapshot,
         ...prices,
-        rewards: this.claimed,
+        farmRewards: this.farmRewards,
+        compRewards: this.compRewards,
         drawdown,
         ...poolSnap,
         highest: this.highest,
         aum: totalAssets,
         profit,
         rebalanceCount: this.rebalanceCount,
+        lent,
+        debt,
+        idle: this.idle,
+        lpAmount: this.pos.lpAmount * pool.price,
       },
       timestamp: new Date(data.timestamp * 1000),
     };
@@ -345,7 +377,8 @@ class HedgedVelodrome {
       name: this.name,
       timestamp: data.timestamp,
       aum: totalAssets,
-      rewards: this.claimed,
+      farmRewards: this.farmRewards,
+      compRewards: this.compRewards,
       lpAmount: this.pos.lpAmount,
       ...tokens,
       ...prices,
@@ -375,7 +408,8 @@ class HedgedVelodrome {
       apy: this.apy(data),
       apr: this.apr(data),
       drawdown: this.maxDrawdown,
-      rewards: this.claimed,
+      farmRewards: this.farmRewards,
+      compRewards: this.compRewards,
       start: toDate(this.start),
       end: toDate(data.timestamp),
       daysElapsed: (data.timestamp - this.start) / (60 * 60 * 24), // days
@@ -388,9 +422,9 @@ class HedgedVelodrome {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class HedgeManualVeloStrategy {
-  private curve = new VelodromePositionManager();
+  private velo = new VelodromePositionManager();
   private lastData!: VelodromeSnaphot;
-  private aaveManager = new AAVEPositionManager();
+  private sonne = new CompPositionManager();
   // private farm = new CamelotFarm()
   private strategies: HedgedVelodrome[] = [];
   constructor() {
@@ -403,8 +437,6 @@ export class HedgeManualVeloStrategy {
         debtRatioRange: 0.02,
         tokenIndex: 1,
       },
-      //{ initialInvestment: 10_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
-      //{ initialInvestment: 10_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
     ];
     this.strategies = strategies.map(
       (s) =>
@@ -425,26 +457,39 @@ export class HedgeManualVeloStrategy {
 
   public async after() {
     const summary = await Promise.all(
-      this.strategies.map((s) => s.end(this.curve, this.lastData)),
+      this.strategies.map((s) => s.end(this.velo, this.lastData)),
     );
     console.log(summary);
     const csv = stringify(summary, { header: true });
-    fs.writeFile('./velo_hedged.csv', csv);
+    fs.writeFile('./velo_hedged_manual.csv', csv);
 
     const series = this.strategies.map((s) => s.series).flat();
     const seriesCsv = stringify(series, { header: true });
-    fs.writeFile('./velo_hedged_series.csv', seriesCsv);
+    fs.writeFile('./velo_hedged_series_manual.csv', seriesCsv);
   }
 
+  missingCount = 0
   public async onData(snapshot: VelodromeSnaphot) {
+    if (!snapshot.data.velodrome) {
+      console.log('missing velodrome data', snapshot);
+      if (this.missingCount++ > 10) throw new Error()
+      return 
+    }
     this.lastData = snapshot;
-    // console.log('onData')
-    this.curve.update(snapshot);
+    this.velo.update(snapshot);
+
+    // Sonne Position Update
+    if (snapshot.data.sonne) {
+      await this.sonne.update({
+        timestamp: snapshot.timestamp,
+        data: snapshot.data.sonne as any,
+      });
+    }
 
     // Process the strategy
     for (const strat of this.strategies) {
       await wait(1);
-      await strat.process(this.curve, this.aaveManager, snapshot);
+      await strat.process(this.velo, this.sonne, snapshot);
     }
   }
 }

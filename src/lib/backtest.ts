@@ -65,13 +65,13 @@ export class Backtest {
     const sources = this.sources.sort((a, b) => {
       const aRes = Backtest.ResToSeconds(a.info.resoution);
       const bRes = Backtest.ResToSeconds(b.info.resoution);
-      return aRes > bRes ? 1 : -1;
+      return aRes >= bRes ? 1 : -1;
     });
 
     let start = this.start.getTime() / 1000;
     let end = this.end.getTime() / 1000;
 
-    const limit = 10000;
+    const limit = 1000;
     let finished = false;
     let from = start;
     let to = end;

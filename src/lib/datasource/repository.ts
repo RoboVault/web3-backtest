@@ -5,7 +5,8 @@ import { CamelotFarmDataSource } from './camelotFarm.js';
 import { CurveDexDataSource } from './curveDex.js';
 import { DataSource, DataSourceInfo } from './types.js';
 import { VelodromeDexDataSource } from './velodromeDex.js';
-import { Uni3DexDataSource } from './uni3Dex.js';
+import { Uni3DexDataSource } from './univ3Dex.js';
+import { SonneDataSource } from './sonne.js';
 
 type DataSourceEntry = DataSourceInfo & {
   createSource: (info: DataSourceInfo) => DataSource;
@@ -54,5 +55,11 @@ export const DataSourcesRepo: DataSourceEntry[] = [
     protocol: 'uniswap-dex',
     resoution: '1h',
     createSource: Uni3DexDataSource.create,
+  },
+  {
+    chain: 'optimism',
+    protocol: 'sonne',
+    resoution: '1h',
+    createSource: SonneDataSource.create,
   },
 ];

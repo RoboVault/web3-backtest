@@ -4,7 +4,7 @@ import { Numbers } from "../utils/utility.js"
 //import { PoolHourData, UniV3DataSource } from "./datasource/univ3datasource.ts"
 import * as jsbi from 'jsbi'
 import { calculateL, getXLP, getXReal, getYLP, getYReal } from "./UniV3Utils.js"
-import { Uni3Snaphot, Uni3DexDataSource } from "../datasource/uni3Dex.js"
+import { Uni3Snaphot, Uni3DexDataSource } from "../datasource/univ3Dex.js"
 const JSBI: any = jsbi // Hack because JSBIs types are broken
 
 const getTickFromPrice = (price: any, pool: any, baseSelected = 0) => {

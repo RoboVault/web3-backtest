@@ -49,7 +49,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
   constructor(public info: DataSourceInfo) {
     this.id = info.id || 'velodrome';
     const url =
-      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots-incentives-4/graphql';
+      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
     //const url = 'http://0.0.0.0:4000/graphql'
     this.client = new GraphQLClient(url, { headers: {} });
   }
@@ -84,27 +84,29 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 
   public async init() {
     const tokens = await this.getTokens();
-    const rawPools = (
-      (await this.client.request(gql`
-        query MyQuery {
-          AmmPools {
-            _id
-            tokens {
-              _id
-              address
-            }
-            address
-            symbol
-          }
+    const query = gql`
+    query MyQuery {
+      AmmPools {
+        _id
+        tokens {
+          _id
+          address
         }
-      `)) as any
+        address
+        symbol
+      }
+    }
+  `
+    const rawPools = (
+      (await this.client.request(query)) as any
     ).AmmPools as {
       tokens: any[];
       address: string;
       _id: string;
       symbol: string;
     }[];
-
+    if (rawPools.length === 0)
+      console.log(query)
     rawPools.forEach((pool) => {
       //pool.tokens.map(e => console.log(e._id))
       this.pools[pool._id] = {
@@ -120,6 +122,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
     to: number,
     limit?: number,
   ): Promise<VelodromeSnaphot[]> {
+    console.log('velo  from', from, 'to', to)
     const query = gql`query MyQuery {
 			Snapshots (
 				sort: TIMESTAMP_ASC
@@ -135,7 +138,6 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
 			}
 		  }
 		`;
-
     const raw = ((await this.client.request(query)) as any).Snapshots;
     return this.prep(raw);
   }

@@ -272,9 +272,8 @@ export class VelodromePosition {
   }
 
   public async pendingRewards(data: VelodromePoolSnapshot) {
-    //const url = 'http://0.0.0.0:4000/graphql'
     const url =
-      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots-incentives-4/graphql';
+      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
     let client: GraphQLClient = new GraphQLClient(url, { headers: {} });
     const rawFarmSnapshots = (await (
       (await client.request(gql`query MyQuery {
@@ -312,7 +311,7 @@ export class VelodromePosition {
     const dollarsEarned =
       posVeloEarned * rawFarmSnapshots[0].rewardTokenUSDPrices[0];
     const adjustedDollarsEarned = dollarsEarned * (1 - lpPercent);
-    //console.log(`adjustedDollarsEarned: ${adjustedDollarsEarned}`)
+    // console.log(`adjustedDollarsEarned: ${adjustedDollarsEarned}`)
     return adjustedDollarsEarned;
   }
 
