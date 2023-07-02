@@ -160,7 +160,7 @@ class SingleSidedUniswap {
       },
       fields: {
         strategy: this.name,
-        // ...this.pos.snapshot,
+        ...this.pos.snapshot,
         ...prices,
         rewards: this.claimed,
         drawdown,
@@ -186,6 +186,7 @@ class SingleSidedUniswap {
       timestamp: data.timestamp,
       aum: totalAssets,
       rewards: this.claimed,
+      fees: this.pos.snapshot.fees,
       lpAmount: this.pos.lpAmount,
       ...tokens,
       ...prices,

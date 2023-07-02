@@ -24,8 +24,8 @@ export type Uni3PoolSnapshot = {
   sqrtPriceX96: bigint;
   close: number;
   // tick: number
-  feeGrowthGlobal0X128: bigint;
-  feeGrowthGlobal1X128: bigint;
+  feeGrowthGlobal0X128: number;
+  feeGrowthGlobal1X128: number;
   low: number;
   high: number;
   totalValueLockedToken0: number;
@@ -210,8 +210,8 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
             sqrtPriceX96: BigInt(snap.sqrtPriceX96),
             close: sqrtPriceX96ToPrice(snap.sqrtPriceX96),
             block: snap.block,
-            feeGrowthGlobal0X128: BigInt(Number(snap.feeGrowthGlobal0X128)),
-            feeGrowthGlobal1X128: BigInt(Number(snap.feeGrowthGlobal1X128)),
+            feeGrowthGlobal0X128: Number(snap.feeGrowthGlobal0X128),
+            feeGrowthGlobal1X128: Number(snap.feeGrowthGlobal1X128),
             low: sqrtPriceX96ToPrice(snap.low),
             high: sqrtPriceX96ToPrice(snap.high),
             totalValueLockedToken0: Number(snap.totalValueLockedToken0),

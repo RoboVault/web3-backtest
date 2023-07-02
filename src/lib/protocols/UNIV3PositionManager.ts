@@ -3,13 +3,7 @@ import { ethers, BigNumber } from 'ethers';
 import { Numbers } from '../utils/utility.js';
 //import { PoolHourData, UniV3DataSource } from "./datasource/univ3datasource.ts"
 import * as jsbi from 'jsbi';
-import {
-  calculateL,
-  getXLP,
-  getXReal,
-  getYLP,
-  getYReal,
-} from './UniV3Utils.js';
+import { calculateL, getXReal, getYReal } from './UniV3Utils.js';
 import { Uni3Snaphot, Uni3DexDataSource } from '../datasource/univ3Dex.js';
 const JSBI: any = jsbi; // Hack because JSBIs types are broken
 
@@ -308,10 +302,9 @@ export class UniV3Position {
       amountTR = this.amount + (amountV - (x0 * (1 / pool.close) + y0));
     }
 
-    const fees = [this.feeToken0, this.feeToken1];
+    const fees = this.feeToken0 + pool.close * this.feeToken1;
     // note: posReserves array is flipped
-    const valueToken0 =
-      posReserves[1] + fees[0] + pool.close * (posReserves[0] + fees[1]);
+    const valueToken0 = fees + posReserves[1] + pool.close * posReserves[0];
     this.valueUsd = valueToken0 * pool.prices[0];
 
     this.snapshot = {
@@ -320,10 +313,7 @@ export class UniV3Position {
       x0,
       y0,
       activeliquidity: activeLiquidity,
-      feeToken0: feeToken0,
-      feeToken1: feeToken1,
-      tokens: tokens,
-      reserves: posReserves,
+      fees,
       fgV: fgV,
       feeV: feeV,
       feeUnb: feeUnb,
@@ -357,10 +347,10 @@ export class UniV3PositionManager {
       const pool = getPool(data);
       const lastPool = getPool(this.lastData);
       const unboundFees = this.calcUnboundedFees(
-        Number(BigInt(Number(pool.feeGrowthGlobal0X128))),
-        Number(BigInt(Number(lastPool.feeGrowthGlobal0X128))),
-        Number(BigInt(Number(pool.feeGrowthGlobal1X128))),
-        Number(BigInt(Number(lastPool.feeGrowthGlobal1X128))),
+        pool.feeGrowthGlobal0X128,
+        lastPool.feeGrowthGlobal0X128,
+        pool.feeGrowthGlobal1X128,
+        lastPool.feeGrowthGlobal1X128,
         pool,
       );
       pos.processData(this.lastData, data, unboundFees);
@@ -393,26 +383,6 @@ export class UniV3PositionManager {
     return pos;
   }
 
-  // public openBalancedPosition(
-  //     amount: number,
-  //     tickRange: number,
-  //     priceToken: number = 0
-  // ): UniV3Position {
-  //     if (!this.lastData)
-  //         throw new Error('wow')
-
-  //     // getPriceFromTick()
-
-  //     const currentTick = getTickFromPrice(this.lastData.close, this.lastData.pool)
-  //     const maxRange = getPriceFromTick(currentTick + tickRange, this.lastData.pool)
-  //     const minRange = getPriceFromTick(currentTick - tickRange, this.lastData.pool)
-  //     console.log('Openning position')
-  //     console.log(minRange, this.lastData.close, maxRange)
-  //     const pos = new UniV3Position(amount, minRange, maxRange, priceToken, this.lastData.close)
-  //     this.positions.push(pos)
-  //     return pos
-  // }
-
   // calculate the amount of fees earned in 1 period by 1 unit of unbounded liquidity //
   // fg0 represents the amount of token 0, fg1 represents the amount of token1 //
   // Borrowed from https://github.com/DefiLab-xyz/uniswap-v3-backtest
@@ -423,15 +393,10 @@ export class UniV3PositionManager {
     prevGlobalfee1: number,
     pool: any,
   ): [number, number] {
-    const fg0_0 =
-      globalfee0 / Math.pow(2, 128) / Math.pow(10, pool.tokens[0].decimals);
-    const fg0_1 =
-      prevGlobalfee0 / Math.pow(2, 128) / Math.pow(10, pool.tokens[0].decimals);
-
-    const fg1_0 =
-      globalfee1 / Math.pow(2, 128) / Math.pow(10, pool.tokens[1].decimals);
-    const fg1_1 =
-      prevGlobalfee1 / Math.pow(2, 128) / Math.pow(10, pool.tokens[1].decimals);
+    const fg0_0 = globalfee0 / Math.pow(2, 128);
+    const fg0_1 = prevGlobalfee0 / Math.pow(2, 128);
+    const fg1_0 = globalfee1 / Math.pow(2, 128);
+    const fg1_1 = prevGlobalfee1 / Math.pow(2, 128);
 
     const fg0 = fg0_0 - fg0_1; // fee of token 0 earned in 1 period by 1 unit of unbounded liquidity
     const fg1 = fg1_0 - fg1_1; // fee of token 1 earned in 1 period by 1 unit of unbounded liquidity
