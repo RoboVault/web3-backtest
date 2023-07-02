@@ -70,7 +70,7 @@ class HedgedVelodrome {
   count = 0;
   public gasCosts: number = 0;
   private rebalanceCount: number = 0;
-  private scheduler = new RebalanceScheduler()
+  private scheduler = new RebalanceScheduler();
 
   constructor(
     public name: string,
@@ -245,9 +245,9 @@ class HedgedVelodrome {
     data: VelodromeSnaphot,
   ) {
     const debtRatio = this.calcDebtRatio(data);
-    const triggered = 
+    const triggered =
       debtRatio > 1 + this.debtRatioRange ||
-      debtRatio < 1 - this.debtRatioRange
+      debtRatio < 1 - this.debtRatioRange;
     if (this.scheduler.shouldRebalance(data.timestamp * 1000, triggered)) {
       console.log('\n************* rebalancing debt! *************');
       // console.log((debtRatio * 100).toFixed(2));
@@ -296,8 +296,9 @@ class HedgedVelodrome {
   private async harvest(comp: CompPositionManager, data: VelodromeSnaphot) {
     const pool = this.pool(data);
     const farmRewards = await this.pos.claim(pool);
-    this.farmRewards += farmRewards
-    const compRewards = await comp.claim(this.comp, 'LUSD') * pool.tokens[1].price
+    this.farmRewards += farmRewards;
+    const compRewards =
+      (await comp.claim(this.comp, 'LUSD')) * pool.tokens[1].price;
     this.compRewards += compRewards;
     this.lastHarvest = data.timestamp;
     this.idle += farmRewards + compRewards;
@@ -334,7 +335,8 @@ class HedgedVelodrome {
     this.maxDrawdown = Math.max(this.maxDrawdown, -drawdown);
     const profit = totalAssets - this.initial;
     const lent = pool.tokens[this.tokenIndex].price * this.lent(data);
-    const debt = pool.tokens[this.tokenIndex == 0 ? 1 : 0].price * this.borrow(data);
+    const debt =
+      pool.tokens[this.tokenIndex == 0 ? 1 : 0].price * this.borrow(data);
 
     const apy = this.apy(data);
     const log = {
@@ -468,12 +470,12 @@ export class HedgeManualVeloStrategy {
     fs.writeFile('./velo_hedged_series_manual.csv', seriesCsv);
   }
 
-  missingCount = 0
+  missingCount = 0;
   public async onData(snapshot: VelodromeSnaphot) {
     if (!snapshot.data.velodrome) {
       console.log('missing velodrome data', snapshot);
-      if (this.missingCount++ > 10) throw new Error()
-      return 
+      if (this.missingCount++ > 10) throw new Error();
+      return;
     }
     this.lastData = snapshot;
     this.velo.update(snapshot);

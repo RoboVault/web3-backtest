@@ -20,10 +20,10 @@ const main = async () => {
       chain: 'optimism',
       protocol: 'sonne',
       resoution: '1h',
-      config: { 
-        pools: ['LUSD', 'WETH']
+      config: {
+        pools: ['LUSD', 'WETH'],
       },
-    }
+    },
   ];
 
   const bt = await Backtest.create(

@@ -6,17 +6,17 @@ import {
 } from './types.js';
 import { gql, GraphQLClient } from 'graphql-request';
 
-export type CompPoolSnapshot = SonnePoolSnapshot
+export type CompPoolSnapshot = SonnePoolSnapshot;
 export type SonnePoolSnapshot = {
   underlying: string;
   liquidityRate: number;
   variableBorrowRate: number;
   totalSupply: number;
   totalDebt: number;
-	cTokenTotalSupply: number,
-	compPrice: number,
-	compSupplyPerBlock: number,
-	compBorrowPerBlock: number,
+  cTokenTotalSupply: number;
+  compPrice: number;
+  compSupplyPerBlock: number;
+  compBorrowPerBlock: number;
 };
 export type SonneSnapshot = DataSnapshot<SonnePoolSnapshot>;
 
@@ -28,10 +28,10 @@ type Snapshots = {
   totalSupply: number;
   totalDebt: number;
   underlying: string;
-	cTokenTotalSupply: number,
-	compPrice: number,
-	compSupplyPerBlock: number,
-	compBorrowPerBlock: number,
+  cTokenTotalSupply: number;
+  compPrice: number;
+  compSupplyPerBlock: number;
+  compBorrowPerBlock: number;
 };
 
 type SonnePool = {
@@ -40,9 +40,9 @@ type SonnePool = {
   network: string;
   underlyingSymbol: string;
   underlying: {
-    symbol: string,
-    address: string,
-  }
+    symbol: string;
+    address: string;
+  };
 };
 
 export class SonneDataSource implements DataSource<SonneSnapshot> {
@@ -54,7 +54,7 @@ export class SonneDataSource implements DataSource<SonneSnapshot> {
     this.id = info.id || 'sonne';
     this.poolSymbols = info.config.pools;
     // const url =
-      // 'https://data.staging.arkiver.net/robolabs/sonne-snapshots/graphql';
+    // 'https://data.staging.arkiver.net/robolabs/sonne-snapshots/graphql';
     const url =
       'https://data.staging.arkiver.net/robolabs/sonne-snapshots/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
     this.client = new GraphQLClient(url, { headers: {} });
@@ -98,7 +98,7 @@ export class SonneDataSource implements DataSource<SonneSnapshot> {
     limit?: number,
   ): Promise<Snapshots[]> {
     const poolId = `"${pool._id}"`;
-    console.log('sonne from', from, 'to', to)
+    console.log('sonne from', from, 'to', to);
     const query = gql`query MyQuery {
 			Snapshots (
 				sort: TIMESTAMP_ASC

@@ -9,23 +9,23 @@ type Rates = {
   [key: string]: {
     supply: number;
     borrow: number;
-    rewards? : {
-      totalSupply: number,
-      totalDebt: number,
-      compPrice: number,
-      compSupplyPerBlock: number,
-      compBorrowPerBlock: number,
-    }
+    rewards?: {
+      totalSupply: number;
+      totalDebt: number;
+      compPrice: number;
+      compSupplyPerBlock: number;
+      compBorrowPerBlock: number;
+    };
   };
 };
 
-const DILUTION_FACTOR = 0.7
+const DILUTION_FACTOR = 0.7;
 
 export class CompPosition {
   public borrows: { [key: string]: number } = {};
   public lends: { [key: string]: number } = {};
   public interest = { cost: 0, income: 0 };
-  public pendingComp = 0
+  public pendingComp = 0;
 
   constructor(private blocksPerSecond: number, public rates: Rates) {}
 
@@ -48,9 +48,9 @@ export class CompPosition {
   }
 
   public claim() {
-    const compEarned = this.pendingComp
-    this.pendingComp = 0
-    return compEarned
+    const compEarned = this.pendingComp;
+    this.pendingComp = 0;
+    return compEarned;
   }
 
   public borrow(token: string, amount: number) {
@@ -58,7 +58,7 @@ export class CompPosition {
     this.borrows[token] = now + amount;
   }
 
-  public process(elapsed: number, rates: Rates, ) {
+  public process(elapsed: number, rates: Rates) {
     this.rates = rates;
     let income = 0;
     let cost = 0;
@@ -70,11 +70,16 @@ export class CompPosition {
       this.borrows[borrow] -= interest;
       cost += interest;
 
-      const rewards = this.rates[borrow].rewards
+      const rewards = this.rates[borrow].rewards;
       if (rewards) {
-        const borrowed = this.borrows[borrow]
-        const compEarned = (this.blocksPerSecond * elapsed * rewards.compBorrowPerBlock * borrowed) / (rewards.totalDebt + (borrowed * DILUTION_FACTOR))
-        this.pendingComp += compEarned
+        const borrowed = this.borrows[borrow];
+        const compEarned =
+          (this.blocksPerSecond *
+            elapsed *
+            rewards.compBorrowPerBlock *
+            borrowed) /
+          (rewards.totalDebt + borrowed * DILUTION_FACTOR);
+        this.pendingComp += compEarned;
       }
     }
 
@@ -85,14 +90,15 @@ export class CompPosition {
       this.lends[lend] += interest;
       income += interest;
 
-      const rewards = this.rates[lend].rewards
+      const rewards = this.rates[lend].rewards;
       if (rewards) {
-        const lent = this.lends[lend]
-        const compEarned = (this.blocksPerSecond * elapsed * rewards.compSupplyPerBlock * lent) / (rewards.totalSupply + (lent * DILUTION_FACTOR))
-        this.pendingComp += compEarned
+        const lent = this.lends[lend];
+        const compEarned =
+          (this.blocksPerSecond * elapsed * rewards.compSupplyPerBlock * lent) /
+          (rewards.totalSupply + lent * DILUTION_FACTOR);
+        this.pendingComp += compEarned;
       }
     }
-
 
     this.interest = { cost, income };
   }
@@ -127,7 +133,7 @@ export class CompPositionManager {
           compPrice: pool.compPrice,
           compSupplyPerBlock: pool.compSupplyPerBlock,
           compBorrowPerBlock: pool.compBorrowPerBlock,
-        }
+        },
       };
     }
 
@@ -146,8 +152,8 @@ export class CompPositionManager {
   }
 
   public claim(pos: CompPosition, claimInToken: string) {
-    const price = this.rates[claimInToken].rewards!.compPrice
-    return pos.claim() * price
+    const price = this.rates[claimInToken].rewards!.compPrice;
+    return pos.claim() * price;
   }
 
   public close(pos: CompPosition) {

@@ -85,28 +85,25 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
   public async init() {
     const tokens = await this.getTokens();
     const query = gql`
-    query MyQuery {
-      AmmPools {
-        _id
-        tokens {
+      query MyQuery {
+        AmmPools {
           _id
+          tokens {
+            _id
+            address
+          }
           address
+          symbol
         }
-        address
-        symbol
       }
-    }
-  `
-    const rawPools = (
-      (await this.client.request(query)) as any
-    ).AmmPools as {
+    `;
+    const rawPools = ((await this.client.request(query)) as any).AmmPools as {
       tokens: any[];
       address: string;
       _id: string;
       symbol: string;
     }[];
-    if (rawPools.length === 0)
-      console.log(query)
+    if (rawPools.length === 0) console.log(query);
     rawPools.forEach((pool) => {
       //pool.tokens.map(e => console.log(e._id))
       this.pools[pool._id] = {
@@ -122,7 +119,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
     to: number,
     limit?: number,
   ): Promise<VelodromeSnaphot[]> {
-    console.log('velo  from', from, 'to', to)
+    console.log('velo  from', from, 'to', to);
     const query = gql`query MyQuery {
 			Snapshots (
 				sort: TIMESTAMP_ASC

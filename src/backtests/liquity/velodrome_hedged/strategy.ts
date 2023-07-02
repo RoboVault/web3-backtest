@@ -294,8 +294,9 @@ class HedgedVelodrome {
   private async harvest(comp: CompPositionManager, data: VelodromeSnaphot) {
     const pool = this.pool(data);
     const farmRewards = await this.pos.claim(pool);
-    this.farmRewards += farmRewards
-    const compRewards = await comp.claim(this.comp, 'LUSD') * pool.tokens[1].price
+    this.farmRewards += farmRewards;
+    const compRewards =
+      (await comp.claim(this.comp, 'LUSD')) * pool.tokens[1].price;
     this.compRewards += compRewards;
     this.lastHarvest = data.timestamp;
     this.idle += farmRewards + compRewards;
@@ -331,7 +332,8 @@ class HedgedVelodrome {
     this.maxDrawdown = Math.max(this.maxDrawdown, -drawdown);
     const profit = totalAssets - this.initial;
     const lent = pool.tokens[this.tokenIndex].price * this.lent(data);
-    const debt = pool.tokens[this.tokenIndex == 0 ? 1 : 0].price * this.borrow(data);
+    const debt =
+      pool.tokens[this.tokenIndex == 0 ? 1 : 0].price * this.borrow(data);
 
     const apy = this.apy(data);
     const log = {
@@ -370,7 +372,7 @@ class HedgedVelodrome {
       }
     }
 
-    console.log()
+    console.log();
     this.series.push({
       name: this.name,
       timestamp: data.timestamp,
