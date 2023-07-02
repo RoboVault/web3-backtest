@@ -94,9 +94,9 @@ class SingleSidedUniswap {
     if (!this.pos) {
       const pool = this.pool(data);
       this.pos = uni.open(
-        this.initial,
-        pool.tokens[0].price * 0.9,
-        pool.tokens[0].price * 1.1,
+        this.initial / pool.close,
+        pool.close * 0.9,
+        pool.close * 1.1,
         this.priceToken,
         this.poolSymbol,
       );
