@@ -10,6 +10,10 @@ export function toBigNumber(n: number, decimals: number = 0): ethers.BigNumber {
   return ethers.BigNumber.from(`0x${(n * 10 ** decimals).toString(16)}`);
 }
 
+export function bigintToNumber(n: bigint, decimals: number = 0): number {
+  return Number(n) / (10**decimals);
+}
+
 export type Environment = 'DEV' | 'STAG' | 'PROD';
 
 export class Settings {

@@ -291,6 +291,8 @@ export class SingleSidedVelodromeStrategy {
   }
 
   public async onData(snapshot: VelodromeSnaphot) {
+    if (!snapshot.data.velodrome)
+      return console.log('No velodrome data, skipping', snapshot);
     this.lastData = snapshot;
     // console.log('onData')
     this.curve.update(snapshot);

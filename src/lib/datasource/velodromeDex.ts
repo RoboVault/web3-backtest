@@ -49,7 +49,7 @@ export class VelodromeDexDataSource implements DataSource<VelodromeSnaphot> {
   constructor(public info: DataSourceInfo) {
     this.id = info.id || 'velodrome';
     const url =
-      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
+      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots-v2/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
     //const url = 'http://0.0.0.0:4000/graphql'
     this.client = new GraphQLClient(url, { headers: {} });
   }

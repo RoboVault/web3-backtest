@@ -72,7 +72,7 @@ class SingleSidedUniswap {
   }
 
   public pool(data: Uni3Snaphot) {
-    return data.data.uni3.find((p) => p.symbol === this.poolSymbol)!;
+    return data.data.univ3.find((p) => p.symbol === this.poolSymbol)!;
   }
 
   public poolIndex(data: Uni3Snaphot) {
@@ -142,7 +142,7 @@ class SingleSidedUniswap {
   }
 
   public async log(data: Uni3Snaphot) {
-	console.log(`log timestamp: ${Date.now()}`);
+	// console.log(`log timestamp: ${Date.now()}`);
     const tokens: any = {};
     const prices: any = {};
     const pool = this.pool(data);
@@ -166,28 +166,27 @@ class SingleSidedUniswap {
       },
       fields: {
         strategy: this.name,
-    	...this.pos.snapshot,
+    	  // ...this.pos.snapshot,
         ...prices,
         rewards: this.claimed,
         drawdown,
         //...poolSnap,
         highest: this.highest,
-		apy, // TODO: get APY
+		    apy, // TODO: get APY
         aum: totalAssets,
         profit,
       },
       timestamp: new Date(data.timestamp * 1000)
     };
-    if (this.count++ % 24 === 0) {
-      this.count = 0;
-      if (apy !== 0) log.fields.apy = apy;
-      try {
-        await Log.writePoint(log);
-      } catch (e) {
-        await wait(10);
-        await Log.writePoint(log);
-      }
+    if (apy !== 0) log.fields.apy = apy;
+
+    try {
+      await Log.writePoint(log);
+    } catch (e) {
+      await wait(10);
+      await Log.writePoint(log);
     }
+
 
     this.series.push({
       name: this.name,
@@ -202,9 +201,9 @@ class SingleSidedUniswap {
   }
 
   public async end(uni: UniV3PositionManager, data: Uni3Snaphot) {
-	const close = await uni.close(this.pos)
-	console.log(`close: ${close}`)
-	console.log(`idle: ${this.idle}`)
+    const close = await uni.close(this.pos)
+    console.log(`close: ${close}`)
+    console.log(`idle: ${this.idle}`)
     this.idle = this.idle + close
     console.log('Strategy closing position', this.estTotalAssets(data));
     const variance = Stats.variance(this.series.map((e) => e.aum));
@@ -248,7 +247,7 @@ export class SingleSidedUniswapStrategy {
       {
         initialInvestment: 100_000,
         name: 'A: UNI3-LUSD/USDC 0.05%',
-        pool: 'UNI3-LUSD/USDC 0.05%',
+        pool: 'Univ3 LUSD/USDC 0.05%',
         rangeSpread: 0.1,
         priceToken: 0,
       },

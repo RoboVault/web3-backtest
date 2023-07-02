@@ -273,7 +273,7 @@ export class VelodromePosition {
 
   public async pendingRewards(data: VelodromePoolSnapshot) {
     const url =
-      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
+      'https://data.staging.arkiver.net/robolabs/velodrome-snapshots-v2/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
     let client: GraphQLClient = new GraphQLClient(url, { headers: {} });
     const rawFarmSnapshots = (await (
       (await client.request(gql`query MyQuery {

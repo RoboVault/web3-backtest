@@ -268,7 +268,7 @@ export class Uni3PositionManager {
   ): Promise<[Uni3Position, number]> {
     if (!this.lastData) throw new Error('wow');
 
-    const pair = this.lastData.data.uni3.find((p) => p.symbol === symbol)!;
+    const pair = this.lastData.data.univ3.find((p) => p.symbol === symbol)!;
     let [pos, idle] = await Uni3Position.open(
       pair,
       amount,

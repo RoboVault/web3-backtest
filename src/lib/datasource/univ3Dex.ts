@@ -1,3 +1,4 @@
+import { bigintToNumber, toNumber } from "../utils/utility.js";
 import { DataSnapshot, DataSource, DataSourceInfo, Resolution } from "./types.js";
 import { gql, GraphQLClient } from "graphql-request";
 
@@ -13,16 +14,17 @@ export type Uni3PoolSnapshot = {
 		//reserve: number
 		price: number
 	}[]
-	totalSupply: number
-	//price: number
-	//sqrtPriceX96: number
-	tick: number
-	feeGrowthGlobal0X128: string
-	feeGrowthGlobal1X128: string
+	// totalSupply: number
+	prices: [number, number]
+	sqrtPriceX96: bigint
+	close: number,
+	// tick: number
+	feeGrowthGlobal0X128: bigint
+	feeGrowthGlobal1X128: bigint
 	low: number
 	high: number
-	totalValueLockedToken0: string
-	totalValueLockedToken1: string
+	totalValueLockedToken0: number
+	totalValueLockedToken1: number
 	totalValueLockedUSD: number
 }
 
@@ -32,16 +34,16 @@ type Snapshot = {
 	block: number,
 	pool: {_id: string},
 	//reserves: number[],
-	prices: number[],
+	prices: [number, number],
 	timestamp: number,
 	res: '1h' | '1m',
-	totalSupply: number,
-	//sqrtPriceX96: number,
-	tick: number,
+	// totalSupply: number,
+	sqrtPriceX96: string,
+	tick: string,
 	feeGrowthGlobal0X128: string,
 	feeGrowthGlobal1X128: string,
-	low: number,
-	high: number
+	low: string,
+	high: string
 	totalValueLockedToken0: string,
 	totalValueLockedToken1: string,
 	totalValueLockedUSD: number
@@ -58,7 +60,7 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 	private pools: {[key: string]: { tokens: Token[], address: string, symbol: string}} = {}
 	public readonly id: string
 	constructor(public info: DataSourceInfo) {
-		this.id = info.id || 'uni3'
+		this.id = info.id || 'univ3'
 		const url = 'https://data.staging.arkiver.net/robolabs/univ3-ohlc/graphql'
 		//const url = 'http://0.0.0.0:4000/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
@@ -73,7 +75,7 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 	}
 
 	private async getTokens() {
-		return ((await this.client.request(gql`query MyQuery {
+		return ((await this.client.request(gql`query TokenQuery {
 			Tokens {
 				_id
 				symbol
@@ -90,7 +92,7 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 	// }
 	public async init() {
 		const tokens = await this.getTokens()
-		const rawPools = ((await this.client.request(gql`query MyQuery {
+		const rawPools = ((await this.client.request(gql`query PoolQuery {
 			AmmPools {
 				_id
 				tokens{
@@ -112,24 +114,24 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 	}
 
 	public async fetch(from: number, to: number, limit?: number): Promise<Uni3Snaphot[]> {
-		const query = gql`query MyQuery {
+		const query = gql`query SnapshotQuery {
 			Snapshots (
 				sort: TIMESTAMP_ASC
 				filter: {_operators: {timestamp: {gt: ${from}, lt: ${to}}}}
 				${limit ? `limit: ${limit}` : ``}
 			) {
 				pool {
-                    _id
-                }
-				timestamp
-				totalSupply
+					_id
+				}
 				block
-				prices
-				tick
 				feeGrowthGlobal0X128
 				feeGrowthGlobal1X128
-				low
 				high
+				low
+				prices
+				res
+				timestamp
+				sqrtPriceX96
 				totalValueLockedToken0
 				totalValueLockedToken1
 				totalValueLockedUSD
@@ -156,26 +158,35 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 						price: snap.prices[i]
 					}
 				})
+
+				const sqrtPriceX96ToPrice = (sqrtPriceX96: string) => {
+					const sqrtPriceX96BN = BigInt(sqrtPriceX96)
+					const price = sqrtPriceX96BN * sqrtPriceX96BN * (10n ** 18n) / (2n ** 192n)
+					return bigintToNumber(price, pool.tokens[1].decimals)
+				}
+				
 				//const price = tokens.reduce((acc, token) => acc + (token.reserve * token.price), 0) / snap.totalSupply
 				// console.log(tokens)
 				// console.log(`price: ${price} `)
 				// console.log(`totSupply: ${snap.totalSupply}`)
-				return {
+				const s: Uni3PoolSnapshot = {
 					...snap,
 					timestamp,
 					pool: pool.address,
 					tokens,
 					symbol: pool.symbol,
-					//price,
+					sqrtPriceX96: BigInt(snap.sqrtPriceX96),
+					close: sqrtPriceX96ToPrice(snap.sqrtPriceX96),
 					block: snap.block,
-					feeGrowthGlobal0X128: snap.feeGrowthGlobal0X128,
-					feeGrowthGlobal1X128: snap.feeGrowthGlobal1X128,
-					low: snap.low,
-					high: snap.high,
-					totalValueLockedToken0: snap.totalValueLockedToken0,
-					totalValueLockedToken1: snap.totalValueLockedToken1,
-					totalValueLockedUSD: snap.totalValueLockedUSD
+					feeGrowthGlobal0X128: BigInt(Number(snap.feeGrowthGlobal0X128)),
+					feeGrowthGlobal1X128: BigInt(Number(snap.feeGrowthGlobal1X128)),
+					low: sqrtPriceX96ToPrice(snap.low),
+					high: sqrtPriceX96ToPrice(snap.high),
+					totalValueLockedToken0: Number(snap.totalValueLockedToken0),
+					totalValueLockedToken1: Number(snap.totalValueLockedToken1),
+					totalValueLockedUSD: Number(snap.totalValueLockedUSD)
 				}
+				return s
 			})
 			return ret
 		})
