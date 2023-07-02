@@ -1,14 +1,11 @@
 import { Measurement, Schema } from '../../../lib/utils/timeseriesdb.js';
 import {
-  Uni3Position,
-  Uni3PositionManager,
-} from '../../../lib/protocols/UNIV3PositionManager.js';
+  UniV3Position,
+  UniV3PositionManager,
+} from '../../../lib/protocols/UniV3PositionManager.js';
 import { Uni3Snaphot } from '../../../lib/datasource/univ3Dex.js';
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
-import { ethers } from 'ethers';
-import { VelodromeRouterAbi } from '../../../lib/abis/VelodromeRouter.js';
-import { toBigNumber, toNumber } from '../../../lib/utils/utility.js';
 
 interface ILogAny extends Schema {
   tags: any;
@@ -23,7 +20,7 @@ const ONE_YEAR = 60 * 60 * 24 * 365;
 
 const RPC =
   'https://optimism-mainnet.infura.io/v3/5e5034092e114ffbb3d812b6f7a330ad';
-const VELODROME_ROUTER = '0x9c12939390052919aF3155f41Bf4160Fd3666A6f';
+//const VELODROME_ROUTER = "0x9c12939390052919aF3155f41Bf4160Fd3666A6f"
 
 class Stats {
   // Calculate the average of all the numbers
@@ -50,7 +47,7 @@ class Stats {
 }
 
 class SingleSidedUniswap {
-  public pos!: Uni3Position;
+  public pos!: UniV3Position;
   public start!: number;
   public highest: number;
   public lastHarvest: number = 0;
@@ -64,15 +61,15 @@ class SingleSidedUniswap {
     public name: string,
     public poolSymbol: string,
     public initial: number,
+    public rangeSpread: number,
+    public priceToken: number,
   ) {
     this.highest = initial;
     // this.symbol = 'WETH/USDC'
   }
 
   public pool(data: Uni3Snaphot) {
-    console.log(`getPool`);
-    console.log(data.data.uni3);
-    return data.data.uni3.find((p) => p.symbol === this.poolSymbol)!;
+    return data.data.univ3.find((p) => p.symbol === this.poolSymbol)!;
   }
 
   public poolIndex(data: Uni3Snaphot) {
@@ -83,16 +80,12 @@ class SingleSidedUniswap {
     return amount * 10 ** decimals;
   }
 
-  private router() {
-    const provider = new ethers.providers.JsonRpcProvider(RPC);
-    return new ethers.Contract(
-      VELODROME_ROUTER,
-      VelodromeRouterAbi as any,
-      provider,
-    );
-  }
+  // private router() {
+  // 	const provider = new ethers.providers.JsonRpcProvider(RPC)
+  // 	return new ethers.Contract(VELODROME_ROUTER, VelodromeRouterAbi as any, provider)
+  // }
 
-  public async process(uni: Uni3PositionManager, data: Uni3Snaphot) {
+  public async process(uni: UniV3PositionManager, data: Uni3Snaphot) {
     if (!this.pool(data)) {
       console.log('missing data for ' + this.name);
       return;
@@ -100,38 +93,31 @@ class SingleSidedUniswap {
     // open the first position
     if (!this.pos) {
       const pool = this.pool(data);
-      // const poolIndex = this.poolIndex(data)
-      const prices = [pool.tokens[0].price, pool.tokens[1].price];
-      const decimals = [pool.tokens[0].decimals, pool.tokens[1].decimals];
-      console.log(prices);
-      console.log(pool.tokens[0].symbol);
-      console.log(pool.tokens[1].symbol);
-      let [pos, idle] = await uni.addLiquidity(pool.symbol, this.initial, 0);
-      // //let [pos, idle] = await velodrome.addLiquidity(this.poolSymbol, this.initial, 1)
-      // this.pos = pos
-      // this.idle = idle
-      // this.start = data.timestamp
-      // this.lastHarvest = this.start
-      // //this.idle = this.initial - this.pos.valueUsd
+      this.pos = uni.open(
+        this.initial,
+        pool.tokens[0].price*0.9,
+        pool.tokens[0].price*1.1,
+        this.priceToken,
+        this.poolSymbol,
+      );
+	    this.start = data.timestamp;
     }
 
-    if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
-      await this.harvest(data);
-    }
+	if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
+		await this.harvest(data)
+	}
 
     // always log data
     await this.log(data);
   }
 
   private estTotalAssets(data: Uni3Snaphot) {
-    return 0; //this.claimed + this.pos.valueUsd + this.idle
+    return this.pos.valueUsd + this.idle;
   }
 
   private async harvest(data: Uni3Snaphot) {
-    const pool = this.pool(data);
-    const claimed = await this.pos.claim(pool);
-    this.claimed += claimed;
-    this.lastHarvest = data.timestamp;
+  	this.claimed = this.pos.claimed
+  	this.lastHarvest = data.timestamp
   }
 
   private apy(data: Uni3Snaphot) {
@@ -158,6 +144,7 @@ class SingleSidedUniswap {
       prices[`price${i}`] = token.price;
     });
     const totalAssets = this.estTotalAssets(data);
+    if (totalAssets === 0) return;
     this.highest = this.highest < totalAssets ? totalAssets : this.highest;
     const drawdown = -(this.highest - totalAssets) / this.highest;
     const { tokens: _t, prices: _p, reserves: _r, ...poolSnap } = pool as any;
@@ -173,42 +160,45 @@ class SingleSidedUniswap {
       },
       fields: {
         strategy: this.name,
-        ...this.pos.snapshot,
+    	  // ...this.pos.snapshot,
         ...prices,
         rewards: this.claimed,
         drawdown,
-        ...poolSnap,
+        //...poolSnap,
         highest: this.highest,
+		    apy, // TODO: get APY
         aum: totalAssets,
         profit,
       },
-      timestamp: new Date(data.timestamp * 1000),
+      timestamp: new Date(data.timestamp * 1000)
     };
-    if (this.count++ % 24 === 0) {
-      this.count = 0;
-      if (apy !== 0) log.fields.apy = apy;
-      try {
-        await Log.writePoint(log);
-      } catch (e) {
-        await wait(10);
-        await Log.writePoint(log);
-      }
+    if (apy !== 0) log.fields.apy = apy;
+
+    try {
+      await Log.writePoint(log);
+    } catch (e) {
+      await wait(10);
+      await Log.writePoint(log);
     }
+
 
     this.series.push({
       name: this.name,
       timestamp: data.timestamp,
       aum: totalAssets,
       rewards: this.claimed,
-      //lpAmount: this.pos.lpAmount,
+      lpAmount: this.pos.lpAmount,
       ...tokens,
       ...prices,
       ...this.pos.snapshot,
     });
   }
 
-  public async end(uni: Uni3PositionManager, data: Uni3Snaphot) {
-    // this.idle = this.idle + await uni.close(this.pos)
+  public async end(uni: UniV3PositionManager, data: Uni3Snaphot) {
+    const close = await uni.close(this.pos)
+    console.log(`close: ${close}`)
+    console.log(`idle: ${this.idle}`)
+    this.idle = this.idle + close
     console.log('Strategy closing position', this.estTotalAssets(data));
     const variance = Stats.variance(this.series.map((e) => e.aum));
     const stddev = Stats.stddev(variance);
@@ -241,7 +231,7 @@ class SingleSidedUniswap {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export class SingleSidedUniswapStrategy {
-  private uni = new Uni3PositionManager();
+  private uni = new UniV3PositionManager();
   private lastData!: Uni3Snaphot;
   // private aaveManager = new AAVEPositionManager()
   // private farm = new CamelotFarm()
@@ -249,15 +239,22 @@ export class SingleSidedUniswapStrategy {
   constructor() {
     const strategies = [
       {
-        initialInvestment: 10_000,
+        initialInvestment: 100_000,
         name: 'A: UNI3-LUSD/USDC 0.05%',
-        pool: 'UNI3-LUSD/USDC 0.05%',
+        pool: 'Univ3 LUSD/USDC 0.05%',
+        rangeSpread: 0.1,
+        priceToken: 0,
       },
-      // { initialInvestment: 10_000, name: 'A: sAMM-LUSD/MAI', pool: 'sAMM-LUSD/MAI' },
-      // { initialInvestment: 10_000, name: 'A: sAMM-USD+/LUSD', pool: 'sAMM-USD+/LUSD' }
     ];
     this.strategies = strategies.map(
-      (s) => new SingleSidedUniswap(s.name, s.pool, s.initialInvestment),
+      (s) =>
+        new SingleSidedUniswap(
+          s.name,
+          s.pool,
+          s.initialInvestment,
+          s.rangeSpread,
+          s.priceToken,
+        ),
     );
   }
 
@@ -271,17 +268,17 @@ export class SingleSidedUniswapStrategy {
     );
     console.log(summary);
     const csv = stringify(summary, { header: true });
-    fs.writeFile('./velo_ss.csv', csv);
+    fs.writeFile('./univ3_ss.csv', csv);
 
     const series = this.strategies.map((s) => s.series).flat();
     const seriesCsv = stringify(series, { header: true });
-    fs.writeFile('./velo_ss_series.csv', seriesCsv);
+    fs.writeFile('./univ3_ss_series.csv', seriesCsv);
   }
 
   public async onData(snapshot: Uni3Snaphot) {
     this.lastData = snapshot;
     // console.log('onData')
-    this.uni.update(snapshot);
+    this.uni.processPoolData(snapshot);
 
     // Process the strategy
     for (const strat of this.strategies) {
