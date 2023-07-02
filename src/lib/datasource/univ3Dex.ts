@@ -59,7 +59,7 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 	public readonly id: string
 	constructor(public info: DataSourceInfo) {
 		this.id = info.id || 'uni3'
-		const url = 'https://data.staging.arkiver.net/robolabs/uniswapv3-lucky5/graphql'
+		const url = 'https://data.staging.arkiver.net/robolabs/univ3-ohlc/graphql'
 		//const url = 'http://0.0.0.0:4000/graphql'
         this.client = new GraphQLClient(url, { headers: {} })
 	}
