@@ -95,8 +95,8 @@ class SingleSidedUniswap {
       const pool = this.pool(data);
       this.pos = uni.open(
         this.initial / pool.close,
-        pool.close * 0.9,
-        pool.close * 1.1,
+        pool.close * (1 - this.rangeSpread),
+        pool.close * (1 + this.rangeSpread),
         this.priceToken,
         this.poolSymbol,
       );
@@ -233,19 +233,18 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export class SingleSidedUniswapStrategy {
   private uni = new UniV3PositionManager();
   private lastData!: Uni3Snaphot;
-  // private aaveManager = new AAVEPositionManager()
-  // private farm = new CamelotFarm()
   private strategies: SingleSidedUniswap[] = [];
   constructor() {
-    const strategies = [
-      {
+    const strategies = Array.from(Array(6).keys()).map(i => {
+      const n = i + 1
+      return {
         initialInvestment: 100_000,
-        name: 'A: UNI3-LUSD/USDC 0.05%',
+        name: `#${n}: UNI3-LUSD/USDC ${n}%`,
         pool: 'Univ3 LUSD/USDC 0.05%',
-        rangeSpread: 0.1,
+        rangeSpread: 0.01 * n,
         priceToken: 0,
-      },
-    ];
+      }
+    })
     this.strategies = strategies.map(
       (s) =>
         new SingleSidedUniswap(
