@@ -84,7 +84,6 @@ export class Measurement<T extends Schema, Fields, Tags> {
     points.forEach((e: any) => {
       e.tags.env = Settings.environment();
     });
-    this.nrequests++;
     await this.timeseriesDB.writePoints(pts as Influx.IPoint[]);
     this.nrequests--;
   }
