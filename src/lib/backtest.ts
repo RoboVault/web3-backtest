@@ -24,9 +24,12 @@ export class Backtest {
   public static async create(
     start: Date,
     end: Date,
-    sourceConfig: DataSourceInfo[],
+    sourceConfig?: DataSourceInfo[],
+    _sources?: DataSource[],
   ): Promise<Backtest> {
-    const sources = sourceConfig.map((source) => DataSourceStore.get(source));
+    const sources =
+      _sources || sourceConfig?.map((source) => DataSourceStore.get(source));
+    if (!sources) throw new Error('no sources provided');
     const bt = new Backtest(start, end, sources);
     return bt;
   }
@@ -111,9 +114,11 @@ export class Backtest {
       const unique = Array.from(new Set(timestamps)).sort((a, b) => a - b);
 
       const mergedData = unique.map((ts) => {
+        // find all datasources that have a snapshot at this timestamp
         const dsWithSnapshots = allData.filter(
           (ds) => ds.findIndex((e) => e.timestamp === ts) !== -1,
         );
+        // grab data from each datasource at this timestamp
         const data = dsWithSnapshots.map(
           (ds) => ds.find((e) => e.timestamp === ts)?.data,
         );
