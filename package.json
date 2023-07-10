@@ -58,6 +58,7 @@
     "graphql": "^16.6.0",
     "graphql-request": "^5.0.0",
     "influx": "^5.9.3",
-    "jsbi": "^3.2.5"
+    "jsbi": "^3.2.5",
+    "nodeplotlib": "^1.1.2"
   }
 }

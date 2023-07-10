@@ -81,9 +81,6 @@ export class Measurement<T extends Schema, Fields, Tags> {
     const pts = points.map((e) => {
       return { measurement: this.name, ...e };
     });
-    points.forEach((e: any) => {
-      e.tags.env = Settings.environment();
-    });
     await this.timeseriesDB.writePoints(pts as Influx.IPoint[]);
     this.nrequests--;
   }
@@ -106,6 +103,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
       }
     }
     query += `TIME >= ${options.start} AND TIME <= ${options.end}`;
+    console.log(query);
     const res: Array<{ timestamp: number } & Fields> = (
       await this.timeseriesDB.query<Schema>(query)
     ).map((e: any) => {
@@ -117,6 +115,15 @@ export class Measurement<T extends Schema, Fields, Tags> {
   public async dropMeasurement() {
     await TimeSeriesDB.instance;
     await this.timeseriesDB.dropMeasurement(this.name);
+  }
+
+  public async dropSeries(options: { where: string }) {
+    await TimeSeriesDB.instance;
+    const query = {
+      where: options.where,
+      measurement: this.name,
+    };
+    await this.timeseriesDB.dropSeries(query);
   }
 }
 
