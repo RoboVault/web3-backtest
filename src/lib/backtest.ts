@@ -5,6 +5,7 @@ import {
   DataSourceInfo,
   Resolution,
 } from './datasource/types.js';
+import { getCachedData, updateCache } from './utils/cache.js';
 
 const toElapsed = (start: number) => {
   return ((Date.now() - start) / 1000).toFixed(2) + 's';
@@ -71,8 +72,8 @@ export class Backtest {
       return aRes > bRes ? 1 : -1;
     });
 
-    let start = this.start.getTime() / 1000;
-    let end = this.end.getTime() / 1000;
+    const start = this.start.getTime() / 1000;
+    const end = this.end.getTime() / 1000;
 
     const limit = 10000;
 
@@ -89,6 +90,11 @@ export class Backtest {
       let from = start;
       let finished = false;
       let allData: any[] = [];
+      let prevDataLimit = 0;
+
+      const cachedData = await getCachedData(ds.id, start, end);
+      if (cachedData) return cachedData;
+
       do {
         const data = await ds.fetch(from, end, limit);
         if (data.length === 0) break;
@@ -101,20 +107,26 @@ export class Backtest {
 
         allData = [...allData, ...data];
 
-        finished = data.length < 10;
+        finished = data.length < prevDataLimit;
+        prevDataLimit = data.length;
       } while (!finished);
       return allData;
     });
 
     const allData = await Promise.all(dataPromises);
+    for (const data of allData) {
+      await await updateCache(data, start, end);
+    }
 
     // merge all timestamps
     const timestamps = Array.prototype.concat.apply(
       [],
       allData.map((e) => e.map((e) => e.timestamp)),
     ) as number[];
+    console.log('sorting timestamps');
     const unique = Array.from(new Set(timestamps)).sort((a, b) => a - b);
 
+    console.log('merging data');
     const mergedData = unique.map((ts) => {
       // find all datasources that have a snapshot at this timestamp
       const dsWithSnapshots = allData.filter(
