@@ -12,7 +12,6 @@ export class PriceSeriesStore {
     });
     await Price.writePoints(
       series.map((price) => {
-        console.log(new Date(price.ts * 1000));
         return {
           tags: {
             id: name,
@@ -32,11 +31,14 @@ export class PriceSeriesStore {
       start: (start * 1000).toString(),
       end: (end * 1000).toString(),
     });
-    return data.map((e: any) => {
-      return {
-        ts: e.timestamp / 1000,
-        price: e.price,
-      };
-    });
+    return {
+      id: name,
+      data: data.map((e: any) => {
+        return {
+          ts: e.timestamp / 1000,
+          price: e.price,
+        };
+      })
+    }
   }
 }
