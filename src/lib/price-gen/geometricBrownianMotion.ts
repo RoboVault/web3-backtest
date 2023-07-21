@@ -45,10 +45,9 @@ export function generateGbm({
   // Implement GBM
   const S = [S0];
   for (let i = 1; i < N; i++) {
-    const t = dt * i;
     const W = Math.sqrt(dt) * randn_bm();
     const St =
-      S[S.length - 1] * Math.exp((mu - sigma ** 2 / 2) * t + sigma * W);
+      S[S.length - 1] * Math.exp((mu - sigma ** 2 / 2) * dt + sigma * W);
     S.push(St);
   }
   return S;
