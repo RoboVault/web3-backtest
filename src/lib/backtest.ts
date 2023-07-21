@@ -7,9 +7,9 @@ import {
 } from './datasource/types.js';
 import { getCachedData, updateCache } from './utils/cache.js';
 
-const toElapsed = (start: number) => {
-  return ((Date.now() - start) / 1000).toFixed(2) + 's';
-};
+type BacktestOptions = { 
+  useCache?: boolean // default: true
+}
 
 export class Backtest {
   private onDataHandler?: (update: DataSnapshot<any>) => Promise<void>;
@@ -20,6 +20,7 @@ export class Backtest {
     private start: Date,
     private end: Date,
     public readonly sources: DataSource[],
+    public options: BacktestOptions,
   ) {}
 
   public static async create(
@@ -27,11 +28,12 @@ export class Backtest {
     end: Date,
     sourceConfig?: DataSourceInfo[],
     _sources?: DataSource[],
+    options?: BacktestOptions,
   ): Promise<Backtest> {
     const sources =
       _sources || sourceConfig?.map((source) => DataSourceStore.get(source));
     if (!sources) throw new Error('no sources provided');
-    const bt = new Backtest(start, end, sources);
+    const bt = new Backtest(start, end, sources, options || { useCache: true });
     return bt;
   }
 
@@ -92,8 +94,10 @@ export class Backtest {
       let allData: any[] = [];
       let prevDataLimit = 0;
 
-      const cachedData = await getCachedData(ds.id, start, end);
-      if (cachedData) return cachedData;
+      if (this.options.useCache) {
+        const cachedData = await getCachedData(ds.id, start, end);
+        if (cachedData) return cachedData;
+      }
 
       do {
         const data = await ds.fetch(from, end, limit);
