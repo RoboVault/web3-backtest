@@ -74,7 +74,7 @@ export class Backtest {
     let start = this.start.getTime() / 1000;
     let end = this.end.getTime() / 1000;
 
-    const limit = 10000;
+    const limit = 1000;
 
     const formatTime = (time: number) => {
       const t = new Date(time * 1000)
