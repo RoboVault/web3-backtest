@@ -1,20 +1,19 @@
-import { TickMath, FullMath, tickToPrice, Tick } from '@uniswap/v3-sdk';
-import { ethers } from 'ethers';
-import { Numbers } from '../utils/utility';
-import { PoolHourData, UniV3DataSource } from './datasource/univ3datasource';
+import { TickMath, FullMath, tickToPrice } from '@uniswap/v3-sdk';
+import { Numbers } from '../utils/utility.js';
 import * as jsbi from 'jsbi';
-import { calculateL, getXLP, getXReal, getYLP, getYReal } from './UniV3Utils';
+import { calculateL, getXReal, getYReal } from './UniV3Utils.js';
+import { Uni3Snaphot } from '../datasource/univ3Dex.js';
 const JSBI: any = jsbi; // Hack because JSBIs types are broken
 
 const getTickFromPrice = (price: any, pool: any, baseSelected = 0) => {
   const decimal0 =
     baseSelected && baseSelected === 1
-      ? parseInt(pool.token1.decimals)
-      : parseInt(pool.token0.decimals);
+      ? parseInt(pool.tokens[1].decimals)
+      : parseInt(pool.tokens[0].decimals);
   const decimal1 =
     baseSelected && baseSelected === 1
-      ? parseInt(pool.token0.decimals)
-      : parseInt(pool.token1.decimals);
+      ? parseInt(pool.tokens[0].decimals)
+      : parseInt(pool.tokens[1].decimals);
   const valToLog = parseFloat(price) * Math.pow(10, decimal0 - decimal1);
   const tickIDXRaw = Numbers.logWithBase(valToLog, 1.0001);
 
@@ -101,9 +100,9 @@ export const tokensForStrategy = (
   const xLp = getXReal(price, minRange, maxRange, L);
   const yLp = getYReal(price, minRange, maxRange, L);
   const amountNow = yLp + xLp * price;
-  console.log('tokensForStrategy');
-  console.log(amountNow, initalInvestment);
-  console.log(amountNow / initalInvestment); // amountNow is always gt initalInvestment
+  // console.log('tokensForStrategy')
+  // console.log(amountNow, initalInvestment)
+  // console.log(amountNow / initalInvestment) // amountNow is always gt initalInvestment
   return [xLp, yLp];
 };
 
@@ -114,6 +113,11 @@ export class UniV3Position {
   public snapshot: any;
   public feeToken0: number = 0;
   public feeToken1: number = 0;
+  public totalSupply: number = 0;
+  public valueUsd: number = 0;
+  public reserves: any;
+  public claimed: number = 0;
+  public lpAmount: number = 0;
 
   constructor(
     public amount: number,
@@ -121,6 +125,7 @@ export class UniV3Position {
     public maxRange: number,
     public priceToken: number,
     public entryPrice: number,
+    public poolSymbol: string,
   ) {}
 
   public init() {}
@@ -183,17 +188,23 @@ export class UniV3Position {
       return [amount0, 0];
     }
   }
+  public pool(data: Uni3Snaphot) {
+    return data.data.univ3.find((p) => p.symbol === this.poolSymbol)!;
+  }
 
   public processData(
-    lastData: PoolHourData,
-    data: PoolHourData,
+    lastData: Uni3Snaphot,
+    data: Uni3Snaphot,
     unbFees: [number, number],
   ) {
     this.unboundedFees[0] += unbFees[0];
     this.unboundedFees[1] += unbFees[1];
+    const pool = this.pool(data);
+
+    const lastPool = this.pool(lastData);
     const posReserves = tokensForStrategy(
       this.entryPrice,
-      data.close,
+      pool.tokens[this.priceToken].price,
       this.minRange,
       this.maxRange,
       this.amount,
@@ -205,8 +216,8 @@ export class UniV3Position {
       Math.pow(1.0001, 887220),
       posReserves[0],
       posReserves[1],
-      data.pool.token0.decimals,
-      data.pool.token1.decimals,
+      pool.tokens[0].decimals,
+      pool.tokens[1].decimals,
     );
     const liquidity = liquidityForStrategy(
       this.entryPrice,
@@ -214,19 +225,19 @@ export class UniV3Position {
       this.maxRange,
       posReserves[0],
       posReserves[1],
-      data.pool.token0.decimals,
-      data.pool.token1.decimals,
+      pool.tokens[0].decimals,
+      pool.tokens[1].decimals,
     );
 
     const low =
-      this.priceToken === 0 ? data.low : 1 / (data.low === 0 ? 1 : data.low);
+      this.priceToken === 0 ? pool.low : 1 / (pool.low === 0 ? 1 : pool.low);
     const high =
-      this.priceToken === 0 ? data.high : 1 / (data.high === 0 ? 1 : data.high);
+      this.priceToken === 0 ? pool.high : 1 / (pool.high === 0 ? 1 : pool.high);
 
-    const lowTick = getTickFromPrice(low, data.pool, this.priceToken);
-    const highTick = getTickFromPrice(high, data.pool, this.priceToken);
-    const minTick = getTickFromPrice(this.minRange, data.pool, this.priceToken);
-    const maxTick = getTickFromPrice(this.maxRange, data.pool, this.priceToken);
+    const lowTick = getTickFromPrice(low, pool, this.priceToken);
+    const highTick = getTickFromPrice(high, pool, this.priceToken);
+    const minTick = getTickFromPrice(this.minRange, pool, this.priceToken);
+    const maxTick = getTickFromPrice(this.maxRange, pool, this.priceToken);
 
     const activeLiquidity = this.activeLiquidityForCandle(
       minTick,
@@ -236,12 +247,12 @@ export class UniV3Position {
     );
 
     const tokens = this.tokensFromLiquidity(
-      this.priceToken === 1 ? 1 / data.close : data.close,
+      this.priceToken === 1 ? 1 / pool.close : pool.close,
       this.minRange,
       this.maxRange,
       liquidity,
-      data.pool.token0.decimals,
-      data.pool.token1.decimals,
+      pool.tokens[0].decimals,
+      pool.tokens[1].decimals,
     );
 
     const feeToken0 = (unbFees[0] * liquidity * activeLiquidity) / 100;
@@ -261,57 +272,54 @@ export class UniV3Position {
       this.minRange,
       this.maxRange,
       liquidity,
-      data.pool.token0.decimals,
-      data.pool.token1.decimals,
+      pool.tokens[0].decimals,
+      pool.tokens[1].decimals,
     );
     const x0 = tokenRatioFirstClose[1];
     const y0 = tokenRatioFirstClose[0];
 
     if (this.priceToken === 0) {
-      fgV = unbFees[0] + unbFees[1] * data.close;
-      feeV = feeToken0 + feeToken1 * data.close;
-      feeUnb = feeUnb0 + feeUnb1 * data.close;
-      amountV = tokens[0] + tokens[1] * data.close;
+      fgV = unbFees[0] + unbFees[1] * pool.close;
+      feeV = feeToken0 + feeToken1 * pool.close;
+      feeUnb = feeUnb0 + feeUnb1 * pool.close;
+      amountV = tokens[0] + tokens[1] * pool.close;
       feeUSD =
-        (feeV * lastData.pool.totalValueLockedUSD) /
-        (lastData.pool.totalValueLockedToken1 * lastData.close +
-          lastData.pool.totalValueLockedToken0);
-      amountTR = this.amount + (amountV - (x0 * data.close + y0));
+        (feeV * lastPool.totalValueLockedUSD) /
+        (lastPool.totalValueLockedToken1 * lastPool.close +
+          lastPool.totalValueLockedToken0);
+      amountTR = this.amount + (amountV - (x0 * pool.close + y0));
     } else if (this.priceToken === 1) {
-      fgV = unbFees[0] / data.close + unbFees[1];
-      feeV = feeToken0 / data.close + feeToken1;
-      feeUnb = feeUnb0 + feeUnb1 * data.close;
-      amountV = tokens[1] / data.close + tokens[0];
+      fgV = unbFees[0] / pool.close + unbFees[1];
+      feeV = feeToken0 / pool.close + feeToken1;
+      feeUnb = feeUnb0 + feeUnb1 * pool.close;
+      amountV = tokens[1] / pool.close + tokens[0];
       feeUSD =
-        (feeV * lastData.pool.totalValueLockedUSD) /
-        (lastData.pool.totalValueLockedToken1 +
-          lastData.pool.totalValueLockedToken0 / lastData.close);
-      amountTR = this.amount + (amountV - (x0 * (1 / data.close) + y0));
+        (feeV * lastPool.totalValueLockedUSD) /
+        (lastPool.totalValueLockedToken1 +
+          lastPool.totalValueLockedToken0 / lastPool.close);
+      amountTR = this.amount + (amountV - (x0 * (1 / pool.close) + y0));
     }
 
-    const date = new Date(data.periodStartUnix * 1000);
+    const fees = this.feeToken0 + pool.close * this.feeToken1;
+    // note: posReserves array is flipped
+    const valueToken0 = fees + posReserves[1] + pool.close * posReserves[0];
+    this.valueUsd = valueToken0 * pool.prices[0];
+
     this.snapshot = {
-      hour: date.getUTCHours(),
-      day: date.getUTCDate(),
-      month: date.getUTCMonth(),
-      year: date.getFullYear(),
       fg0: unbFees[0],
       fg1: unbFees[1],
       x0,
       y0,
       activeliquidity: activeLiquidity,
-      feeToken0: feeToken0,
-      feeToken1: feeToken1,
-      tokens: tokens,
-      reserves: posReserves,
+      fees,
       fgV: fgV,
       feeV: feeV,
       feeUnb: feeUnb,
       amountV: amountV,
       amountTR: amountTR,
       feeUSD: feeUSD,
-      close: data.close,
-      baseClose: this.priceToken === 1 ? 1 / data.close : data.close,
+      close: pool.close,
+      baseClose: this.priceToken === 1 ? 1 / pool.close : pool.close,
       cumulativeFeeToken0: this.feeToken0,
       cumulativeFeeToken1: this.feeToken1,
     };
@@ -319,26 +327,30 @@ export class UniV3Position {
 }
 
 export class UniV3PositionManager {
-  lastData?: PoolHourData;
+  lastData?: Uni3Snaphot;
   positions: UniV3Position[] = [];
 
   constructor() {}
 
-  public processPoolData(data: PoolHourData): boolean {
+  public processPoolData(data: Uni3Snaphot): boolean {
     if (!this.lastData) {
       this.lastData = data;
       return false;
     }
 
-    const unboundFees = this.calcUnboundedFees(
-      data.feeGrowthGlobal0X128,
-      this.lastData.feeGrowthGlobal0X128,
-      data.feeGrowthGlobal1X128,
-      this.lastData.feeGrowthGlobal1X128,
-      data.pool,
-    );
-
     for (const pos of this.positions) {
+      function getPool(data: Uni3Snaphot) {
+        return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
+      }
+      const pool = getPool(data);
+      const lastPool = getPool(this.lastData);
+      const unboundFees = this.calcUnboundedFees(
+        pool.feeGrowthGlobal0X128,
+        lastPool.feeGrowthGlobal0X128,
+        pool.feeGrowthGlobal1X128,
+        lastPool.feeGrowthGlobal1X128,
+        pool,
+      );
       pos.processData(this.lastData, data, unboundFees);
     }
     this.lastData = data;
@@ -349,49 +361,21 @@ export class UniV3PositionManager {
     amount: number,
     minRange: number,
     maxRange: number,
-    priceToken: number = 0,
+    priceToken: number,
+    poolSymbol: string,
   ): UniV3Position {
     if (!this.lastData) throw new Error('wow');
+    function pool(data: Uni3Snaphot) {
+      return data.data.univ3.find((p) => p.symbol === poolSymbol)!;
+    }
+    const lastPool = pool(this.lastData);
     const pos = new UniV3Position(
       amount,
       minRange,
       maxRange,
       priceToken,
-      this.lastData.close,
-    );
-    this.positions.push(pos);
-    return pos;
-  }
-
-  public openBalancedPosition(
-    amount: number,
-    tickRange: number,
-    priceToken: number = 0,
-  ): UniV3Position {
-    if (!this.lastData) throw new Error('wow');
-
-    // getPriceFromTick()
-
-    const currentTick = getTickFromPrice(
-      this.lastData.close,
-      this.lastData.pool,
-    );
-    const maxRange = getPriceFromTick(
-      currentTick + tickRange,
-      this.lastData.pool,
-    );
-    const minRange = getPriceFromTick(
-      currentTick - tickRange,
-      this.lastData.pool,
-    );
-    console.log('Openning position');
-    console.log(minRange, this.lastData.close, maxRange);
-    const pos = new UniV3Position(
-      amount,
-      minRange,
-      maxRange,
-      priceToken,
-      this.lastData.close,
+      lastPool.tokens[0].price,
+      poolSymbol,
     );
     this.positions.push(pos);
     return pos;
@@ -407,15 +391,10 @@ export class UniV3PositionManager {
     prevGlobalfee1: number,
     pool: any,
   ): [number, number] {
-    const fg0_0 =
-      globalfee0 / Math.pow(2, 128) / Math.pow(10, pool.token0.decimals);
-    const fg0_1 =
-      prevGlobalfee0 / Math.pow(2, 128) / Math.pow(10, pool.token0.decimals);
-
-    const fg1_0 =
-      globalfee1 / Math.pow(2, 128) / Math.pow(10, pool.token1.decimals);
-    const fg1_1 =
-      prevGlobalfee1 / Math.pow(2, 128) / Math.pow(10, pool.token1.decimals);
+    const fg0_0 = globalfee0 / Math.pow(2, 128);
+    const fg0_1 = prevGlobalfee0 / Math.pow(2, 128);
+    const fg1_0 = globalfee1 / Math.pow(2, 128);
+    const fg1_1 = prevGlobalfee1 / Math.pow(2, 128);
 
     const fg0 = fg0_0 - fg0_1; // fee of token 0 earned in 1 period by 1 unit of unbounded liquidity
     const fg1 = fg1_0 - fg1_1; // fee of token 1 earned in 1 period by 1 unit of unbounded liquidity
@@ -425,6 +404,9 @@ export class UniV3PositionManager {
 
   public close(pos: UniV3Position) {
     const idx = this.positions.indexOf(pos);
+    const valueUsd = this.positions[idx].valueUsd;
+    this.positions[idx].valueUsd = 0; // this type stuff should probably be on the Uniswap position class
     this.positions.splice(idx, 1);
+    return valueUsd;
   }
 }

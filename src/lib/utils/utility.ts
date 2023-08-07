@@ -15,8 +15,6 @@ export function bigintToNumber(n: bigint, decimals: number = 0): number {
 }
 export type Environment = 'DEV' | 'STAG' | 'PROD';
 
-export type Environment = 'DEV' | 'STAG' | 'PROD';
-
 export class Settings {
   public static environment(): Environment {
     switch (process.env.NODE_ENV?.toUpperCase()) {
