@@ -235,16 +235,16 @@ export class SingleSidedUniswapStrategy {
   private lastData!: Uni3Snaphot;
   private strategies: SingleSidedUniswap[] = [];
   constructor() {
-    const strategies = Array.from(Array(6).keys()).map(i => {
-      const n = i + 1
+    const strategies = Array.from(Array(6).keys()).map((i) => {
+      const n = i + 1;
       return {
         initialInvestment: 100_000,
         name: `#${n}: UNI3-LUSD/USDC ${n}%`,
         pool: 'Univ3 LUSD/USDC 0.05%',
         rangeSpread: 0.01 * n,
         priceToken: 0,
-      }
-    })
+      };
+    });
     this.strategies = strategies.map(
       (s) =>
         new SingleSidedUniswap(
