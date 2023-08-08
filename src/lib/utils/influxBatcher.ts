@@ -8,7 +8,7 @@ interface ILogAny extends Schema {
 export class InfluxBatcher<
   T extends Schema = ILogAny,
   Fields = any,
-  Tags = any,
+  Tags = any
 > extends Measurement<T, Fields, Tags> {
   private points: T[] = [];
   constructor(private measurement: string) {
@@ -30,7 +30,7 @@ export class InfluxBatcher<
 
     const start = Date.now();
     await this.writePoints(this.points);
-    console.log(`batch ${this.measurement} elapsed ${Date.now() - start}ms`);
+    // console.log(`batch ${this.measurement} elapsed ${Date.now() - start}ms`);
     this.points = [];
   }
 }
