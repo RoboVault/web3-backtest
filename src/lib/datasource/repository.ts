@@ -57,6 +57,12 @@ export const DataSourcesRepo: DataSourceEntry[] = [
     createSource: Uni3DexDataSource.create,
   },
   {
+    chain: 'arbitrum',
+    protocol: 'uniswap-dex',
+    resoution: '1h',
+    createSource: Uni3DexDataSource.create,
+  },
+  {
     chain: 'optimism',
     protocol: 'sonne',
     resoution: '1h',

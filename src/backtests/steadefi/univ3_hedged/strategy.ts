@@ -6,6 +6,10 @@ import {
 import { Uni3Snaphot } from '../../../lib/datasource/univ3Dex.js';
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
+import {
+  CompPositionManager,
+  CompPosition,
+} from '../../../lib/protocols/CompPositionManager.js';
 
 interface ILogAny extends Schema {
   tags: any;
@@ -46,16 +50,22 @@ class Stats {
   }
 }
 
+const REBALANCE_COST = 0;
+const HARVEST_COST = 0;
+
 class SingleSidedUniswap {
-  public pos!: UniV3Position;
-  public start!: number;
-  public highest: number;
-  public lastHarvest: number = 0;
+  public pos!: UniV3Position
+  public start!: number
+  public highest: number
+  public lastHarvest: number = 0
   public claimed = 0;
-  public idle: number = 0; // idle assets
-  public maxDrawdown = 0;
-  public series: any[] = [];
+  public idle: number = 0 // idle assets
+  public maxDrawdown = 0
+  public series: any[] = []
   count = 0;
+  public comp: CompPositionManager
+  
+  public rebalanceCount = 0
 
   constructor(
     public name: string,
@@ -63,8 +73,11 @@ class SingleSidedUniswap {
     public initial: number,
     public rangeSpread: number,
     public priceToken: number,
+    public collatRatio: number,
+    public debtRatioRange: number
   ) {
     this.highest = initial;
+    
     // this.symbol = 'WETH/USDC'
   }
 
@@ -85,7 +98,109 @@ class SingleSidedUniswap {
   // 	return new ethers.Contract(VELODROME_ROUTER, VelodromeRouterAbi as any, provider)
   // }
 
-  public async process(uni: UniV3PositionManager, data: Uni3Snaphot) {
+  private calcLenderAmounts(totalAssets: number, data: Uni3Snaphot) {
+    const pool = this.pool(data);
+    const lendUSD = totalAssets * (1 / (1 + this.collatRatio));
+    const borrowInUSD = totalAssets - lendUSD;
+    const lend = lendUSD / pool.tokens[this.priceToken].price;
+    //const price = this.tokenIndex ? pool.tokens[0].price/pool.tokens[1].price : pool.tokens[1].price/pool.tokens[0].price
+    const borrow =
+      borrowInUSD / pool.tokens[this.priceToken == 0 ? 1 : 0].price;
+    return { borrow, lend };
+  }
+
+  public borrow(data: Uni3Snaphot) {
+    const pool = this.pool(data);
+    const borrow = this.comp.borrowed(
+      pool.tokens[this.priceToken == 0 ? 1 : 0].symbol,
+    );
+    return borrow;
+  }
+
+  private calcDebtRatio(mgr: UniV3PositionManager, pos: UniV3Position, data: Uni3Snaphot): number {
+    if (!this.pos) return 1;
+    const pool = this.pool(data)
+    const result = mgr.tokensForStrategy(
+      pos.minRange,
+      pos.maxRange,
+      pos.amount,
+      pool.tokens[this.priceToken].price
+    )
+    const shortInLP = result[this.priceToken==0 ? 1 : 0]
+    console.log(`shortInLP: ${shortInLP}`)
+    return this.borrow(data) / shortInLP;
+  }
+
+  public async rebalanceDebt(
+    mgr: UniV3PositionManager,
+    comp: CompPositionManager,
+    data: Uni3Snaphot,
+  ) {
+    this.rebalanceCount++;
+    console.log('rebalanceDebt', new Date(data.timestamp * 1000).toISOString());
+
+    // Close this position
+    const mgrClose = await mgr.close(this.pos, false);
+    await comp.close(this.comp);
+    this.idle = this.idle + mgrClose;
+    // Calc total assets
+    const totalAssets = this.estTotalAssets(data);
+    // compound rewards, subtract gas fees
+    // this.farmRewards = 0;
+    // this.compRewards = 0;
+    this.gasCosts = 0;
+    const pool = this.pool(data);
+
+    // Future: Account for trading fees and slippage on rebalances
+
+    // Update Lend
+    const { borrow, lend } = this.calcLenderAmounts(totalAssets, data);
+
+    //const result = this.calcLenderAmounts(this.initial, data)
+    let amountWant = totalAssets / pool.tokens[this.tokenIndex].price - lend;
+    let amountBorrow = borrow;
+    const amount0 = this.tokenIndex == 0 ? amountWant : amountBorrow;
+    const amount1 = this.tokenIndex == 0 ? amountBorrow : amountWant;
+
+    this.comp = comp.create();
+    this.comp.lend(pool.tokens[this.tokenIndex].symbol, lend);
+    this.comp.borrow(pool.tokens[this.tokenIndex == 0 ? 1 : 0].symbol, borrow);
+    let [pos, idle] = await mgr.addLiquidityHedged(
+      this.poolSymbol,
+      amount0,
+      amount1,
+    );
+    this.pos = pos;
+    this.idle = idle;
+    const totalAssetsNew = this.estTotalAssets(data);
+    this.gasCosts += REBALANCE_COST;
+    Rebalance.writePoint({
+      tags: { strategy: this.name },
+      fields: {
+        gas: REBALANCE_COST,
+      },
+      timestamp: new Date(data.timestamp * 1000),
+    });
+  }
+
+  private async checkRebalance(
+    mgr: UniV3PositionManager,
+    comp: CompPositionManager,
+    data: VelodromeSnaphot,
+  ) {
+    const debtRatio = this.calcDebtRatio(data);
+    if (
+      debtRatio > 1 + this.debtRatioRange ||
+      debtRatio < 1 - this.debtRatioRange
+    ) {
+      console.log('\n************* rebalancing debt! *************');
+      console.log((debtRatio * 100).toFixed(2));
+      await this.rebalanceDebt(mgr, comp, data);
+      console.log('new debt ratio:', this.calcDebtRatio(data));
+    }
+  }
+
+  public async process(uni: UniV3PositionManager, data: Uni3Snaphot, comp: CompPositionManager) {
     if (!this.pool(data)) {
       console.log('missing data for ' + this.name);
       return;
@@ -93,14 +208,33 @@ class SingleSidedUniswap {
     // open the first position
     if (!this.pos) {
       const pool = this.pool(data);
+      console.log(`this.initial: ${this.initial}`)
+      console.log(`pool.close: ${pool.close}`)
+      const result = this.calcLenderAmounts(this.initial, data)
+      console.log(`calcLenderAmounts`)
+      console.log(result)
+      const lend = result.lend
+      const borrow = result.borrow
+      const lendUsd = lend*pool.close
+      console.log(`lendUsd: ${lendUsd}`)
+      const usdLeft = this.initial - lendUsd + borrow
+      console.log(`usdLeft: ${usdLeft}`)
+      this.comp = comp.create();
+      this.comp.lend(pool.tokens[this.priceToken].symbol, result.lend);
+      this.comp.borrow(
+        pool.tokens[this.priceToken == 0 ? 1 : 0].symbol,
+        result.borrow,
+      );
       this.pos = uni.open(
-        this.initial / pool.close,
+        usdLeft,
         pool.close * (1 - this.rangeSpread),
         pool.close * (1 + this.rangeSpread),
         this.priceToken,
         this.poolSymbol,
       );
       this.start = data.timestamp;
+    } else {
+      this.checkRebalance()
     }
 
     if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
@@ -233,16 +367,19 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export class SingleSidedUniswapStrategy {
   private uni = new UniV3PositionManager();
   private lastData!: Uni3Snaphot;
+  private compMgr = new CompPositionManager();
   private strategies: SingleSidedUniswap[] = [];
   constructor() {
     const strategies = Array.from(Array(6).keys()).map(i => {
       const n = i + 1
       return {
         initialInvestment: 100_000,
-        name: `#${n}: UNI3-LUSD/USDC ${n}%`,
-        pool: 'Univ3 LUSD/USDC 0.05%',
-        rangeSpread: 0.01 * n,
+        name: `#${n}: Camelotv3 WETH/USDC ${n*3}%`,
+        pool: 'Camelotv3 WETH/USDC 0%',
+        rangeSpread: 0.03 * n,
         priceToken: 0,
+        collatRatio: 0.6,
+        debtRatioRange: 0.02
       }
     })
     this.strategies = strategies.map(
@@ -253,6 +390,8 @@ export class SingleSidedUniswapStrategy {
           s.initialInvestment,
           s.rangeSpread,
           s.priceToken,
+          s.collatRatio,
+          s.debtRatioRange
         ),
     );
   }
@@ -279,10 +418,18 @@ export class SingleSidedUniswapStrategy {
     // console.log('onData')
     this.uni.processPoolData(snapshot);
 
+    // Sonne Position Update
+    if (snapshot.data.sonne) {
+      await this.sonne.update({
+        timestamp: snapshot.timestamp,
+        data: snapshot.data.sonne as any,
+      });
+    }
+
     // Process the strategy
     for (const strat of this.strategies) {
       await wait(1);
-      await strat.process(this.uni, snapshot);
+      await strat.process(this.uni, snapshot, this.compMgr);
     }
   }
 }
