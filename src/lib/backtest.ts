@@ -77,7 +77,7 @@ export class Backtest {
     const start = this.start.getTime() / 1000;
     const end = this.end.getTime() / 1000;
 
-    const limit = 10000;
+    const limit = 1000;
 
     const formatTime = (time: number) => {
       const t = new Date(time * 1000)
@@ -132,14 +132,18 @@ export class Backtest {
 
     console.log('merging data');
     const mergedData = unique.map((ts) => {
-      // find all datasources that have a snapshot at this timestamp
-      const dsWithSnapshots = allData.filter(
-        (ds) => ds.findIndex((e) => e.timestamp === ts) !== -1,
-      );
       // grab data from each datasource at this timestamp
-      const data = dsWithSnapshots.map(
-        (ds) => ds.find((e) => e.timestamp === ts)?.data,
-      );
+      const data = allData
+        .map((ds) => {
+          const index = ds.findIndex((e) => e.timestamp === ts);
+          if (index === -1) return;
+          const data = ds[index]?.data;
+          // remove data from the array so we don't have to iterate through it again
+          ds.splice(index, 1);
+          return data;
+        })
+        .filter((e) => e);
+
       return {
         timestamp: ts,
         data: Object.assign({}, ...data),

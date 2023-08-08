@@ -8,7 +8,14 @@ export abstract class DataSource<T = DataSnapshot<any>> {
 
 export type Chains = 'ethereum' | 'arbitrum' | 'optimism';
 
-export type Protocols = 'aave' | 'camelot-dex' | 'camelot-farm';
+export type Protocols =
+  | 'aave'
+  | 'camelot-dex'
+  | 'camelot-farm'
+  | 'velodrome-dex'
+  | 'curve-dex'
+  | 'uniswap-dex'
+  | 'sonne';
 
 export type Resolution = '1m' | '1h' | '1d';
 

@@ -6,16 +6,21 @@ import {
 } from './types.js';
 import { gql, GraphQLClient } from 'graphql-request';
 
-export type AavePoolSnapshot = {
+export type CompPoolSnapshot = SonnePoolSnapshot;
+export type SonnePoolSnapshot = {
   underlying: string;
   liquidityRate: number;
   variableBorrowRate: number;
   totalSupply: number;
   totalDebt: number;
+  cTokenTotalSupply: number;
+  compPrice: number;
+  compSupplyPerBlock: number;
+  compBorrowPerBlock: number;
 };
-export type AaveSnapshot = DataSnapshot<AavePoolSnapshot>;
+export type SonneSnapshot = DataSnapshot<SonnePoolSnapshot>;
 
-type HourData = {
+type Snapshots = {
   pool: string;
   timestamp: number;
   liquidityRate: number;
@@ -23,26 +28,35 @@ type HourData = {
   totalSupply: number;
   totalDebt: number;
   underlying: string;
+  cTokenTotalSupply: number;
+  compPrice: number;
+  compSupplyPerBlock: number;
+  compBorrowPerBlock: number;
 };
 
-type AAVEPool = {
+type SonnePool = {
   _id: string;
   protocol: string;
   network: string;
   underlyingSymbol: string;
-  underlying: string;
+  underlying: {
+    symbol: string;
+    address: string;
+  };
 };
 
-export class AaveDataSource implements DataSource<AaveSnapshot> {
+export class SonneDataSource implements DataSource<SonneSnapshot> {
   private client: GraphQLClient;
   public readonly id: string;
   public poolSymbols: string[]; // Underlying Symbols
-  public pools: AAVEPool[] = [];
+  public pools: SonnePool[] = [];
   constructor(public info: DataSourceInfo) {
-    this.id = info.id || 'aave';
+    this.id = info.id || 'sonne';
     this.poolSymbols = info.config.pools;
+    // const url =
+    // 'https://data.staging.arkiver.net/robolabs/sonne-snapshots/graphql';
     const url =
-      'https://data.staging.arkiver.net/robolabs/aave-hourly-data/graphql';
+      'https://data.staging.arkiver.net/robolabs/sonne-snapshots/graphql?apiKey=ef7a25de-c6dd-4620-a616-2196eedde775';
     this.client = new GraphQLClient(url, { headers: {} });
   }
 
@@ -51,7 +65,7 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
   }
 
   public static create(info: DataSourceInfo) {
-    return new AaveDataSource(info);
+    return new SonneDataSource(info);
   }
 
   public async init() {
@@ -65,7 +79,10 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 					protocol
 					network
 					underlyingSymbol
-					underlying
+					underlying {
+            address
+            symbol
+          }
 				}
 			  }
 			`;
@@ -77,28 +94,32 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
   public async fetchPool(
     from: number,
     to: number,
-    pool: AAVEPool,
+    pool: SonnePool,
     limit?: number,
-  ): Promise<HourData[]> {
+  ): Promise<Snapshots[]> {
     const poolId = `"${pool._id}"`;
+    console.log('sonne from', from, 'to', to);
     const query = gql`query MyQuery {
-			HourDatas (
+			Snapshots (
 				sort: TIMESTAMP_ASC
 				filter: {_operators: {timestamp: {gt: ${from}, lt: ${to}}}, pool: ${poolId}}
 				${limit ? `limit: ${limit}` : ``}
 			) {
-				pool
 				timestamp
 				liquidityRate
 				variableBorrowRate
 				totalSupply
 				totalDebt
+        cTokenTotalSupply
+        compPrice
+        compSupplyPerBlock
+        compBorrowPerBlock
 			}
-		  }
+    }
 		`;
-    return ((await this.client.request(query)) as any).HourDatas.map(
+    return ((await this.client.request(query)) as any).Snapshots.map(
       (e: any) => {
-        return { ...e, underlying: pool.underlying };
+        return { ...e, underlying: pool.underlying.symbol };
       },
     );
   }
@@ -107,23 +128,23 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
     from: number,
     to: number,
     limit?: number,
-  ): Promise<AaveSnapshot[]> {
-    const hourDatas = await Promise.all(
+  ): Promise<SonneSnapshot[]> {
+    const Snapshots = await Promise.all(
       this.pools.map(async (pool) => {
         return this.fetchPool(from, to, pool, limit);
       }),
     );
-    return this.prep(hourDatas);
+    return this.prep(Snapshots);
   }
 
-  private prep(raw: HourData[][]): AaveSnapshot[] {
+  private prep(raw: Snapshots[][]): SonneSnapshot[] {
     const ts = raw[0].map((e) => e.timestamp);
     return ts.map((e) => {
-      const ret: AaveSnapshot = {
+      const ret: SonneSnapshot = {
         timestamp: e,
         data: {},
       };
-      ret.data[this.id] = raw.map((data: HourData[]) => {
+      ret.data[this.id] = raw.map((data: Snapshots[]) => {
         return { ...data.find((snap) => snap.timestamp === e)! };
       });
       return ret;

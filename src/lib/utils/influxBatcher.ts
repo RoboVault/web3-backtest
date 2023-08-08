@@ -30,7 +30,7 @@ export class InfluxBatcher<
 
     const start = Date.now();
     await this.writePoints(this.points);
-    // console.log(`batch ${this.measurement} elapsed ${Date.now() - start}ms`);
+    console.log(`batch ${this.measurement} elapsed ${Date.now() - start}ms`);
     this.points = [];
   }
 }

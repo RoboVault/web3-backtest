@@ -35,6 +35,7 @@ export class UniV2Position {
   public processData(data: Univ2PoolSnapshot) {
     const pc = this.lpTokens / data.totalSupply;
     this.totalSupply = data.totalSupply;
+    // console.log(this.lpTokens, data.totalSupply, data.reserves1, data.reserves0)
     this.valueUsd = pc * data.reserves1 * 2;
     this.reserves0 = pc * data.reserves0;
     this.reserves1 = pc * data.reserves1;
@@ -58,6 +59,7 @@ export class UniV2PositionManager {
   constructor() {}
 
   public update(snapshot: Snapshot): boolean {
+    // console.log(snapshot)
     if (!this.lastData) {
       this.lastData = snapshot;
       return false;

@@ -1,0 +1,1720 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": {
+            "type": "grafana",
+            "uid": "-- Grafana --"
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 1,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "id": 6,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "price0"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "price1"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "USDC/LUSD",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "id": 7,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "profit"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "profit"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "C",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "profit"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "MAI, USD+, USDC Profit",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        },
+        "id": 5,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "price0"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "price1"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "USD+/LUSD",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "__systemRef": "hideSeriesFrom",
+              "matcher": {
+                "id": "byNames",
+                "options": {
+                  "mode": "exclude",
+                  "names": [
+                    "ssc_lusd_strategy.mean"
+                  ],
+                  "prefix": "All except:",
+                  "readOnly": true
+                }
+              },
+              "properties": [
+                {
+                  "id": "custom.hideFrom",
+                  "value": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "id": 3,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "aum"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "aum"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "C",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "aum"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "MAI, USD+, USDC AUM",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "__systemRef": "hideSeriesFrom",
+              "matcher": {
+                "id": "byNames",
+                "options": {
+                  "mode": "exclude",
+                  "names": [
+                    "ssc_lusd_strategy.mean"
+                  ],
+                  "prefix": "All except:",
+                  "readOnly": true
+                }
+              },
+              "properties": [
+                {
+                  "id": "custom.hideFrom",
+                  "value": {
+                    "legend": false,
+                    "tooltip": false,
+                    "viz": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        },
+        "id": 4,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "price0"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "price1"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          }
+        ],
+        "title": "LUSD/MAI",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        },
+        "id": 8,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "drawdown"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "drawdown"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "C",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "drawdown"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "MAI, USD+, USDC Drawdowns",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        },
+        "id": 10,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "apy"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "apy"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "C",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "apy"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "MAI, USD+, USDC APY",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        },
+        "id": 9,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "valueUsd"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-LUSD/MAI"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "valueUsd"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USD+/LUSD"
+              }
+            ]
+          },
+          {
+            "datasource": {
+              "type": "influxdb",
+              "uid": "e07cf4a3-f974-428f-b5da-a7460ba029bf"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "ssc_lusd_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "C",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "valueUsd"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "pool::tag",
+                "operator": "=",
+                "value": "sAMM-USDC/LUSD"
+              }
+            ]
+          }
+        ],
+        "title": "MAI, USD+, USDC Value LP",
+        "type": "timeseries"
+      }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+      "list": []
+    },
+    "time": {
+      "from": "now-90d",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Strategies",
+    "uid": "a2b8c090-680c-43a5-8a4e-494d72ddf799",
+    "version": 2,
+    "weekStart": ""
+  }

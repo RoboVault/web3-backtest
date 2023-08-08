@@ -203,6 +203,15 @@ To add an example dashboard, navigate to Dashboards -> New -> Import and paste t
 
 __NOTE:__ If Grafana failed to connect to localhost, try setting connection mode to `server` use container name for the URL field. URL: http://influxdb:8086/
 
+
+# Contributors and Supporters
+
+![Contributors](./img/contributor_logos.png)
+
+[Robo Labs](https://www.robolabs.biz/) | [Neutra Finance](https://neutra.finance/) | [Liquity](https://www.liquity.org/) | [Sector Finance](https://sector.finance/)
+
+If you would like to support the project, please contact us on [Twitter](https://twitter.com/robolabs_biz).
 # Robo Labs
 
-If your looking for someone to use this library and write custom back tests for you, hit up [Robo Labs](https://www.robolabs.biz/) on Twitter [@robolabs_biz](https://twitter.com/robolabs_biz).
+If your looking for to build custom backtests for you, using this library, hit up [Robo Labs](https://www.robolabs.biz/) on Twitter [@robolabs_biz](https://twitter.com/robolabs_biz).
+
