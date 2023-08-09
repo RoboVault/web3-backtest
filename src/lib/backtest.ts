@@ -7,9 +7,9 @@ import {
 } from './datasource/types.js';
 import { getCachedData, updateCache } from './utils/cache.js';
 
-type BacktestOptions = { 
-  useCache?: boolean // default: true
-}
+type BacktestOptions = {
+  useCache?: boolean; // default: true
+};
 
 export class Backtest {
   private onDataHandler?: (update: DataSnapshot<any>) => Promise<void>;
@@ -77,7 +77,7 @@ export class Backtest {
     const start = this.start.getTime() / 1000;
     const end = this.end.getTime() / 1000;
 
-    const limit = 1000;
+    const limit = 10000;
 
     const formatTime = (time: number) => {
       const t = new Date(time * 1000)
