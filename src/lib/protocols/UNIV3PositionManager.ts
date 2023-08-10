@@ -90,74 +90,74 @@ const liquidityForStrategy = (
   }
 };
 
-// Calculate the number of Tokens a strategy owns at a specific price
-// export const tokensForStrategy = (
-//   entryPrice: number,
-//   price: number,
-//   minRange: number,
-//   maxRange: number,
-//   initalInvestment: number,
-// ) => {
-//   console.log(initalInvestment)
-//   const L = calculateL(entryPrice, initalInvestment, minRange, maxRange);
-//   const xLp = getXReal(price, minRange, maxRange, L);
-//   const yLp = getYReal(price, minRange, maxRange, L);
-//   const amountNow = yLp + xLp * price;
-//   console.log(`L: ${L}`)
-//   console.log(`xLp: ${xLp}`)
-//   console.log(`yLp: ${yLp}`)
-//   console.log('tokensForStrategy')
-//   console.log(amountNow, initalInvestment)
-//   console.log(amountNow / initalInvestment) // amountNow is always gt initalInvestment
-//   return [xLp, yLp];
-// };
+//Calculate the number of Tokens a strategy owns at a specific price
+export const tokensForStrategy = (
+  entryPrice: number,
+  price: number,
+  minRange: number,
+  maxRange: number,
+  initalInvestment: number,
+) => {
+  console.log(initalInvestment)
+  const L = calculateL(entryPrice, initalInvestment, minRange, maxRange);
+  const xLp = getXReal(price, minRange, maxRange, L);
+  const yLp = getYReal(price, minRange, maxRange, L);
+  const amountNow = yLp + xLp * price;
+  // console.log(`L: ${L}`)
+  // console.log(`xLp: ${xLp}`)
+  // console.log(`yLp: ${yLp}`)
+  // console.log('tokensForStrategy')
+  // console.log(amountNow, initalInvestment)
+  // console.log(amountNow / initalInvestment) // amountNow is always gt initalInvestment
+  return [xLp, yLp];
+};
 
 //   entryPrice: number,
 //   price: number,
 //   minRange: number,
 //   maxRange: number,
 //   initalInvestment: number,
-function tokensForStrategy(minRange: number, maxRange: number, investment: number, price: number){
-  const decimal = 12
-  console.log(price)
-  const sqrtPrice = Math.sqrt(price * (Math.pow(10, decimal)));
-  const sqrtLow = Math.sqrt(minRange * (Math.pow(10, decimal)));
-  const sqrtHigh = Math.sqrt(maxRange * (Math.pow(10, decimal)));
+// function tokensForStrategy(minRange: number, maxRange: number, investment: number, price: number){
+//   const decimal = 12
+//   console.log(price)
+//   const sqrtPrice = Math.sqrt(price * (Math.pow(10, decimal)));
+//   const sqrtLow = Math.sqrt(minRange * (Math.pow(10, decimal)));
+//   const sqrtHigh = Math.sqrt(maxRange * (Math.pow(10, decimal)));
 
-  let delta, amount0, amount1;
+//   let delta, amount0, amount1;
 
-  if ( sqrtPrice > sqrtLow && sqrtPrice < sqrtHigh) {
-    console.log("branch a")
-     delta = investment / (((sqrtPrice - sqrtLow)) + (((1 / sqrtPrice) - (1 / sqrtHigh)) * (price * Math.pow(10, decimal))));
-     amount1 = delta * (sqrtPrice - sqrtLow);
-     console.log(`delta: ${delta}`)
-     console.log(`sqrtPrice: ${sqrtPrice}`)
-     console.log(`(sqrtPrice - sqrtLow): ${(sqrtPrice - sqrtLow)}`)
-     amount0 = delta * ((1 / sqrtPrice) - (1 / sqrtHigh)) * Math.pow(10, decimal);
-     console.log(`((1 / sqrtPrice) - (1 / sqrtHigh)): ${((1 / sqrtPrice) - (1 / sqrtHigh))}`)
-     console.log(`(1 / sqrtPrice): ${(1 / sqrtPrice)}`)
-     console.log(`(1 / sqrtHigh): ${(1 / sqrtHigh)}`)
-     console.log(`----`)
-     console.log(`delta * (sqrtHigh - sqrtPrice): ${delta * (sqrtHigh - sqrtPrice)}`)
-     console.log(`Math.sqrt(1/price): ${Math.sqrt(1/price)}`)
-     console.log(`----`)
-  }
-  else if (sqrtPrice < sqrtLow) {
-    console.log("branch b")
-    delta = investment / ((((1 / sqrtLow) - (1 / sqrtHigh)) * price));
-    amount1 = 0;
-    amount0 = delta * ((1 / sqrtLow) - (1 / sqrtHigh));
-  }
-  else {
-    console.log("branch c")
-    delta = investment / ((sqrtHigh - sqrtLow)) ;
-    amount1 = delta * (sqrtHigh - sqrtLow);
-    amount0 = 0;
-  }
-  console.log("reserves")
-  console.log(amount0, amount1)
-  return [amount0, amount1];
-}
+//   if ( sqrtPrice > sqrtLow && sqrtPrice < sqrtHigh) {
+//     console.log("branch a")
+//      delta = investment / (((sqrtPrice - sqrtLow)) + (((1 / sqrtPrice) - (1 / sqrtHigh)) * (price * Math.pow(10, decimal))));
+//      amount1 = delta * (sqrtPrice - sqrtLow);
+//      console.log(`delta: ${delta}`)
+//      console.log(`sqrtPrice: ${sqrtPrice}`)
+//      console.log(`(sqrtPrice - sqrtLow): ${(sqrtPrice - sqrtLow)}`)
+//      amount0 = delta * ((1 / sqrtPrice) - (1 / sqrtHigh)) * Math.pow(10, decimal);
+//      console.log(`((1 / sqrtPrice) - (1 / sqrtHigh)): ${((1 / sqrtPrice) - (1 / sqrtHigh))}`)
+//      console.log(`(1 / sqrtPrice): ${(1 / sqrtPrice)}`)
+//      console.log(`(1 / sqrtHigh): ${(1 / sqrtHigh)}`)
+//      console.log(`----`)
+//      console.log(`delta * (sqrtHigh - sqrtPrice): ${delta * (sqrtHigh - sqrtPrice)}`)
+//      console.log(`Math.sqrt(1/price): ${Math.sqrt(1/price)}`)
+//      console.log(`----`)
+//   }
+//   else if (sqrtPrice < sqrtLow) {
+//     console.log("branch b")
+//     delta = investment / ((((1 / sqrtLow) - (1 / sqrtHigh)) * price));
+//     amount1 = 0;
+//     amount0 = delta * ((1 / sqrtLow) - (1 / sqrtHigh));
+//   }
+//   else {
+//     console.log("branch c")
+//     delta = investment / ((sqrtHigh - sqrtLow)) ;
+//     amount1 = delta * (sqrtHigh - sqrtLow);
+//     amount0 = 0;
+//   }
+//   console.log("reserves")
+//   console.log(amount0, amount1)
+//   return [amount0, amount1];
+// }
 
 export class UniV3Position {
   // pool!: ethers.Contract
@@ -255,19 +255,19 @@ export class UniV3Position {
     const pool = this.pool(data);
 
     const lastPool = this.pool(lastData);
-    // const posReserves = tokensForStrategy(
-    //   this.entryPrice,
-    //   pool.tokens[this.priceToken].price,
-    //   this.minRange,
-    //   this.maxRange,
-    //   this.amount,
-    // );
     const posReserves = tokensForStrategy(
+      this.entryPrice,
+      pool.tokens[this.priceToken].price,
       this.minRange,
       this.maxRange,
       this.amount,
-      pool.tokens[this.priceToken].price
     );
+    // const posReserves = tokensForStrategy(
+    //   this.minRange,
+    //   this.maxRange,
+    //   this.amount,
+    //   pool.tokens[this.priceToken].price
+    // );
     // const thing = tokensForStrategy(
     //   1458.30480672,
     //   2098.5361852799997,
@@ -391,9 +391,9 @@ export class UniV3Position {
     // console.log(`posReserves[1]: ${posReserves[1]}`)
     // console.log(`valueToken0: ${valueToken0}`)
     this.valueUsd = this.claimed + pool.prices[0] * posReserves[0] + pool.prices[1] * posReserves[1]
-    console.log(`this.valueUsd: ${this.valueUsd}`)
-    console.log(`pool.prices[0]: ${pool.prices[0]}`)
-    console.log(`pool.prices[1]: ${pool.prices[1]}`)
+    // console.log(`this.valueUsd: ${this.valueUsd}`)
+    // console.log(`pool.prices[0]: ${pool.prices[0]}`)
+    // console.log(`pool.prices[1]: ${pool.prices[1]}`)
 
     this.snapshot = {
       fg0: unbFees[0],
@@ -459,6 +459,7 @@ export class UniV3PositionManager {
       return data.data.univ3.find((p) => p.symbol === poolSymbol)!;
     }
     const lastPool = pool(this.lastData);
+    console.log(`opening with: ${amount}`)
     const pos = new UniV3Position(
       amount,
       minRange,
