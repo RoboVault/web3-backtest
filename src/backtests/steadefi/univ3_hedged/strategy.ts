@@ -107,18 +107,19 @@ class SingleSidedUniswap {
     const lendUSD = totalAssets * (1 / (1 + this.collatRatio));
     const borrowInUSD = totalAssets - lendUSD;
     const lend = lendUSD / (pool.tokens[this.tokenIndex].price);
+
     //const price = this.tokenIndex ? pool.tokens[0].price/pool.tokens[1].price : pool.tokens[1].price/pool.tokens[0].price
     // const borrow =
     //   borrowInUSD / pool.tokens[this.priceToken].price;
+    // TODO: Logic should change if we are using Token0 or Token1, not just pool.close
     const borrow =
       borrowInUSD / pool.close;
-    // console.log(`callend, pool.tokens[this.priceToken].price: ${pool.tokens[this.priceToken].price}`)
-    // console.log(`callend, pool.close: ${pool.close}`)
     return { borrow, lend };
   }
 
   public borrow(data: Uni3Snaphot) {
     const pool = this.pool(data);
+    // TODO: Symbol on pool is WETH which leads me to hard code this part,
     const borrow = this.aave.borrowed(
       'ETH' //pool.tokens[this.priceToken].symbol,
     );
@@ -130,22 +131,9 @@ class SingleSidedUniswap {
     if (!this.pos) return 1;
     if(!this.aave.borrowed('ETH')) return 1
     const pool = this.pool(data)
-    //console.log(`pos.entryPrice: ${pos.entryPrice}`)
-    //console.log(pool.tokens[this.priceToken].price, pos.minRange, pos.maxRange, pos.amount)
     const result = tokensForStrategy(pos.entryPrice, pool.close, pos.minRange, pos.maxRange, pos.amount)
-    // console.log(result)
-    // const result = tokensForStrategy(
-    //   pos.minRange,
-    //   pos.maxRange,
-    //   pos.amount,
-    //   pool.tokens[this.priceToken].price
-    // )
     const shortInLP = result[this.priceToken]
-    console.log(`shortInLP: ${shortInLP}`)
-    console.log(`borrowed: ${this.aave.borrowed('ETH')}`)
     const borrowedEth = this.aave.borrowed('ETH')
-    console.log(`borrowedEth: ${borrowedEth}`)
-    console.log(`dr: ${borrowedEth / shortInLP}`)
     return borrowedEth / shortInLP;
   }
 
@@ -159,18 +147,10 @@ class SingleSidedUniswap {
 
     // Close this position
     const totalAssets = this.estTotalAssets(data);
-    console.log(`rb, totalAssets: ${totalAssets}`)
     const mgrClose = await mgr.close(this.pos);
     const pool = this.pool(data);
     await aave.close(this.aave);
     this.idle = totalAssets
-    
-    // Calc total assets
-    //const totalAssets = this.estTotalAssets(data);
-    // compound rewards, subtract gas fees
-    // this.farmRewards = 0;
-    // this.compRewards = 0;
-    //this.gasCosts = 0
 
     // Future: Account for trading fees and slippage on rebalances
 
@@ -180,8 +160,8 @@ class SingleSidedUniswap {
 
     this.aave = aave.create();
     this.aave.lend(pool.tokens[this.tokenIndex].symbol, lend)
+    // TODO: Symbol on pool is WETH which leads me to hard code this part
     this.aave.borrow('ETH', borrow)
-    console.log(`rebalance Debt open: ${usdLeft}`)
     this.pos = mgr.open(
       usdLeft,
       pool.close * (1 - this.rangeSpread),
@@ -189,22 +169,10 @@ class SingleSidedUniswap {
       this.priceToken,
       this.poolSymbol,
     )
-    // if(totalAssets > this.estTotalAssets(data)){
-    //   this.idle = totalAssets - this.estTotalAssets(data)
-    // } else {
-    //   this.idle = 0
-    // }
     this.idle = 0
-
     this.pos.valueUsd = usdLeft
-    // if(totalAssets > this.estTotalAssets(data)){
-    //   this.idle = totalAssets-this.estTotalAssets(data)
-    // } else {
-    this.idle = 0
-    // }
     
     const totalAssetsNew = this.estTotalAssets(data);
-    console.log(`rb, totalAssetsNew: ${totalAssetsNew}`)
     this.gasCosts += REBALANCE_COST;
     Rebalance.writePoint({
       tags: { strategy: this.name },
@@ -213,10 +181,6 @@ class SingleSidedUniswap {
       },
       timestamp: new Date(data.timestamp * 1000),
     });
-  }
-
-  private delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
   }
 
   private async checkRebalance(
@@ -245,11 +209,7 @@ class SingleSidedUniswap {
     // open the first position
     if (!this.pos) {
       const pool = this.pool(data);
-      // console.log(`this.initial: ${this.initial}`)
-      // console.log(`pool.close: ${pool.close}`)
       const result = this.calcLenderAmounts(this.initial, data)
-      // console.log(`calcLenderAmounts`)
-      // console.log(result)
       const lend = result.lend
       const borrow = result.borrow
       const lendUsd = lend
@@ -257,9 +217,9 @@ class SingleSidedUniswap {
       console.log(`borrow: ${borrow}`)
       console.log(`initial: ${this.initial}`)
       const usdLeft = (borrow*pool.close)*2
-      // console.log(`usdLeft: ${usdLeft}`)
       this.aave = aave.create()
-      this.aave.lend('USDC', lend)
+      //TODO: Pool symbol is WETH, which lead me to hard code this
+      this.aave.lend(pool.tokens[this.tokenIndex].symbol, lend)
       this.aave.borrow('ETH', borrow)
       console.log(`first pos open: ${usdLeft}`)
       this.pos = uni.open(
@@ -271,9 +231,7 @@ class SingleSidedUniswap {
       );
       this.start = data.timestamp;
       this.pos.valueUsd = usdLeft
-      //this.idle = this.initial - this.estTotalAssets(data)
       this.idle = 0
-      //this.startPrice = pool.close
     } else {
       await this.checkRebalance(uni, aave, data)
     }
@@ -287,29 +245,11 @@ class SingleSidedUniswap {
   }
 
   private estTotalAssets(data: Uni3Snaphot) {
-    // if(this.pos.valueUsd == 0){
-    //   return this.initial
-    // }
-    //console.log(`this.aave.borrowed('ETH'): ${this.aave.borrowed('ETH')}`)
+
     const pool = this.pool(data);
-    //return 0
-    // console.log(`estTotalAssets`)
-    // console.log(`est, lent: ${this.aave.lent(pool.tokens[this.tokenIndex].symbol)}`)
-    // //console.log(pool.tokens[this.priceToken].symbol)
-    // //console.log(this.aave.borrowed(pool.tokens[this.priceToken].symbol))
-    // console.log(`est borrowed: ${this.aave.borrowed('ETH')}`)
-    // console.log(`est, pos: ${this.pos.valueUsd}`)
-    // //console.log(`est, claimed: ${this.pos.claimed}`)
-    // console.log(`est, idle: ${this.idle}`)
-    // if(!this.aave.borrowed('ETH')){
-    //   // console.log("estTotalAssets no ETH borrow")
-    //   // console.log(`this.aave: ${this.aave}`)
-    //   // console.log(`this.pos.valueUsd: ${this.pos.valueUsd}`)
-    //   // console.log(`this.idle: ${this.idle}`)
-    //   return this.pos.valueUsd + this.idle
-    // }
-    const result = this.idle + (this.pos.valueUsd + this.aave.lent(pool.tokens[this.tokenIndex].symbol)) - (this.aave.borrowed('ETH') *  pool.close) - this.gasCosts //(this.aave.borrowed(pool.tokens[this.priceToken].symbol) * pool.close)
-    // console.log(`est return: ${result}`)
+    // TODO: Symbol on pool is WETH which leads me to hard code this part,
+    // TODO: this logic should change if we are starting with token0 or token1
+    const result = this.idle + (this.pos.valueUsd + this.aave.lent(pool.tokens[this.tokenIndex].symbol)) - (this.aave.borrowed('ETH') *  pool.close) - this.gasCosts 
     return result
   }
 
@@ -372,6 +312,7 @@ class SingleSidedUniswap {
         minRange: this.pos.minRange,
         maxRange: this.pos.maxRange,
         debtRatio,
+        gasCosts: this.gasCosts,
         profit
       },
       timestamp: new Date(data.timestamp * 1000),
@@ -384,7 +325,6 @@ class SingleSidedUniswap {
       await wait(10);
       await Log.writePoint(log);
     }
-    //console.log(this.pos.snapshot)
     this.series.push({
       name: this.name,
       timestamp: data.timestamp,
@@ -396,6 +336,7 @@ class SingleSidedUniswap {
       //fees: this.pos.snapshot.fees,
       debtRatioRange: this.debtRatioRange,
       rangeSpread: this.rangeSpread,
+      gasCosts: this.gasCosts,
       lpAmount: this.pos.lpAmount,
       ...tokens,
       ...prices,
@@ -405,8 +346,6 @@ class SingleSidedUniswap {
 
   public async end(uni: UniV3PositionManager, data: Uni3Snaphot) {
     
-    // console.log(`close: ${close}`);
-    // console.log(`idle: ${this.idle}`);
     const totalAssets = this.estTotalAssets(data)
     console.log('Strategy closing position', this.estTotalAssets(data));
     const close = await uni.close(this.pos);
@@ -495,10 +434,9 @@ export class HedgedUniswapStrategy {
 
   public async onData(snapshot: Uni3Snaphot) {
     this.lastData = snapshot;
-    // console.log('onData')
     this.uni.processPoolData(snapshot);
 
-    // Sonne Position Update
+    // Aave Position Update
     if (snapshot.data.sonne) {
       await this.lender.update({
         timestamp: snapshot.timestamp,
