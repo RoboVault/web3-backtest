@@ -257,7 +257,7 @@ export class UniV3Position {
     const lastPool = this.pool(lastData);
     const posReserves = tokensForStrategy(
       this.entryPrice,
-      pool.tokens[this.priceToken].price,
+      pool.close,
       this.minRange,
       this.maxRange,
       this.amount,
@@ -379,8 +379,10 @@ export class UniV3Position {
 
     //const fees = this.feeToken0 * pool.prices[0] + pool.prices[1] * this.feeToken1;
     // note: posReserves array is flipped
-    console.log(`fees: ${feeUSD}`)
-    this.claimed += feeUSD
+    // console.log("lastPool manager:")
+    // console.log(lastPool)
+    // console.log(`fees: ${feeUSD}`)
+
     // console.log(`this.feeToken0: ${this.feeToken0}`)
     // console.log(`pool.prices[0]: ${pool.prices[0]}`)
     // console.log(`this.feeToken1: ${this.feeToken1}`)
@@ -390,7 +392,11 @@ export class UniV3Position {
     // console.log(`posReserves[0]: ${posReserves[0]}`)
     // console.log(`posReserves[1]: ${posReserves[1]}`)
     // console.log(`valueToken0: ${valueToken0}`)
-    this.valueUsd = this.claimed + pool.prices[0] * posReserves[0] + pool.prices[1] * posReserves[1]
+    const reservesValueUsd = pool.prices[0] * posReserves[0] + pool.prices[1] * posReserves[1]
+    const diluted = feeUSD * (reservesValueUsd/(lastPool.totalValueLockedUSD+reservesValueUsd))
+    console.log(`diluted fees: ${diluted}`)
+    this.claimed += feeUSD
+    this.valueUsd = this.claimed + reservesValueUsd
     // console.log(`this.valueUsd: ${this.valueUsd}`)
     // console.log(`pool.prices[0]: ${pool.prices[0]}`)
     // console.log(`pool.prices[1]: ${pool.prices[1]}`)
@@ -465,7 +471,7 @@ export class UniV3PositionManager {
       minRange,
       maxRange,
       priceToken,
-      lastPool.tokens[0].price,
+      lastPool.close,
       poolSymbol,
     );
     this.positions.push(pos);
