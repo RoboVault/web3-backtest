@@ -453,7 +453,7 @@
           "x": 12,
           "y": 0
         },
-        "id": 5,
+        "id": 7,
         "options": {
           "legend": {
             "calcs": [],
@@ -468,7 +468,7 @@
         },
         "targets": [
           {
-            "alias": "3fee",
+            "alias": "3",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -496,7 +496,7 @@
               [
                 {
                   "params": [
-                    "feeUSD"
+                    "gasCosts"
                   ],
                   "type": "field"
                 },
@@ -515,7 +515,7 @@
             ]
           },
           {
-            "alias": "6fee",
+            "alias": "6",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -544,7 +544,7 @@
               [
                 {
                   "params": [
-                    "feeUSD"
+                    "gasCosts"
                   ],
                   "type": "field"
                 },
@@ -563,7 +563,7 @@
             ]
           },
           {
-            "alias": "9fee",
+            "alias": "9",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -592,7 +592,7 @@
               [
                 {
                   "params": [
-                    "feeUSD"
+                    "gasCosts"
                   ],
                   "type": "field"
                 },
@@ -611,7 +611,7 @@
             ]
           },
           {
-            "alias": "12fee",
+            "alias": "12",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -640,7 +640,7 @@
               [
                 {
                   "params": [
-                    "feeUSD"
+                    "gasCosts"
                   ],
                   "type": "field"
                 },
@@ -659,7 +659,7 @@
             ]
           },
           {
-            "alias": "15fee",
+            "alias": "15",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -688,7 +688,7 @@
               [
                 {
                   "params": [
-                    "feeUSD"
+                    "gasCosts"
                   ],
                   "type": "field"
                 },
@@ -707,7 +707,7 @@
             ]
           },
           {
-            "alias": "18fee",
+            "alias": "18",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -736,7 +736,7 @@
               [
                 {
                   "params": [
-                    "feeUSD"
+                    "gasCosts"
                   ],
                   "type": "field"
                 },
@@ -755,7 +755,7 @@
             ]
           }
         ],
-        "title": "Fees",
+        "title": "Gas Cost",
         "type": "timeseries"
       },
       {
@@ -1477,7 +1477,7 @@
           "x": 12,
           "y": 8
         },
-        "id": 6,
+        "id": 5,
         "options": {
           "legend": {
             "calcs": [],
@@ -1492,7 +1492,7 @@
         },
         "targets": [
           {
-            "alias": "3debt",
+            "alias": "3",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -1520,7 +1520,7 @@
               [
                 {
                   "params": [
-                    "debtRatio"
+                    "feeUSD"
                   ],
                   "type": "field"
                 },
@@ -1539,7 +1539,7 @@
             ]
           },
           {
-            "alias": "6debt",
+            "alias": "6",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -1568,7 +1568,7 @@
               [
                 {
                   "params": [
-                    "debtRatio"
+                    "feeUSD"
                   ],
                   "type": "field"
                 },
@@ -1587,7 +1587,7 @@
             ]
           },
           {
-            "alias": "9debt",
+            "alias": "9",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -1616,7 +1616,7 @@
               [
                 {
                   "params": [
-                    "debtRatio"
+                    "feeUSD"
                   ],
                   "type": "field"
                 },
@@ -1635,7 +1635,7 @@
             ]
           },
           {
-            "alias": "12debt",
+            "alias": "12",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -1664,7 +1664,7 @@
               [
                 {
                   "params": [
-                    "debtRatio"
+                    "feeUSD"
                   ],
                   "type": "field"
                 },
@@ -1683,7 +1683,7 @@
             ]
           },
           {
-            "alias": "15debt",
+            "alias": "15",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -1712,7 +1712,7 @@
               [
                 {
                   "params": [
-                    "debtRatio"
+                    "feeUSD"
                   ],
                   "type": "field"
                 },
@@ -1731,7 +1731,7 @@
             ]
           },
           {
-            "alias": "18debt",
+            "alias": "18",
             "datasource": {
               "type": "influxdb",
               "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
@@ -1760,7 +1760,7 @@
               [
                 {
                   "params": [
-                    "debtRatio"
+                    "feeUSD"
                   ],
                   "type": "field"
                 },
@@ -1779,7 +1779,7 @@
             ]
           }
         ],
-        "title": "Debt Ratio",
+        "title": "Fees",
         "type": "timeseries"
       },
       {
@@ -1907,7 +1907,7 @@
             ]
           }
         ],
-        "title": "ETH/USDC",
+        "title": "ETH/USD",
         "type": "timeseries"
       },
       {
@@ -1972,6 +1972,374 @@
           "w": 12,
           "x": 12,
           "y": 16
+        },
+        "id": 6,
+        "options": {
+          "legend": {
+            "calcs": [],
+            "displayMode": "list",
+            "placement": "bottom",
+            "showLegend": true
+          },
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          }
+        },
+        "targets": [
+          {
+            "alias": "3",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "measurement": "hedged_camelot3_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "A",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "debtRatio"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "name::tag",
+                "operator": "=",
+                "value": "#1: Camelotv3 WETH/USDC 3%"
+              }
+            ]
+          },
+          {
+            "alias": "6",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "hedged_camelot3_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "B",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "debtRatio"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "name::tag",
+                "operator": "=",
+                "value": "#2: Camelotv3 WETH/USDC 6%"
+              }
+            ]
+          },
+          {
+            "alias": "9",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "hedged_camelot3_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "C",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "debtRatio"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "name::tag",
+                "operator": "=",
+                "value": "#3: Camelotv3 WETH/USDC 9%"
+              }
+            ]
+          },
+          {
+            "alias": "12",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "hedged_camelot3_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "D",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "debtRatio"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "name::tag",
+                "operator": "=",
+                "value": "#4: Camelotv3 WETH/USDC 12%"
+              }
+            ]
+          },
+          {
+            "alias": "15",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "hedged_camelot3_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "E",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "debtRatio"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "name::tag",
+                "operator": "=",
+                "value": "#5: Camelotv3 WETH/USDC 15%"
+              }
+            ]
+          },
+          {
+            "alias": "18",
+            "datasource": {
+              "type": "influxdb",
+              "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
+            },
+            "groupBy": [
+              {
+                "params": [
+                  "$__interval"
+                ],
+                "type": "time"
+              },
+              {
+                "params": [
+                  "null"
+                ],
+                "type": "fill"
+              }
+            ],
+            "hide": false,
+            "measurement": "hedged_camelot3_strategy",
+            "orderByTime": "ASC",
+            "policy": "autogen",
+            "refId": "F",
+            "resultFormat": "time_series",
+            "select": [
+              [
+                {
+                  "params": [
+                    "debtRatio"
+                  ],
+                  "type": "field"
+                },
+                {
+                  "params": [],
+                  "type": "mean"
+                }
+              ]
+            ],
+            "tags": [
+              {
+                "key": "name::tag",
+                "operator": "=",
+                "value": "#6: Camelotv3 WETH/USDC 18%"
+              }
+            ]
+          }
+        ],
+        "title": "Debt Ratio",
+        "type": "timeseries"
+      },
+      {
+        "datasource": {
+          "type": "influxdb",
+          "uid": "dfff064a-ba6d-41b5-aed0-2f7e52c719da"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "axisCenteredZero": false,
+              "axisColorMode": "text",
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 0,
+              "gradientMode": "none",
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "viz": false
+              },
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {
+                "type": "linear"
+              },
+              "showPoints": "auto",
+              "spanNulls": false,
+              "stacking": {
+                "group": "A",
+                "mode": "none"
+              },
+              "thresholdsStyle": {
+                "mode": "off"
+              }
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
         },
         "id": 3,
         "options": {
@@ -2039,7 +2407,7 @@
         "type": "timeseries"
       }
     ],
-    "refresh": false,
+    "refresh": "5s",
     "schemaVersion": 38,
     "style": "dark",
     "tags": [],
@@ -2047,13 +2415,13 @@
       "list": []
     },
     "time": {
-      "from": "2023-06-20T19:02:11.502Z",
-      "to": "2023-06-30T11:40:59.170Z"
+      "from": "2023-06-20T07:37:42.428Z",
+      "to": "2023-08-10T18:38:24.780Z"
     },
     "timepicker": {},
     "timezone": "",
     "title": "Camelot V3",
     "uid": "f334b0e8-efd9-40a6-87e5-15facc56d953",
-    "version": 3,
+    "version": 5,
     "weekStart": ""
   }
