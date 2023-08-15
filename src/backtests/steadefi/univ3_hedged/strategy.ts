@@ -169,10 +169,16 @@ class SingleSidedUniswap {
       this.priceToken,
       this.poolSymbol,
     )
-    this.idle = 0
-    this.pos.valueUsd = usdLeft
     
+    this.pos.valueUsd = usdLeft
+    this.idle = 0
     const totalAssetsNew = this.estTotalAssets(data);
+    console.log(totalAssets, totalAssetsNew)
+    if((totalAssets-totalAssetsNew)>0){
+      this.idle = totalAssets-totalAssetsNew
+    }
+    
+    console.log(`this.idle: ${this.idle}`)
     this.gasCosts += REBALANCE_COST;
     Rebalance.writePoint({
       tags: { strategy: this.name },
@@ -189,15 +195,15 @@ class SingleSidedUniswap {
     data: Uni3Snaphot,
   ) {
     const debtRatio = this.calcDebtRatio(mgr, this.pos, data);
-    console.log(`debt ratio: ${this.calcDebtRatio(mgr, this.pos, data)}`)
     if (
       debtRatio > 1 + this.debtRatioRange ||
       debtRatio < 1 - this.debtRatioRange
     ) {
       console.log('\n************* rebalancing debt! *************');
-      console.log((debtRatio * 100).toFixed(2));
+      console.log(`debt ratio: ${(debtRatio * 100).toFixed(2)}`);
+      console.log(`before rebalance: ${this.estTotalAssets(data)}`)
       await this.rebalanceDebt(mgr, aave, data);
-      console.log('new debt ratio:', this.calcDebtRatio(mgr, this.pos, data));
+      console.log(`after rebalance: ${this.estTotalAssets(data)}`)
     }
   }
 

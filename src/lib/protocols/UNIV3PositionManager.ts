@@ -377,8 +377,6 @@ export class UniV3PositionManager {
       poolSymbol,
     );
     this.positions.push(pos);
-    console.log(`open pos:`)
-    console.log(pos)
     return pos;
   }
 

@@ -68,7 +68,7 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
   public readonly id: string;
   constructor(public info: DataSourceInfo) {
     this.id = info.id || 'univ3';
-    const url = 'https://data.staging.arkiver.net/robolabs/univ3-ohlc/graphql';
+    const url = 'https://data.staging.arkiver.net/robolabs/camelot-ohlc/graphql';
     //const url = 'http://0.0.0.0:4000/graphql'
     this.client = new GraphQLClient(url, { headers: {} });
   }
@@ -198,9 +198,6 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
           };
 
           //const price = tokens.reduce((acc, token) => acc + (token.reserve * token.price), 0) / snap.totalSupply
-          // console.log(tokens)
-          // console.log(`price: ${price} `)
-          // console.log(`totSupply: ${snap.totalSupply}`)
           const s: Uni3PoolSnapshot = {
             ...snap,
             timestamp,
