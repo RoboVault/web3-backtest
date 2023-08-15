@@ -13,6 +13,14 @@ const main = async () => {
         pairs: [USDCWETH],
       },
     },
+    {
+      chain: 'arbitrum',
+      protocol: 'aave',
+      resoution: '1h',
+      config: {
+        pools: ['USDC', 'WETH'],
+      },
+    },
   ];
 
   const bt = await Backtest.create(

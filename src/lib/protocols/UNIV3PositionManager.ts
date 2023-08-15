@@ -339,7 +339,14 @@ export class UniV3PositionManager {
 
     for (const pos of this.positions) {
       function getPool(data: Uni3Snaphot) {
-        return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
+        try{
+          return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
+        } catch(e){
+          console.log(e)
+          console.log(data)
+          return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
+        }
+        
       }
       const pool = getPool(data);
       const lastPool = getPool(this.lastData);

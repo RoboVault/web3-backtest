@@ -52,7 +52,7 @@ class Stats {
 const REBALANCE_COST = 5;
 const HARVEST_COST = 0;
 
-class SingleSidedUniswap {
+class HedgedUniswap {
   public pos!: UniV3Position
   public start!: number
   public highest: number
@@ -227,7 +227,7 @@ class SingleSidedUniswap {
       //TODO: Pool symbol is WETH, which lead me to hard code this
       this.aave.lend(pool.tokens[this.tokenIndex].symbol, lend)
       this.aave.borrow('ETH', borrow)
-      console.log(`first pos open: ${usdLeft}`)
+      console.log(`first position value: ${usdLeft}`)
       this.pos = uni.open(
         usdLeft,
         pool.close * (1 - this.rangeSpread),
@@ -393,7 +393,7 @@ export class HedgedUniswapStrategy {
   private uni = new UniV3PositionManager();
   private lastData!: Uni3Snaphot;
   private lender = new AAVEPositionManager();
-  private strategies: SingleSidedUniswap[] = [];
+  private strategies: HedgedUniswap[] = [];
   constructor() {
     const strategies = Array.from(Array(6).keys()).map(i => {
       const n = i + 1
@@ -409,7 +409,7 @@ export class HedgedUniswapStrategy {
     })
     this.strategies = strategies.map(
       (s) =>
-        new SingleSidedUniswap(
+        new HedgedUniswap(
           s.name,
           s.pool,
           s.initialInvestment,
@@ -440,20 +440,25 @@ export class HedgedUniswapStrategy {
 
   public async onData(snapshot: Uni3Snaphot) {
     this.lastData = snapshot;
-    this.uni.processPoolData(snapshot);
+    
 
     // Aave Position Update
-    if (snapshot.data.sonne) {
-      await this.lender.update({
-        timestamp: snapshot.timestamp,
-        data: snapshot.data.aave as any,
-      });
+    // console.log(snapshot.data)
+    if (snapshot.data.aave) {
+      // console.log("lender")
+        await this.lender.update({
+          timestamp: snapshot.timestamp,
+          data: snapshot.data.aave as any,
+        });
+    } else if (snapshot.data.univ3) {
+      this.uni.processPoolData(snapshot);
+      // Process the strategy
+      for (const strat of this.strategies) {
+        await wait(1);
+        await strat.process(this.uni, snapshot, this.lender);
+      }
     }
 
-    // Process the strategy
-    for (const strat of this.strategies) {
-      await wait(1);
-      await strat.process(this.uni, snapshot, this.lender);
-    }
+
   }
 }
