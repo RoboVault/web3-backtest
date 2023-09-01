@@ -1,4 +1,4 @@
-import { AaveDataSource } from './aave.js';
+import { AaveDataSource } from './Aave.js';
 import { AaveArbitrumDataSource } from './aaveArbitrum.js';
 import { CamelotDexDataSource } from './camelotDex.js';
 import { CamelotFarmDataSource } from './camelotFarm.js';

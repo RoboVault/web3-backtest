@@ -1,10 +1,8 @@
-import { TickMath, FullMath, tickToPrice, Tick } from '@uniswap/v3-sdk';
-import { ethers, BigNumber } from 'ethers';
+import { TickMath, FullMath, tickToPrice } from '@uniswap/v3-sdk';
 import { Numbers } from '../utils/utility.js';
-//import { PoolHourData, UniV3DataSource } from "./datasource/univ3datasource.ts"
 import * as jsbi from 'jsbi';
 import { calculateL, getXReal, getYReal } from './UniV3Utils.js';
-import { Uni3Snaphot, Uni3DexDataSource } from '../datasource/univ3Dex.js';
+import { Uni3Snaphot } from '../datasource/univ3Dex.js';
 const JSBI: any = jsbi; // Hack because JSBIs types are broken
 
 const getTickFromPrice = (price: any, pool: any, baseSelected = 0) => {

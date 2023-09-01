@@ -1,4 +1,4 @@
-import { AavePoolSnapshot } from '../datasource/aave.js';
+import { AavePoolSnapshot } from '../datasource/Aave.js';
 
 type Snapshot = {
   timestamp: number;

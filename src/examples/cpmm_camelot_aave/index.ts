@@ -33,7 +33,8 @@ const main = async () => {
 
   const bt = await Backtest.create(
     new Date('2023-01-01'),
-    new Date('2023-01-16'), // Now
+    // new Date('2023-05-16'), // Now
+    new Date(),
     sources,
   );
 
@@ -43,7 +44,7 @@ const main = async () => {
     aave: bt.sources[1].id,
     farm: bt.sources[2].id,
   });
-  bt.onBefore(strategy.before.bind(this));
+  bt.onBefore(strategy.before.bind(strategy));
   bt.onData(strategy.onData.bind(strategy));
   bt.onAfter(strategy.after.bind(strategy));
 

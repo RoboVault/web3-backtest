@@ -13,7 +13,6 @@ export function toBigNumber(n: number, decimals: number = 0): ethers.BigNumber {
 export function bigintToNumber(n: bigint, decimals: number = 0): number {
   return Number(n) / 10 ** decimals;
 }
-
 export type Environment = 'DEV' | 'STAG' | 'PROD';
 
 export class Settings {
