@@ -10,15 +10,20 @@ export class InfluxBatcher<
   Fields = any,
   Tags = any,
 > extends Measurement<T, Fields, Tags> {
+  lock = false;
   private points: T[] = [];
   constructor(private measurement: string) {
     super(measurement);
   }
 
   // adds point to batch
-  public async writePointBatched(point: T, batchLimit: number = 1) {
+  public async writePointBatched(point: T, batchLimit: number = 1000) {
     this.points.push(point);
     if (this.points.length > batchLimit) await this.exec();
+  }
+
+  public async writePoint(point: T, batchLimit: number = 1000) {
+    this.writePointBatched(point, batchLimit);
   }
 
   public pending() {
@@ -27,10 +32,12 @@ export class InfluxBatcher<
 
   public async exec() {
     if (this.points.length === 0) return;
-
+    if (this.lock) return
+    this.lock = true;
     const start = Date.now();
-    await this.writePoints(this.points);
-    console.log(`batch ${this.measurement} elapsed ${Date.now() - start}ms`);
+    await super.writePoints(this.points);
+    this.lock = false;
+    console.log(`batch ${this.measurement} ${this.points.length} points - elapsed ${Date.now() - start}ms`);
     this.points = [];
   }
 }
