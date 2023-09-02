@@ -32,12 +32,16 @@ export class InfluxBatcher<
 
   public async exec() {
     if (this.points.length === 0) return;
-    if (this.lock) return
+    if (this.lock) return;
     this.lock = true;
     const start = Date.now();
     await super.writePoints(this.points);
     this.lock = false;
-    console.log(`batch ${this.measurement} ${this.points.length} points - elapsed ${Date.now() - start}ms`);
+    console.log(
+      `batch ${this.measurement} ${this.points.length} points - elapsed ${
+        Date.now() - start
+      }ms`,
+    );
     this.points = [];
   }
 }

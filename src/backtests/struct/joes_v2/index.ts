@@ -11,7 +11,7 @@ const main = async () => {
       resoution: '1h',
     },
   ];
-  const end = new Date()
+  const end = new Date();
   const bt = await Backtest.create(
     // new Date('2023-07-01'),
     new Date('2023-06-15'),

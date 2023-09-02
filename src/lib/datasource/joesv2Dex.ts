@@ -7,20 +7,20 @@ import {
 import { gql, GraphQLClient } from 'graphql-request';
 
 export type Bin = {
-  id: number
-  reserveX: number
-  reserveY: number
-  supply: string // hex number
-}
+  id: number;
+  reserveX: number;
+  reserveY: number;
+  supply: string; // hex number
+};
 
 type HourData = {
-  pool: string
-  timestamp: number
-  block: number
-  price: number
-  activeBin: number
-  bins: Bin[]
-}
+  pool: string;
+  timestamp: number;
+  block: number;
+  price: number;
+  activeBin: number;
+  bins: Bin[];
+};
 
 type Token = {
   symbol: string;
@@ -29,11 +29,11 @@ type Token = {
 };
 
 type Pool = {
-  address: string
-  symbol: string
-  tokenX: Token
-  tokenY: Token
-}
+  address: string;
+  symbol: string;
+  tokenX: Token;
+  tokenY: Token;
+};
 
 export type JoesV2PoolSnapshot = {
   block: number;
@@ -41,7 +41,7 @@ export type JoesV2PoolSnapshot = {
   price: number;
   pool: Pool;
   activeBin: number;
-  bins: Bin[]
+  bins: Bin[];
 };
 
 export type JoesV2Snaphot = DataSnapshot<JoesV2PoolSnapshot>;
@@ -66,7 +66,6 @@ export class JoesV2DexDataSource implements DataSource<JoesV2Snaphot> {
     return new JoesV2DexDataSource(info);
   }
 
-
   public async init() {
     const query = gql`
       query {
@@ -86,7 +85,7 @@ export class JoesV2DexDataSource implements DataSource<JoesV2Snaphot> {
         }
       }
     `;
-    this.pools = ((await this.client.request(query)) as any).Pools as Pool[]
+    this.pools = ((await this.client.request(query)) as any).Pools as Pool[];
   }
 
   public async fetch(
@@ -98,7 +97,9 @@ export class JoesV2DexDataSource implements DataSource<JoesV2Snaphot> {
     const query = gql`query {
       HourDatas(
         sort: TIMESTAMP_ASC
-        filter: {_operators: {timestamp: {gt: ${Math.floor(from)}, lt: ${Math.floor(to)}}}}
+        filter: {_operators: {timestamp: {gt: ${Math.floor(
+          from,
+        )}, lt: ${Math.floor(to)}}}}
         ${limit ? `limit: ${limit}` : ``}
       ) {
         activeBin
@@ -113,8 +114,9 @@ export class JoesV2DexDataSource implements DataSource<JoesV2Snaphot> {
           id
         }
       }
-    }`
-    const raw = ((await this.client.request(query)) as any).HourDatas as HourData[];
+    }`;
+    const raw = ((await this.client.request(query)) as any)
+      .HourDatas as HourData[];
     return this.prep(raw);
   }
 
@@ -127,12 +129,11 @@ export class JoesV2DexDataSource implements DataSource<JoesV2Snaphot> {
       ret.data[this.id] = raw
         .filter((e) => e.timestamp === timestamp)
         .map((snap: HourData) => {
-          const pool = this.pools.find(e => e.address == snap.pool)!;
+          const pool = this.pools.find((e) => e.address == snap.pool)!;
 
           return {
             ...snap,
             pool,
-
           };
         });
       return ret;
