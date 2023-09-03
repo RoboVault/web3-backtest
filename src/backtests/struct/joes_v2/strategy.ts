@@ -99,7 +99,7 @@ export class StructJoesV2Strategy {
       const valueQuote = pos.valueQuote;
       const fixed = this.initial.base * fixedReturns;
       const debt = this.initial.base + fixed;
-      const variable = valueQuote - (debt * pool.price) - this.initial.quote; // in quote
+      const variable = valueQuote - debt * pool.price - this.initial.quote; // in quote
       return {
         fixed,
         fixedReturns: fixed / this.initial.base,
@@ -110,7 +110,7 @@ export class StructJoesV2Strategy {
       const valueBase = pos.valueQuote / pool.price;
       const fixed = this.initial.quote * fixedReturns;
       const debt = this.initial.quote + fixed;
-      const variable = valueBase - (debt / pool.price) - this.initial.base; // in base
+      const variable = valueBase - debt / pool.price - this.initial.base; // in base
       return {
         fixed,
         fixedReturns: fixed / this.initial.quote,
