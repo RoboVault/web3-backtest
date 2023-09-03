@@ -95,11 +95,11 @@ export class StructJoesV2Strategy {
       (this.options.fixedApr * (pool.timestamp - this.startTime)) /
       SECONDS_IN_YEAR;
     const pos = this.autoPool!.snapshot;
-    const value = pos.valueQuote;
     if (this.options.fixedToken === 'base') {
+      const valueQuote = pos.valueQuote;
       const fixed = this.initial.base * fixedReturns;
       const debt = this.initial.base + fixed;
-      const variable = value - debt * pool.price - this.initial.quote;
+      const variable = valueQuote - (debt * pool.price) - this.initial.quote; // in quote
       return {
         fixed,
         fixedReturns: fixed / this.initial.base,
@@ -107,9 +107,10 @@ export class StructJoesV2Strategy {
         variableReturns: variable / this.initial.quote,
       };
     } else {
+      const valueBase = pos.valueQuote / pool.price;
       const fixed = this.initial.quote * fixedReturns;
       const debt = this.initial.quote + fixed;
-      const variable = value - debt - this.initial.base / pool.price;
+      const variable = valueBase - (debt / pool.price) - this.initial.base; // in base
       return {
         fixed,
         fixedReturns: fixed / this.initial.quote,
