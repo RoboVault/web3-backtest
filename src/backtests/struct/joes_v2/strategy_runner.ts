@@ -38,30 +38,38 @@ export class StructJoesV2StrategyRunner {
       symbol: pool,
       binRange: 15,
       rebalanceBin: 13,
-    }
+    };
     const stdOpts = {
       initialValue: 1000,
       fixedApr: 0.1,
       period: PERIOD,
-    }
+    };
     this.strategies.push(
-      new StructJoesV2Strategy({ 
-        ...stdOpts, fixedToken: 'base', pool: { ...stdpool, rebalance: true },
+      new StructJoesV2Strategy({
+        ...stdOpts,
+        fixedToken: 'base',
+        pool: { ...stdpool, rebalance: true },
       }),
     );
     this.strategies.push(
       new StructJoesV2Strategy({
-        ...stdOpts, fixedToken: 'base', pool: { ...stdpool, rebalance: false },
+        ...stdOpts,
+        fixedToken: 'base',
+        pool: { ...stdpool, rebalance: false },
       }),
     );
     this.strategies.push(
       new StructJoesV2Strategy({
-        ...stdOpts, fixedToken: 'quote', pool: { ...stdpool, rebalance: true },
+        ...stdOpts,
+        fixedToken: 'quote',
+        pool: { ...stdpool, rebalance: true },
       }),
     );
     this.strategies.push(
-      new StructJoesV2Strategy({ 
-        ...stdOpts, fixedToken: 'quote', pool: { ...stdpool, rebalance: false },
+      new StructJoesV2Strategy({
+        ...stdOpts,
+        fixedToken: 'quote',
+        pool: { ...stdpool, rebalance: false },
       }),
     );
   }
