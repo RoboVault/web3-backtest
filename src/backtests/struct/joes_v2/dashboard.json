@@ -75,7 +75,7 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1693649438659,
+  "iteration": 1693733305263,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -207,6 +207,12 @@
                 "rebalance"
               ],
               "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
             }
           ],
           "measurement": "struct_joesv2_summary",
@@ -237,6 +243,18 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         }
@@ -374,6 +392,18 @@
                 "rebalance"
               ],
               "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
             }
           ],
           "measurement": "struct_joesv2_summary",
@@ -410,6 +440,18 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         }
@@ -527,6 +569,12 @@
             },
             {
               "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "linear"
               ],
               "type": "fill"
@@ -562,6 +610,18 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         },
@@ -604,6 +664,18 @@
             },
             {
               "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "linear"
               ],
               "type": "fill"
@@ -640,11 +712,174 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         }
       ],
       "title": "Fixed & Variable Returns",
+      "type": "timeseries"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_base / $tag_quote",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "base"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "quote"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "struct_joesv2",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "price"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "Prices",
       "type": "timeseries"
     },
     {
@@ -702,8 +937,8 @@
       "gridPos": {
         "h": 10,
         "w": 12,
-        "x": 12,
-        "y": 14
+        "x": 0,
+        "y": 24
       },
       "id": 11,
       "options": {
@@ -751,6 +986,12 @@
             },
             {
               "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "linear"
               ],
               "type": "fill"
@@ -786,6 +1027,18 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         },
@@ -828,6 +1081,12 @@
             },
             {
               "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "linear"
               ],
               "type": "fill"
@@ -864,6 +1123,18 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         }
@@ -877,7 +1148,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 34
       },
       "id": 8,
       "panels": [],
@@ -939,7 +1210,7 @@
         "h": 10,
         "w": 12,
         "x": 0,
-        "y": 25
+        "y": 35
       },
       "id": 2,
       "options": {
@@ -993,7 +1264,7 @@
             },
             {
               "params": [
-                "rebalance"
+                "fixedToken"
               ],
               "type": "tag"
             },
@@ -1034,386 +1305,18 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
-            }
-          ]
-        }
-      ],
-      "title": "Value (In quote)",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 12,
-        "y": 25
-      },
-      "id": 4,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "$tag_base / $tag_quote",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "symbol"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "base"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "quote"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "rebalance"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "linear"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "struct_joesv2",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "price"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "start",
-              "operator": "=~",
-              "value": "/^$starttime$/"
             },
             {
               "condition": "AND",
-              "key": "symbol",
+              "key": "rebalance",
               "operator": "=~",
-              "value": "/^$symbol$/"
-            }
-          ]
-        }
-      ],
-      "title": "Prices",
-      "type": "timeseries"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 10,
-        "w": 12,
-        "x": 0,
-        "y": 35
-      },
-      "id": 3,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "[$tag_start] Base Value ($tag_quote)",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "quote"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "start"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "symbol"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "rebalance"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "linear"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "struct_joesv2",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "baseValue"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "start",
-              "operator": "=~",
-              "value": "/^$starttime$/"
+              "value": "/^$rebalance$/"
             },
             {
               "condition": "AND",
-              "key": "symbol",
+              "key": "fixedToken",
               "operator": "=~",
-              "value": "/^$symbol$/"
-            }
-          ]
-        },
-        {
-          "alias": "[$tag_start] Quote Value ($tag_quote)",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
-          },
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "quote"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "start"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "symbol"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "rebalance"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "linear"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "struct_joesv2",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "quoteAmount"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "start",
-              "operator": "=~",
-              "value": "/^$starttime$/"
-            },
-            {
-              "condition": "AND",
-              "key": "symbol",
-              "operator": "=~",
-              "value": "/^$symbol$/"
+              "value": "/^$fixedToken$/"
             }
           ]
         }
@@ -1530,6 +1433,12 @@
             },
             {
               "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "previous"
               ],
               "type": "fill"
@@ -1565,6 +1474,12 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         },
@@ -1752,6 +1667,271 @@
       "gridPos": {
         "h": 10,
         "w": 12,
+        "x": 0,
+        "y": 45
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "[$tag_start] Base Value ($tag_quote)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "quote"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "struct_joesv2",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "baseValue"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        },
+        {
+          "alias": "[$tag_start] Quote Value ($tag_quote)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "quote"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "struct_joesv2",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "quoteAmount"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rebalance",
+              "operator": "=~",
+              "value": "/^$rebalance$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "Value (In quote)",
+      "type": "timeseries"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
         "x": 12,
         "y": 45
       },
@@ -1807,6 +1987,12 @@
             },
             {
               "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
                 "none"
               ],
               "type": "fill"
@@ -1846,6 +2032,12 @@
               "key": "symbol",
               "operator": "=~",
               "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
             }
           ]
         }
@@ -1894,17 +2086,62 @@
         "sort": 0,
         "type": "query",
         "datasource": "${DS_INFLUXDB}"
+      },
+      {
+        "current": {
+          "selected": true,
+          "text": "false",
+          "value": "false"
+        },
+        "hide": 0,
+        "includeAll": false,
+        "label": "Rebalance",
+        "multi": false,
+        "name": "rebalance",
+        "options": [
+          {
+            "selected": false,
+            "text": "true",
+            "value": "true"
+          },
+          {
+            "selected": true,
+            "text": "false",
+            "value": "false"
+          }
+        ],
+        "query": "true,false",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
+      },
+      {
+        "current": {},
+        "definition": "SHOW TAG VALUES FROM \"struct_joesv2\" WITH KEY = \"fixedToken\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Fixed Token",
+        "multi": true,
+        "name": "fixedToken",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"struct_joesv2\" WITH KEY = \"fixedToken\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query",
+        "datasource": "${DS_INFLUXDB}"
       }
     ]
   },
   "time": {
-    "from": "now-6M",
+    "from": "now-3M",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Struct Backtests",
   "uid": "Fn0065kIz",
-  "version": 12,
+  "version": 16,
   "weekStart": ""
 }

@@ -34,32 +34,34 @@ export class StructJoesV2StrategyRunner {
   }
 
   public async startNewStartForPool(pool: string) {
+    const stdpool = {
+      symbol: pool,
+      binRange: 15,
+      rebalanceBin: 13,
+    }
+    const stdOpts = {
+      initialValue: 1000,
+      fixedApr: 0.1,
+      period: PERIOD,
+    }
     this.strategies.push(
-      new StructJoesV2Strategy({
-        initialValue: 1000,
-        period: PERIOD,
-        fixedApr: 0.1,
-        fixedToken: 'base',
-        pool: {
-          rebalance: true,
-          symbol: pool,
-          binRange: 15,
-          rebalanceBin: 13,
-        },
+      new StructJoesV2Strategy({ 
+        ...stdOpts, fixedToken: 'base', pool: { ...stdpool, rebalance: true },
       }),
     );
     this.strategies.push(
       new StructJoesV2Strategy({
-        initialValue: 1000,
-        period: PERIOD,
-        fixedApr: 0.1,
-        fixedToken: 'base',
-        pool: {
-          rebalance: false,
-          symbol: pool,
-          binRange: 15,
-          rebalanceBin: 13,
-        },
+        ...stdOpts, fixedToken: 'base', pool: { ...stdpool, rebalance: false },
+      }),
+    );
+    this.strategies.push(
+      new StructJoesV2Strategy({
+        ...stdOpts, fixedToken: 'quote', pool: { ...stdpool, rebalance: true },
+      }),
+    );
+    this.strategies.push(
+      new StructJoesV2Strategy({ 
+        ...stdOpts, fixedToken: 'quote', pool: { ...stdpool, rebalance: false },
       }),
     );
   }

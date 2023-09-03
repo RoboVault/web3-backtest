@@ -70,6 +70,7 @@ export class StructJoesV2Strategy {
       quote: pool.pool.tokenY.symbol,
       base: pool.pool.tokenX.symbol,
       rebalance: this.options.pool.rebalance,
+      fixedToken: this.options.fixedToken,
       start,
     };
     this.startTime = pool.timestamp;
