@@ -3,6 +3,8 @@ import { Log } from './models/log.js';
 import { Rebalance } from './models/rebalance.js';
 import { Summary } from './models/summary.js';
 import { StructJoesV2Strategy } from './strategy.js';
+import { stringify } from 'csv-stringify/sync';
+import fs from 'fs/promises';
 
 const SECONDS_IN_DAY = 60 * 60 * 24;
 const MILLISECONDS_IN_DAY = SECONDS_IN_DAY * 1000;
