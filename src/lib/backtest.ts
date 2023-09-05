@@ -116,14 +116,18 @@ export class Backtest {
     const unique = Array.from(new Set(timestamps)).sort((a, b) => a - b);
 
     const mergedData = unique.map((ts) => {
-      // find all datasources that have a snapshot at this timestamp
-      const dsWithSnapshots = allData.filter(
-        (ds) => ds.findIndex((e) => e.timestamp === ts) !== -1,
-      );
       // grab data from each datasource at this timestamp
-      const data = dsWithSnapshots.map(
-        (ds) => ds.find((e) => e.timestamp === ts)?.data,
-      );
+      const data = allData
+        .map((ds) => {
+          const index = ds.findIndex((e) => e.timestamp === ts);
+          if (index === -1) return;
+          const data = ds[index]?.data;
+          // remove data from the array so we don't have to iterate through it again
+          ds.splice(index, 1);
+          return data;
+        })
+        .filter((e) => e);
+
       return {
         timestamp: ts,
         data: Object.assign({}, ...data),
