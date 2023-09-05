@@ -19,7 +19,7 @@ export class StructJoesV2Strategy {
   public fixed!: number;
   public tags!: any;
   public series: any[] = [];
-  public summary: any
+  public summary: any;
   public initial!: {
     price: number;
     base: number;
@@ -167,7 +167,7 @@ export class StructJoesV2Strategy {
       minBin: -rebalanceBin,
       ...poolSnapshot,
     });
-    
+
     try {
       await Log.writePointBatched(log);
     } catch (e) {
@@ -190,9 +190,8 @@ export class StructJoesV2Strategy {
       fixedApr:
         (fixedReturns * SECONDS_IN_YEAR) / (pool.timestamp - this.startTime),
       variableApr:
-        (variableReturns * SECONDS_IN_YEAR) /
-        (pool.timestamp - this.startTime),
-    }
+        (variableReturns * SECONDS_IN_YEAR) / (pool.timestamp - this.startTime),
+    };
     Summary.writePoint({
       tags: this.tags,
       fields,
@@ -202,6 +201,6 @@ export class StructJoesV2Strategy {
       ...this.tags,
       ...fields,
       end: new Date(pool.timestamp * 1000),
-    }
+    };
   }
 }

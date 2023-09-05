@@ -29,9 +29,9 @@ export class StructJoesV2StrategyRunner {
     } catch (e) {
       // console.log(e)
       throw new Error('INFLUX ERROR after');
-    }    
+    }
 
-    const summaries = this.strategies.map((s) => s.summary)
+    const summaries = this.strategies.map((s) => s.summary);
     const csv = stringify(summaries, { header: true });
     await fs.writeFile('./struct_summary.csv', csv);
 
