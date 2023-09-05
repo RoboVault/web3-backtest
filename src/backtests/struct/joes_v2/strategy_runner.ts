@@ -29,7 +29,16 @@ export class StructJoesV2StrategyRunner {
     } catch (e) {
       // console.log(e)
       throw new Error('INFLUX ERROR after');
-    }
+    }    
+
+    const summaries = this.strategies.map((s) => s.summary)
+    const csv = stringify(summaries, { header: true });
+    await fs.writeFile('./struct_summary.csv', csv);
+
+    const series = this.strategies.map((s) => s.series).flat();
+    const seriesCsv = stringify(series, { header: true });
+    await fs.writeFile('./struct_series.csv', seriesCsv);
+
     console.log('Backtest complete');
   }
 
