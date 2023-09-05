@@ -7,6 +7,7 @@ import { DataSource, DataSourceInfo } from './types.js';
 import { VelodromeDexDataSource } from './velodromeDex.js';
 import { Uni3DexDataSource } from './univ3Dex.js';
 import { SonneDataSource } from './sonne.js';
+import { JoesV2DexDataSource } from './joesv2Dex.js';
 
 type DataSourceEntry = DataSourceInfo & {
   createSource: (info: DataSourceInfo) => DataSource;
@@ -67,5 +68,17 @@ export const DataSourcesRepo: DataSourceEntry[] = [
     protocol: 'sonne',
     resoution: '1h',
     createSource: SonneDataSource.create,
+  },
+  {
+    chain: 'optimism',
+    protocol: 'sonne',
+    resoution: '1h',
+    createSource: SonneDataSource.create,
+  },
+  {
+    chain: 'avalanche',
+    protocol: 'joes-v2-dex',
+    resoution: '1h',
+    createSource: JoesV2DexDataSource.create,
   },
 ];
