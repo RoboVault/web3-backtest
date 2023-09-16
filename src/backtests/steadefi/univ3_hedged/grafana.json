@@ -54,9 +54,9 @@
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
+  "graphTooltip": 2,
   "id": null,
-  "iteration": 1694854071278,
+  "iteration": 1694855197897,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -130,7 +130,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -156,7 +156,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -262,7 +262,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -288,7 +288,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -394,13 +394,13 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
       "targets": [
         {
-          "alias": "$tag_name",
+          "alias": "Max ($tag_name)",
           "datasource": {
             "type": "influxdb",
             "uid": "${DS_INFLUXDB}"
@@ -420,11 +420,12 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
           ],
+          "hide": false,
           "measurement": "hedged_camelot3_strategy",
           "orderByTime": "ASC",
           "policy": "autogen",
@@ -434,7 +435,109 @@
             [
               {
                 "params": [
+                  "maxRange"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "name",
+              "operator": "=~",
+              "value": "/^$strategy$/"
+            }
+          ]
+        },
+        {
+          "alias": "Min ($tag_name)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "name"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "hedged_camelot3_strategy",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
                   "minRange"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "name",
+              "operator": "=~",
+              "value": "/^$strategy$/"
+            }
+          ]
+        },
+        {
+          "alias": "Price",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "previous"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "hedged_camelot3_strategy",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "price0"
                 ],
                 "type": "field"
               },
@@ -526,7 +629,7 @@
           "showLegend": true
         },
         "tooltip": {
-          "mode": "single",
+          "mode": "multi",
           "sort": "none"
         }
       },
@@ -552,7 +655,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -572,7 +675,11 @@
               },
               {
                 "params": [],
-                "type": "mean"
+                "type": "sum"
+              },
+              {
+                "params": [],
+                "type": "cumulative_sum"
               }
             ]
           ],
@@ -684,7 +791,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -816,7 +923,7 @@
             },
             {
               "params": [
-                "null"
+                "previous"
               ],
               "type": "fill"
             }
@@ -985,7 +1092,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "5s",
+  "refresh": false,
   "schemaVersion": 35,
   "style": "dark",
   "tags": [],
@@ -1014,13 +1121,13 @@
     ]
   },
   "time": {
-    "from": "now-6M",
-    "to": "now"
+    "from": "2023-06-21T07:03:24.869Z",
+    "to": "2023-06-27T14:56:53.672Z"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Camelot V3",
   "uid": "f334b0e8-efd9-40a6-87e5-15facc56d953",
-  "version": 2,
+  "version": 6,
   "weekStart": ""
 }
