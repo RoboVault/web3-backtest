@@ -15,7 +15,7 @@ interface ILogAny extends Schema {
 }
 
 const Log = new Measurement<ILogAny, any, any>('hedged_camelot3_strategy');
-const Rebalance = new Measurement<ILogAny, any, any>('hedged_camelot3_strategy');
+const Rebalance = new Measurement<ILogAny, any, any>('hedged_camelot3_rebalance');
 
 const HARVEST_PERIOD = 60 * 60 * 24; // 1 day
 const TWO_WEEKS = 60 * 60 * 24 * 14;
