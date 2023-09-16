@@ -116,6 +116,12 @@ export class UniV3Position {
   public claimed: number = 0;
   public lpAmount: number = 0;
 
+  // fees for this time step 
+  public feeToken0T: number = 0;
+  public feeToken1T: number = 0;
+  public token0Bal : number = 0;
+  public token1Bal : number = 0;
+
   constructor(
     public amount: number,
     public minRange: number,
@@ -256,6 +262,8 @@ export class UniV3Position {
     const feeToken1 = (unbFees[1] * liquidity * activeLiquidity) / 100;
     this.feeToken0 += feeToken0;
     this.feeToken1 += feeToken1;
+    this.feeToken0T = feeToken0;
+    this.feeToken1T = feeToken1;
 
     const feeUnb0 = unbFees[0] * unboundedLiquidity;
     const feeUnb1 = unbFees[1] * unboundedLiquidity;
@@ -301,6 +309,8 @@ export class UniV3Position {
     const diluted = feeUSD * (reservesValueUsd/(lastPool.totalValueLockedUSD+reservesValueUsd))
     this.claimed += feeUSD
     this.valueUsd = this.claimed + reservesValueUsd
+    this.token0Bal = posReserves[0] 
+    this.token1Bal = posReserves[1]
 
     this.snapshot = {
       fg0: unbFees[0],
