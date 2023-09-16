@@ -45,7 +45,6 @@ export class AAVEPosition {
     this.rates = rates;
     let income = 0;
     let cost = 0;
-
     // WARN this is broken for generic borrows. Only works for USDC
     for (const borrow of Object.keys(this.borrows)) {
       const rate = this.rates[borrow].borrow;
@@ -88,8 +87,8 @@ export class AAVEPositionManager {
 
     for (const pool of snapshot.data) {
       this.rates[pool.underlying] = {
-        supply: pool.liquidityRate,
-        borrow: pool.variableBorrowRate,
+        supply: pool.incomeRate,
+        borrow: pool.debtRate,
       };
     }
 

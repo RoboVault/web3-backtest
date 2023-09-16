@@ -1,4 +1,5 @@
-import { Measurement, Schema } from '../../../lib/utils/timeseriesdb.js';
+import { Schema } from '../../../lib/utils/timeseriesdb.js';
+import { InfluxBatcher } from '../../../lib/utils/influxBatcher.js';
 import {
   UniV3Position,
   UniV3PositionManager,
@@ -9,13 +10,14 @@ import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
 import { AAVEPosition, AAVEPositionManager } from '../../../lib/protocols/AavePositionManager.js';
 
+
 interface ILogAny extends Schema {
   tags: any;
   fields: any;
 }
 
-const Log = new Measurement<ILogAny, any, any>('hedged_camelot3_strategy');
-const Rebalance = new Measurement<ILogAny, any, any>('hedged_camelot3_rebalance');
+const Log = new InfluxBatcher<ILogAny, any, any>('hedged_camelot3_strategy');
+const Rebalance = new InfluxBatcher<ILogAny, any, any>('hedged_camelot3_rebalance');
 
 const HARVEST_PERIOD = 60 * 60 * 24; // 1 day
 const TWO_WEEKS = 60 * 60 * 24 * 14;
@@ -49,7 +51,7 @@ class Stats {
   }
 }
 
-const REBALANCE_COST = 5;
+const REBALANCE_COST = 0;
 const HARVEST_COST = 0;
 
 class HedgedUniswap {
@@ -118,10 +120,10 @@ class HedgedUniswap {
   }
 
   public borrow(data: Uni3Snaphot) {
-    const pool = this.pool(data);
+    // const pool = this.pool(data);
     // TODO: Symbol on pool is WETH which leads me to hard code this part,
     const borrow = this.aave.borrowed(
-      'ETH' //pool.tokens[this.priceToken].symbol,
+      'WETH' //pool.tokens[this.priceToken].symbol,
     );
     
     return borrow;
@@ -129,11 +131,11 @@ class HedgedUniswap {
 
   private calcDebtRatio(mgr: UniV3PositionManager, pos: UniV3Position, data: Uni3Snaphot): number {
     if (!this.pos) return 1;
-    if(!this.aave.borrowed('ETH')) return 1
+    if(!this.aave.borrowed('WETH')) return 1
     const pool = this.pool(data)
     const result = tokensForStrategy(pos.entryPrice, pool.close, pos.minRange, pos.maxRange, pos.amount)
     const shortInLP = result[this.priceToken]
-    const borrowedEth = this.aave.borrowed('ETH')
+    const borrowedEth = this.aave.borrowed('WETH')
     return borrowedEth / shortInLP;
   }
 
@@ -161,7 +163,7 @@ class HedgedUniswap {
     this.aave = aave.create();
     this.aave.lend(pool.tokens[this.tokenIndex].symbol, lend)
     // TODO: Symbol on pool is WETH which leads me to hard code this part
-    this.aave.borrow('ETH', borrow)
+    this.aave.borrow('WETH', borrow)
     this.pos = mgr.open(
       usdLeft,
       pool.close * (1 - this.rangeSpread),
@@ -226,7 +228,7 @@ class HedgedUniswap {
       this.aave = aave.create()
       //TODO: Pool symbol is WETH, which lead me to hard code this
       this.aave.lend(pool.tokens[this.tokenIndex].symbol, lend)
-      this.aave.borrow('ETH', borrow)
+      this.aave.borrow('WETH', borrow)
       console.log(`first position value: ${usdLeft}`)
       this.pos = uni.open(
         usdLeft,
@@ -255,7 +257,18 @@ class HedgedUniswap {
     const pool = this.pool(data);
     // TODO: Symbol on pool is WETH which leads me to hard code this part,
     // TODO: this logic should change if we are starting with token0 or token1
-    const result = this.idle + (this.pos.valueUsd + this.aave.lent(pool.tokens[this.tokenIndex].symbol)) - (this.aave.borrowed('ETH') *  pool.close) - this.gasCosts 
+    const result = 
+      this.idle + 
+      this.pos.valueUsd + 
+      this.aave.lent(pool.tokens[this.tokenIndex].symbol) - 
+      (this.aave.borrowed('WETH') *  pool.close)
+    // if (isNaN(result)) {
+    //   console.log('is is nan')
+    //   console.log(this.idle)
+    //   console.log(this.pos.valueUsd)
+    //   console.log(this.aave.lent(pool.tokens[this.tokenIndex].symbol))
+    //   process.exit()
+    // }
     return result
   }
 
@@ -439,22 +452,20 @@ export class HedgedUniswapStrategy {
   }
 
   public async onData(snapshot: Uni3Snaphot) {
-    this.lastData = snapshot;
     
+    if (snapshot.data.aave && snapshot.data.univ3) {
+      this.lastData = snapshot;
 
-    // Aave Position Update
-    // console.log(snapshot.data)
-    if (snapshot.data.aave) {
-      // console.log("lender")
-        await this.lender.update({
-          timestamp: snapshot.timestamp,
-          data: snapshot.data.aave as any,
-        });
-    } else if (snapshot.data.univ3) {
+      // Aave Position Update
+      await this.lender.update({
+        timestamp: snapshot.timestamp,
+        data: snapshot.data.aave as any,
+      });
+
       this.uni.processPoolData(snapshot);
+
       // Process the strategy
       for (const strat of this.strategies) {
-        await wait(1);
         await strat.process(this.uni, snapshot, this.lender);
       }
     }

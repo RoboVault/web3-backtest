@@ -8,8 +8,8 @@ import { gql, GraphQLClient } from 'graphql-request';
 
 export type AavePoolSnapshot = {
   underlying: string;
-  liquidityRate: number;
-  variableBorrowRate: number;
+  incomeRate: number;
+  debtRate: number;
   totalSupply: number;
   totalDebt: number;
 };
@@ -18,8 +18,8 @@ export type AaveSnapshot = DataSnapshot<AavePoolSnapshot>;
 type HourData = {
   pool: string;
   timestamp: number;
-  liquidityRate: number;
-  variableBorrowRate: number;
+  incomeRate: number;
+  debtRate: number;
   totalSupply: number;
   totalDebt: number;
   underlying: string;
