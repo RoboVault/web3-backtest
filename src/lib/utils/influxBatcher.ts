@@ -1,4 +1,4 @@
-import { Schema, Measurement } from './timeseriesdb.js';
+import { Schema, Measurement } from './influx2x.js';
 
 interface ILogAny extends Schema {
   tags: any;
@@ -8,7 +8,7 @@ interface ILogAny extends Schema {
 export class InfluxBatcher<
   T extends Schema = ILogAny,
   Fields = any,
-  Tags = any
+  Tags = any,
 > extends Measurement<T, Fields, Tags> {
   private points: T[] = [];
   constructor(private measurement: string) {

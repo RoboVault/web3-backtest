@@ -1,10 +1,10 @@
-import { Schema, Measurement } from '../utils/timeseriesdb.js';
+import { Schema, Fields, Tags, Measurement } from '../utils/influx2x.js';
 
-interface IPriceTags {
+interface IPriceTags extends Tags {
   id: string;
 }
 
-interface IPriceFields {
+interface IPriceFields extends Fields {
   price: number;
 }
 
