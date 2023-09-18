@@ -8,28 +8,27 @@ export type PriceSeries = {
 export class PriceSeriesStore {
   static async store(name: string, series: PriceSeries) {
     await Price.dropSeries({
-      where: `"id" = '${name}'`,
+      where: `id="${name}"`,
     });
-    await Price.writePoints(
-      series.map((price) => {
-        return {
-          tags: {
-            id: name,
-          },
-          fields: {
-            price: price.price,
-          },
-          timestamp: price.ts * 1000,
-        };
-      }),
-    );
+    const points = series.map((price) => {
+      return {
+        tags: {
+          id: name,
+        },
+        fields: {
+          price: price.price,
+        },
+        timestamp: new Date(price.ts * 1000),
+      };
+    });
+    await Price.writePoints(points);
   }
 
   static async fetch(name: string, start: number, end: number) {
     const data = await Price.query({
       where: { id: name },
-      start: (start * 1000).toString(),
-      end: (end * 1000).toString(),
+      start: new Date(start * 1000),
+      end: new Date(end * 1000),
     });
     return {
       id: name,
@@ -38,7 +37,7 @@ export class PriceSeriesStore {
           ts: e.timestamp / 1000,
           price: e.price,
         };
-      })
-    }
+      }),
+    };
   }
 }
