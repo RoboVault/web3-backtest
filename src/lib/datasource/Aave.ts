@@ -8,8 +8,8 @@ import { gql, GraphQLClient } from 'graphql-request';
 
 export type AavePoolSnapshot = {
   underlying: string;
-  incomeRate: number;
-  debtRate: number;
+  liquidityRate: number;
+  variableBorrowRate: number;
   totalSupply: number;
   totalDebt: number;
 };
@@ -18,8 +18,8 @@ export type AaveSnapshot = DataSnapshot<AavePoolSnapshot>;
 type HourData = {
   pool: string;
   timestamp: number;
-  incomeRate: number;
-  debtRate: number;
+  liquidityRate: number;
+  variableBorrowRate: number;
   totalSupply: number;
   totalDebt: number;
   underlying: string;
@@ -38,11 +38,13 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
   public readonly id: string;
   public poolSymbols: string[]; // Underlying Symbols
   public pools: AAVEPool[] = [];
+  public network: string
   constructor(public info: DataSourceInfo) {
     this.id = info.id || 'aave';
     this.poolSymbols = info.config.pools;
+    this.network = info.chain;
     const url =
-      'https://data.staging.arkiver.net/robolabs/aave-hourly-data/graphql';
+      'https://data.staging.arkiver.net/robolabs/aave-multichain/graphql';
     this.client = new GraphQLClient(url, { headers: {} });
   }
 
@@ -60,12 +62,11 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
       this.poolSymbols.map(async (e) => {
         const sym = `"${e}"`;
         const query = gql`query MyQuery {
-				Pool(filter: {underlyingSymbol: ${sym}}) {
+				Pool(filter: {underlyingSymbol: ${sym}, network: "${this.network}"}) {
 					_id
 					protocol
 					network
 					underlyingSymbol
-					underlying
 				}
 			  }
 			`;
@@ -87,7 +88,9 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 				filter: {_operators: {timestamp: {gt: ${from}, lt: ${to}}}, pool: ${poolId}}
 				${limit ? `limit: ${limit}` : ``}
 			) {
-				pool
+				pool {
+          underlyingSymbol
+        }
 				timestamp
 				liquidityRate
 				variableBorrowRate
@@ -96,9 +99,11 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 			}
 		  }
 		`;
-    return ((await this.client.request(query)) as any).HourDatas.map(
+    const data = (await this.client.request(query)) as any
+    return data.HourDatas.map(
       (e: any) => {
-        return { ...e, underlying: pool.underlying };
+        const { pool, ...rest } = e
+        return { ...rest, underlying: pool.underlyingSymbol };
       },
     );
   }

@@ -3,6 +3,7 @@ import {
   DataSnapshot,
   DataSource,
   DataSourceInfo,
+  Protocols,
   Resolution,
 } from './types.js';
 import { gql, GraphQLClient } from 'graphql-request';
@@ -68,9 +69,17 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
   public readonly id: string;
   constructor(public info: DataSourceInfo) {
     this.id = info.id || 'univ3';
-    const url = 'https://data.staging.arkiver.net/robolabs/camelot-ohlc/graphql';
+    const url = this.getUrl(info.protocol);
     //const url = 'http://0.0.0.0:4000/graphql'
     this.client = new GraphQLClient(url, { headers: {} });
+  }
+
+  public getUrl(protocol: Protocols) {
+    switch (protocol) {
+      case 'camelot-dex': return 'https://data.staging.arkiver.net/robolabs/camelot-ohlc/graphql'
+      case 'uniswap-dex': return 'https://data.staging.arkiver.net/robolabs/univ3-ohlc/graphql'
+      default: throw new Error(`Dex ${protocol} not supported yet`)
+    }
   }
 
   public resolutions(): Resolution[] {

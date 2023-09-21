@@ -19,7 +19,7 @@ export const DataSourcesRepo: DataSourceEntry[] = [
     chain: 'arbitrum',
     protocol: 'aave',
     resoution: '1h',
-    createSource: AaveArbitrumDataSource.create,
+    createSource: AaveDataSource.create,
   },
   {
     chain: 'optimism',
@@ -33,12 +33,12 @@ export const DataSourcesRepo: DataSourceEntry[] = [
     resoution: '1h',
     createSource: CamelotFarmDataSource.create,
   },
-  {
-    chain: 'arbitrum',
-    protocol: 'camelot-dex',
-    resoution: '1m',
-    createSource: CamelotDexDataSource.create,
-  },
+  // {
+  //   chain: 'arbitrum',
+  //   protocol: 'camelot-dex',
+  //   resoution: '1m',
+  //   createSource: CamelotDexDataSource.create,
+  // },
   {
     chain: 'optimism',
     protocol: 'velodrome-dex',
@@ -54,6 +54,12 @@ export const DataSourcesRepo: DataSourceEntry[] = [
   {
     chain: 'ethereum',
     protocol: 'uniswap-dex',
+    resoution: '1h',
+    createSource: Uni3DexDataSource.create,
+  },
+  {
+    chain: 'arbitrum',
+    protocol: 'camelot-dex',
     resoution: '1h',
     createSource: Uni3DexDataSource.create,
   },

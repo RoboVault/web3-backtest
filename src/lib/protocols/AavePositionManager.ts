@@ -87,8 +87,8 @@ export class AAVEPositionManager {
 
     for (const pool of snapshot.data) {
       this.rates[pool.underlying] = {
-        supply: pool.incomeRate,
-        borrow: pool.debtRate,
+        supply: pool.liquidityRate,
+        borrow: pool.variableBorrowRate,
       };
     }
 

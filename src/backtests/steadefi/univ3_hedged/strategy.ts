@@ -10,7 +10,6 @@ import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
 import { AAVEPosition, AAVEPositionManager } from '../../../lib/protocols/AavePositionManager.js';
 
-
 interface ILogAny extends Schema {
   tags: any;
   fields: any;
@@ -22,10 +21,6 @@ const Rebalance = new InfluxBatcher<ILogAny, any, any>('hedged_camelot3_rebalanc
 const HARVEST_PERIOD = 60 * 60 * 24; // 1 day
 const TWO_WEEKS = 60 * 60 * 24 * 14;
 const ONE_YEAR = 60 * 60 * 24 * 365;
-
-const RPC =
-  'https://optimism-mainnet.infura.io/v3/5e5034092e114ffbb3d812b6f7a330ad';
-//const VELODROME_ROUTER = "0x9c12939390052919aF3155f41Bf4160Fd3666A6f"
 
 class Stats {
   // Calculate the average of all the numbers
@@ -51,7 +46,7 @@ class Stats {
   }
 }
 
-const REBALANCE_COST = 0;
+const REBALANCE_COST = 1;
 const HARVEST_COST = 0;
 
 class HedgedUniswap {
@@ -83,8 +78,6 @@ class HedgedUniswap {
   ) {
     this.highest = initial;
     this.tokenIndex = priceToken == 0 ? 1 : 0
-    
-    // this.symbol = 'WETH/USDC'
   }
 
   public pool(data: Uni3Snaphot) {
@@ -94,15 +87,6 @@ class HedgedUniswap {
   public poolIndex(data: Uni3Snaphot) {
     return data.data.velodrome.findIndex((p) => p.symbol === this.poolSymbol)!;
   }
-
-  private fromNumber(amount: number, decimals: number) {
-    return amount * 10 ** decimals;
-  }
-
-  // private router() {
-  // 	const provider = new ethers.providers.JsonRpcProvider(RPC)
-  // 	return new ethers.Contract(VELODROME_ROUTER, VelodromeRouterAbi as any, provider)
-  // }
 
   private calcLenderAmounts(totalAssets: number, data: Uni3Snaphot) {
     const pool = this.pool(data);
@@ -145,7 +129,7 @@ class HedgedUniswap {
     data: Uni3Snaphot,
   ) {
     this.rebalanceCount++;
-    console.log('rebalanceDebt', new Date(data.timestamp * 1000).toISOString());
+    // console.log('rebalanceDebt', new Date(data.timestamp * 1000).toISOString());
 
     // Close this position
     const totalAssets = this.estTotalAssets(data);
@@ -175,12 +159,12 @@ class HedgedUniswap {
     this.pos.valueUsd = usdLeft
     this.idle = 0
     const totalAssetsNew = this.estTotalAssets(data);
-    console.log(totalAssets, totalAssetsNew)
+    // console.log(totalAssets, totalAssetsNew)
     if((totalAssets-totalAssetsNew)>0){
       this.idle = totalAssets-totalAssetsNew
     }
     
-    console.log(`this.idle: ${this.idle}`)
+    // console.log(`this.idle: ${this.idle}`)
     this.gasCosts += REBALANCE_COST;
     Rebalance.writePoint({
       tags: { strategy: this.name },
@@ -201,11 +185,11 @@ class HedgedUniswap {
       debtRatio > 1 + this.debtRatioRange ||
       debtRatio < 1 - this.debtRatioRange
     ) {
-      console.log('\n************* rebalancing debt! *************');
-      console.log(`debt ratio: ${(debtRatio * 100).toFixed(2)}`);
-      console.log(`before rebalance: ${this.estTotalAssets(data)}`)
+      // console.log('\n************* rebalancing debt! *************');
+      // console.log(`debt ratio: ${(debtRatio * 100).toFixed(2)}`);
+      // console.log(`before rebalance: ${this.estTotalAssets(data)}`)
       await this.rebalanceDebt(mgr, aave, data);
-      console.log(`after rebalance: ${this.estTotalAssets(data)}`)
+      // console.log(`after rebalance: ${this.estTotalAssets(data)}`)
     }
   }
 
@@ -247,7 +231,6 @@ class HedgedUniswap {
     if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
       await this.harvest(data);
     }
-
     // always log data
     await this.log(uni, data);
   }
@@ -301,7 +284,10 @@ class HedgedUniswap {
       prices[`price${i}`] = token.price;
     });
     const totalAssets = this.estTotalAssets(data);
-    if (totalAssets === 0) return;
+    if (totalAssets === 0) {
+      console.log('total assets === 0???')
+      return
+    }
     this.highest = this.highest < totalAssets ? totalAssets : this.highest;
     const drawdown = -(this.highest - totalAssets) / this.highest;
     const { tokens: _t, prices: _p, reserves: _r, ...poolSnap } = pool as any;
@@ -341,6 +327,7 @@ class HedgedUniswap {
     try {
       await Log.writePoint(log);
     } catch (e) {
+      console.log('log error')
       await wait(10);
       await Log.writePoint(log);
     }
@@ -369,7 +356,7 @@ class HedgedUniswap {
   }
 
   public async end(uni: UniV3PositionManager, data: Uni3Snaphot) {
-    
+
     const totalAssets = this.estTotalAssets(data)
     console.log('Strategy closing position', this.estTotalAssets(data));
     const close = await uni.close(this.pos);
@@ -401,6 +388,8 @@ class HedgedUniswap {
       rangeSpread: this.rangeSpread,
       debtRatioRange: this.debtRatioRange,
       stddev,
+      rebalanceCount: this.rebalanceCount,
+      collatRatio: this.collatRatio,
     };
   }
 }
@@ -413,16 +402,16 @@ export class HedgedUniswapStrategy {
   private lender = new AAVEPositionManager();
   private strategies: HedgedUniswap[] = [];
   constructor() {
-    const strategies = Array.from(Array(6).keys()).map(i => {
+    const strategies = Array.from(Array(10).keys()).map(i => {
       const n = i + 1
       return {
         initialInvestment: 100_000,
         name: `#${n}: Camelotv3 WETH/USDC ${n*3}%`,
         pool: 'Camelotv3 WETH/USDC 0%',
-        rangeSpread: 0.03 * n,
+        rangeSpread: 0.05 * n,
         priceToken: 0,
         collatRatio: 0.6,
-        debtRatioRange: 0.10
+        debtRatioRange: 0.05
       }
     })
     this.strategies = strategies.map(
@@ -444,6 +433,9 @@ export class HedgedUniswapStrategy {
   }
 
   public async after() {
+    console.log('end date:', new Date(this.lastData.timestamp * 1000).toISOString())
+    await Log.exec(true)
+    await Rebalance.exec(true)
     const summary = await Promise.all(
       this.strategies.map((s) => s.end(this.uni, this.lastData)),
     );
@@ -457,7 +449,6 @@ export class HedgedUniswapStrategy {
   }
 
   public async onData(snapshot: Uni3Snaphot) {
-    
     if (snapshot.data.aave && snapshot.data.univ3) {
       this.lastData = snapshot;
 
@@ -473,6 +464,8 @@ export class HedgedUniswapStrategy {
       for (const strat of this.strategies) {
         await strat.process(this.uni, snapshot, this.lender);
       }
+    } else {
+      console.log(Object.keys(snapshot.data), new Date(snapshot.timestamp * 1000).toISOString())
     }
 
 
