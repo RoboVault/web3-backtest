@@ -311,6 +311,7 @@ export class UniV3Position {
     this.valueUsd = this.claimed + reservesValueUsd
     this.token0Bal = posReserves[0] 
     this.token1Bal = posReserves[1]
+    this.reserves = posReserves
 
     this.snapshot = {
       fg0: unbFees[0],

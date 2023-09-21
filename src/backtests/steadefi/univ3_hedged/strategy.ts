@@ -47,6 +47,7 @@ class Stats {
 }
 
 const REBALANCE_COST = 1;
+const FIXED_SLIPPAGE = 0.002;
 const HARVEST_COST = 0;
 
 class HedgedUniswap {
@@ -130,22 +131,31 @@ class HedgedUniswap {
   ) {
     this.rebalanceCount++;
     // console.log('rebalanceDebt', new Date(data.timestamp * 1000).toISOString());
+    const pool = this.pool(data);
+    const want = pool.tokens[this.tokenIndex].symbol
+    const wantBefore = this.pos.reserves[this.tokenIndex] + this.aave.lent(want)
 
     // Close this position
     const totalAssets = this.estTotalAssets(data);
     const mgrClose = await mgr.close(this.pos);
-    const pool = this.pool(data);
     await aave.close(this.aave);
     this.idle = totalAssets
 
-    // Future: Account for trading fees and slippage on rebalances
+    const calcSlippage = () => {
+      const { borrow, lend } = this.calcLenderAmounts(totalAssets, data);
+      const usdLeft = (borrow*pool.close)*2
+      const wantDiff = wantBefore - (lend + usdLeft)
+      const slippage = Math.abs(wantDiff) * FIXED_SLIPPAGE
+      return slippage
+    }
 
     // Update Lend
-    const { borrow, lend } = this.calcLenderAmounts(totalAssets, data);
+    const slippage = calcSlippage()
+    const { borrow, lend } = this.calcLenderAmounts(totalAssets - slippage, data);
     const usdLeft = (borrow*pool.close)*2
 
     this.aave = aave.create();
-    this.aave.lend(pool.tokens[this.tokenIndex].symbol, lend)
+    this.aave.lend(want, lend)
     // TODO: Symbol on pool is WETH which leads me to hard code this part
     this.aave.borrow('WETH', borrow)
     this.pos = mgr.open(
@@ -170,6 +180,7 @@ class HedgedUniswap {
       tags: { strategy: this.name },
       fields: {
         gas: REBALANCE_COST,
+        slippage,
       },
       timestamp: new Date(data.timestamp * 1000),
     });
