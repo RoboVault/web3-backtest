@@ -1,4 +1,4 @@
-import { Measurement, Schema } from '../../../lib/utils/influx1x.js';
+import { Measurement, Schema } from '../../../lib/utils/timeseriesdb.js';
 import {
   UniV3Position,
   UniV3PositionManager,
@@ -93,8 +93,10 @@ class SingleSidedUniswap {
     // open the first position
     if (!this.pos) {
       const pool = this.pool(data);
+      console.log(`this.initial: ${this.initial}`);
+      console.log(`pool.close: ${pool.close}`);
       this.pos = uni.open(
-        this.initial / pool.close,
+        this.initial,
         pool.close * (1 - this.rangeSpread),
         pool.close * (1 + this.rangeSpread),
         this.priceToken,
@@ -239,9 +241,9 @@ export class SingleSidedUniswapStrategy {
       const n = i + 1;
       return {
         initialInvestment: 100_000,
-        name: `#${n}: UNI3-LUSD/USDC ${n}%`,
-        pool: 'Univ3 LUSD/USDC 0.05%',
-        rangeSpread: 0.01 * n,
+        name: `#${n}: Camelotv3 WETH/USDC ${n * 3}%`,
+        pool: 'Camelotv3 WETH/USDC 0%',
+        rangeSpread: 0.03 * n,
         priceToken: 0,
       };
     });

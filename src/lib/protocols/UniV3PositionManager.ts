@@ -88,7 +88,7 @@ const liquidityForStrategy = (
   }
 };
 
-// Calculate the number of Tokens a strategy owns at a specific price
+//Calculate the number of Tokens a strategy owns at a specific price
 export const tokensForStrategy = (
   entryPrice: number,
   price: number,
@@ -100,9 +100,6 @@ export const tokensForStrategy = (
   const xLp = getXReal(price, minRange, maxRange, L);
   const yLp = getYReal(price, minRange, maxRange, L);
   const amountNow = yLp + xLp * price;
-  // console.log('tokensForStrategy')
-  // console.log(amountNow, initalInvestment)
-  // console.log(amountNow / initalInvestment) // amountNow is always gt initalInvestment
   return [xLp, yLp];
 };
 
@@ -118,6 +115,12 @@ export class UniV3Position {
   public reserves: any;
   public claimed: number = 0;
   public lpAmount: number = 0;
+
+  // fees for this time step
+  public feeToken0T: number = 0;
+  public feeToken1T: number = 0;
+  public token0Bal: number = 0;
+  public token1Bal: number = 0;
 
   constructor(
     public amount: number,
@@ -204,12 +207,12 @@ export class UniV3Position {
     const lastPool = this.pool(lastData);
     const posReserves = tokensForStrategy(
       this.entryPrice,
-      pool.tokens[this.priceToken].price,
+      pool.close,
       this.minRange,
       this.maxRange,
       this.amount,
     );
-    // const posReserves = tokensForStrategy2(this.minRange, this.maxRange, this.amount, data.close, data.pool.token0.decimals)
+
     const unboundedLiquidity = liquidityForStrategy(
       this.entryPrice,
       Math.pow(1.0001, -887220),
@@ -259,11 +262,14 @@ export class UniV3Position {
     const feeToken1 = (unbFees[1] * liquidity * activeLiquidity) / 100;
     this.feeToken0 += feeToken0;
     this.feeToken1 += feeToken1;
+    this.feeToken0T = feeToken0;
+    this.feeToken1T = feeToken1;
 
     const feeUnb0 = unbFees[0] * unboundedLiquidity;
     const feeUnb1 = unbFees[1] * unboundedLiquidity;
 
-    let fgV, feeV, feeUnb, amountV, feeUSD, amountTR;
+    let fgV, feeV, feeUnb, amountV, feeUSD: number, amountTR;
+    feeUSD = 0;
     // const firstClose = this.priceToken === 1 ? 1 / data[0].close : data[0].close;
     const firstClose = this.entryPrice;
 
@@ -299,11 +305,16 @@ export class UniV3Position {
           lastPool.totalValueLockedToken0 / lastPool.close);
       amountTR = this.amount + (amountV - (x0 * (1 / pool.close) + y0));
     }
-
-    const fees = this.feeToken0 + pool.close * this.feeToken1;
-    // note: posReserves array is flipped
-    const valueToken0 = fees + posReserves[1] + pool.close * posReserves[0];
-    this.valueUsd = valueToken0 * pool.prices[0];
+    const reservesValueUsd =
+      pool.prices[0] * posReserves[0] + pool.prices[1] * posReserves[1];
+    const diluted =
+      feeUSD *
+      (reservesValueUsd / (lastPool.totalValueLockedUSD + reservesValueUsd));
+    this.claimed += feeUSD;
+    this.valueUsd = this.claimed + reservesValueUsd;
+    this.token0Bal = posReserves[0];
+    this.token1Bal = posReserves[1];
+    this.reserves = posReserves;
 
     this.snapshot = {
       fg0: unbFees[0],
@@ -311,7 +322,7 @@ export class UniV3Position {
       x0,
       y0,
       activeliquidity: activeLiquidity,
-      fees,
+      fees: feeUSD,
       fgV: fgV,
       feeV: feeV,
       feeUnb: feeUnb,
@@ -340,7 +351,13 @@ export class UniV3PositionManager {
 
     for (const pos of this.positions) {
       function getPool(data: Uni3Snaphot) {
-        return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
+        try {
+          return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
+        } catch (e) {
+          console.log(e);
+          console.log(data);
+          return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
+        }
       }
       const pool = getPool(data);
       const lastPool = getPool(this.lastData);
@@ -374,7 +391,7 @@ export class UniV3PositionManager {
       minRange,
       maxRange,
       priceToken,
-      lastPool.tokens[0].price,
+      lastPool.close,
       poolSymbol,
     );
     this.positions.push(pos);
