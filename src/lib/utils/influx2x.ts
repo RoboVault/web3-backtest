@@ -8,7 +8,7 @@ import { DeleteAPI } from '@influxdata/influxdb-client-apis';
 import { Settings } from './utility.js';
 
 export type Fields = Record<string, number | boolean | string>;
-export type Tags = Record<string, string>;
+export type Tags = Record<string, string | boolean>;
 export abstract class Schema {
   public abstract tags: Tags;
   public abstract fields: Fields;
@@ -79,7 +79,10 @@ export class Measurement<T extends Schema, Fields, Tags> {
   private convertToPoint(point: T) {
     const newPoint = new Point(this.name);
     for (const tag in point.tags) {
-      newPoint.tag(tag, point.tags[tag]);
+      if (typeof point.tags[tag] === 'boolean')
+        newPoint.tag(tag, point.tags[tag] ? 'true' : 'false');
+      else
+        newPoint.tag(tag, point.tags[tag] as string);
     }
     for (const field in point.fields) {
       if (typeof point.fields[field] === 'boolean')

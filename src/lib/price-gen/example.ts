@@ -46,8 +46,8 @@ const main = async () => {
 
   // Plot the series for good-measure
   data.push({
-    x: series.map((d: any) => d.ts),
-    y: series.map((d: any) => d.price),
+    x: series.data.map((d: any) => d.ts),
+    y: series.data.map((d: any) => d.price),
     type: 'scatter',
     name: `v: ${variance.toFixed(2)} mu: ${drift.toFixed(2)}`,
   });

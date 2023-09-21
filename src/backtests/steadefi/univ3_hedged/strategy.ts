@@ -1,10 +1,10 @@
-import { Schema } from '../../../lib/utils/timeseriesdb.js';
+import { Schema } from '../../../lib/utils/influx1x.js';
 import { InfluxBatcher } from '../../../lib/utils/influxBatcher.js';
 import {
   UniV3Position,
   UniV3PositionManager,
   tokensForStrategy,
-} from '../../../lib/protocols/UNIV3PositionManager.js'; //'../../../lib/protocols/UniV3PositionManager.js';
+} from '../../../lib/protocols/UniV3PositionManager.js'; //'../../../lib/protocols/UniV3PositionManager.js';
 import { Uni3Snaphot } from '../../../lib/datasource/univ3Dex.js';
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
