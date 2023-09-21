@@ -76,9 +76,12 @@ export class Uni3DexDataSource implements DataSource<Uni3Snaphot> {
 
   public getUrl(protocol: Protocols) {
     switch (protocol) {
-      case 'camelot-dex': return 'https://data.staging.arkiver.net/robolabs/camelot-ohlc/graphql'
-      case 'uniswap-dex': return 'https://data.staging.arkiver.net/robolabs/univ3-ohlc/graphql'
-      default: throw new Error(`Dex ${protocol} not supported yet`)
+      case 'camelot-dex':
+        return 'https://data.staging.arkiver.net/robolabs/camelot-ohlc/graphql';
+      case 'uniswap-dex':
+        return 'https://data.staging.arkiver.net/robolabs/univ3-ohlc/graphql';
+      default:
+        throw new Error(`Dex ${protocol} not supported yet`);
     }
   }
 
