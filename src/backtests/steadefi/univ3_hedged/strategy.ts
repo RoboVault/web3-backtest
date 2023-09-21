@@ -52,7 +52,6 @@ class Stats {
 }
 
 const REBALANCE_COST = 1;
-const FIXED_SLIPPAGE = 0.002;
 const HARVEST_COST = 0;
 
 class HedgedUniswap {
@@ -81,6 +80,7 @@ class HedgedUniswap {
     public priceToken: number,
     public collatRatio: number,
     public debtRatioRange: number,
+    public FIXED_SLIPPAGE : number,
   ) {
     this.highest = initial;
     this.tokenIndex = priceToken == 0 ? 1 : 0;
@@ -142,6 +142,7 @@ class HedgedUniswap {
     mgr: UniV3PositionManager,
     aave: AAVEPositionManager,
     data: Uni3Snaphot,
+    fixed_slippage : number,
   ) {
     this.rebalanceCount++;
     // console.log('rebalanceDebt', new Date(data.timestamp * 1000).toISOString());
@@ -158,11 +159,11 @@ class HedgedUniswap {
 
     const calcSlippage = () => {
       const { borrow, lend } = this.calcLenderAmounts(totalAssets, data);
-      const usdLeft = borrow * pool.close * 2;
-      const wantDiff = wantBefore - (lend + usdLeft);
-      const slippage = Math.abs(wantDiff) * FIXED_SLIPPAGE;
-      return slippage;
-    };
+      const usdLeft = (borrow*pool.close)*2
+      const wantDiff = wantBefore - (lend + usdLeft)
+      const slippage = Math.abs(wantDiff) * FIXED_SLIPPAGE
+      return slippage
+    }
 
     // Update Lend
     const slippage = calcSlippage();
@@ -217,7 +218,7 @@ class HedgedUniswap {
       // console.log('\n************* rebalancing debt! *************');
       // console.log(`debt ratio: ${(debtRatio * 100).toFixed(2)}`);
       // console.log(`before rebalance: ${this.estTotalAssets(data)}`)
-      await this.rebalanceDebt(mgr, aave, data);
+      await this.rebalanceDebt(mgr, aave, data, this.FIXED_SLIPPAGE);
       // console.log(`after rebalance: ${this.estTotalAssets(data)}`)
     }
   }
@@ -433,18 +434,26 @@ export class HedgedUniswapStrategy {
   private lender = new AAVEPositionManager();
   private strategies: HedgedUniswap[] = [];
   constructor() {
-    const strategies = Array.from(Array(10).keys()).map((i) => {
-      const n = i + 1;
-      return {
-        initialInvestment: 100_000,
-        name: `#${n}: Camelotv3 WETH/USDC ${n * 5}%`,
-        pool: 'Camelotv3 WETH/USDC 0%',
-        rangeSpread: 0.05 * n,
-        priceToken: 0,
-        collatRatio: 0.6,
-        debtRatioRange: 0.05,
-      };
-    });
+    const strategies = Array.from(Array(10).keys()).flatMap(i => {
+      return Array.from(Array(4).keys()).flatMap(j => {
+        return Array.from(Array(3).keys()).flatMap(k => {
+          const n = i + 1
+          return {
+            initialInvestment: 100_000,
+            name: `#${n}: Camelotv3 WETH/USDC ${n*5}% | debt ratio : ${(j+1)*2.5}% | slippage : ${(k+1)*.1}%`,
+            pool: 'Camelotv3 WETH/USDC 0%',
+            rangeSpread: 0.05 * n,
+            priceToken: 0,
+            collatRatio: 0.6,
+            debtRatioRange: 0.025 * (j+1),
+            FIXED_SLIPPAGE : 0.001 * (k+1), 
+          }
+        })
+      })
+    })
+
+    console.log(strategies)
+    
     this.strategies = strategies.map(
       (s) =>
         new HedgedUniswap(
@@ -455,6 +464,7 @@ export class HedgedUniswapStrategy {
           s.priceToken,
           s.collatRatio,
           s.debtRatioRange,
+          s.FIXED_SLIPPAGE,
         ),
     );
   }
