@@ -54,6 +54,8 @@
   },
   "dependencies": {
     "@adraffy/ens-normalize": "^1.9.2",
+    "@influxdata/influxdb-client": "^1.33.2",
+    "@influxdata/influxdb-client-apis": "^1.33.2",
     "@uniswap/v3-sdk": "^3.9.0",
     "csv-stringify": "^6.4.0",
     "dotenv": "^16.0.3",

@@ -203,6 +203,18 @@ To add an example dashboard, navigate to Dashboards -> New -> Import and paste t
 
 __NOTE:__ If Grafana failed to connect to localhost, try setting connection mode to `server` use container name for the URL field. URL: http://influxdb:8086/
 
+## Grafana Influx2 Datasource setup
+
+Instructions [here](https://docs.influxdata.com/influxdb/v2/tools/grafana/?t=InfluxQL#configure-your-influxdb-connection)
+
+* URL: http://host.docker.internal:8086
+* Custom header: 
+  * Header: Authorization 
+  * Value: Token 1Vm2wdJdEM9BBxR8LHio1jjgAyx9Glm1SGQqQeBid5QPMqbvdIPjYxMhswV8AKKhA00s-ITdJgJqqJ6cX3cntA==
+* Database: backtest
+* User: admin
+* Password: password
+
 
 # Contributors and Supporters
 

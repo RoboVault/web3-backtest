@@ -37,3 +37,10 @@ node_modules/
 build/
 
 .hypothesis/
+
+# Docker Volumes
+influx/
+data/
+
+#results
+*.csv

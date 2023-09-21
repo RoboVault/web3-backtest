@@ -1,6 +1,6 @@
 import { Backtest } from '../../../lib/backtest.js';
 import { DataSourceInfo } from '../../../lib/datasource/types.js';
-import { HedgedUniswapStrategy } from './strategy.js';
+import { HedgedUniswapStrategyRunner } from './strategyRunner.js';
 
 const main = async () => {
   const USDCWETH = '0xb1026b8e7276e7ac75410f1fcbbe21796e8f7526';
@@ -26,7 +26,7 @@ const main = async () => {
   const bt = await Backtest.create(new Date('2023-06-20'), new Date(), sources);
 
   // Configure Strategy
-  const strategy = new HedgedUniswapStrategy();
+  const strategy = new HedgedUniswapStrategyRunner();
   bt.onBefore(strategy.before.bind(strategy));
   bt.onData(strategy.onData.bind(strategy));
   bt.onAfter(strategy.after.bind(strategy));
