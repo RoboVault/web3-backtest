@@ -1,4 +1,4 @@
-import { Schema, Measurement } from './timeseriesdb.js';
+import { Schema, Measurement } from './influx2x.js';
 
 interface ILogAny extends Schema {
   tags: any;

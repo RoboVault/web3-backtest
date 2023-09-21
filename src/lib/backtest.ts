@@ -5,9 +5,10 @@ import {
   DataSourceInfo,
   Resolution,
 } from './datasource/types.js';
+import { getCachedData, updateCache } from './utils/cache.js';
 
-const toElapsed = (start: number) => {
-  return ((Date.now() - start) / 1000).toFixed(2) + 's';
+type BacktestOptions = {
+  useCache?: boolean; // default: true
 };
 
 export class Backtest {
@@ -19,6 +20,7 @@ export class Backtest {
     private start: Date,
     private end: Date,
     public readonly sources: DataSource[],
+    public options: BacktestOptions,
   ) {}
 
   public static async create(
@@ -26,11 +28,12 @@ export class Backtest {
     end: Date,
     sourceConfig?: DataSourceInfo[],
     _sources?: DataSource[],
+    options?: BacktestOptions,
   ): Promise<Backtest> {
     const sources =
       _sources || sourceConfig?.map((source) => DataSourceStore.get(source));
     if (!sources) throw new Error('no sources provided');
-    const bt = new Backtest(start, end, sources);
+    const bt = new Backtest(start, end, sources, options || { useCache: true });
     return bt;
   }
 
@@ -71,10 +74,10 @@ export class Backtest {
       return aRes > bRes ? 1 : -1;
     });
 
-    let start = this.start.getTime() / 1000;
-    let end = this.end.getTime() / 1000;
+    const start = this.start.getTime() / 1000;
+    const end = this.end.getTime() / 1000;
 
-    const limit = 5000;
+    const limit = 10000;
 
     const formatTime = (time: number) => {
       const t = new Date(time * 1000)
@@ -89,6 +92,13 @@ export class Backtest {
       let from = start;
       let finished = false;
       let allData: any[] = [];
+      let prevDataLimit = 0;
+
+      if (this.options.useCache) {
+        const cachedData = await getCachedData(ds.id, start, end);
+        if (cachedData) return cachedData;
+      }
+
       do {
         const data = await ds.fetch(from, end, limit);
         if (data.length === 0) break;
@@ -101,20 +111,26 @@ export class Backtest {
 
         allData = [...allData, ...data];
 
-        finished = data.length < 10;
+        finished = data.length < prevDataLimit;
+        prevDataLimit = data.length;
       } while (!finished);
       return allData;
     });
 
     const allData = await Promise.all(dataPromises);
+    for (const data of allData) {
+      await await updateCache(data, start, end);
+    }
 
     // merge all timestamps
     const timestamps = Array.prototype.concat.apply(
       [],
       allData.map((e) => e.map((e) => e.timestamp)),
     ) as number[];
+    console.log('sorting timestamps');
     const unique = Array.from(new Set(timestamps)).sort((a, b) => a - b);
 
+    console.log('merging data');
     const mergedData = unique.map((ts) => {
       // grab data from each datasource at this timestamp
       const data = allData
@@ -134,6 +150,7 @@ export class Backtest {
       };
     });
 
+    console.log('running backtest... 🏃‍♂️');
     // emit each of the snapshots
     for (const snap of mergedData) {
       if (this.onDataHandler) await this.onDataHandler(snap);
