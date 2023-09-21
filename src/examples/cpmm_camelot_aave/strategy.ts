@@ -10,7 +10,7 @@ import {
   AAVEPositionManager,
 } from '../../lib/protocols/AavePositionManager.js';
 import { CamelotFarm, FarmPosition } from '../../lib/protocols/CamelotFarm.js';
-import { Measurement, ILogAny } from '../../lib/utils/influx1x.js';
+import { Measurement, ILogAny } from '../../lib/utils/timeseriesdb.js';
 import { DataSnapshot } from '../../lib/datasource/types.js';
 import { InfluxBatcher } from '../../lib/utils/influxBatcher.js';
 

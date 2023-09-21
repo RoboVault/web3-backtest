@@ -3,7 +3,7 @@ import {
   Measurement,
   ILogAny,
   TimeSeriesDB,
-} from '../lib/utils/influx1x.js';
+} from '../lib/utils/timeseriesdb.js';
 import { waitFor } from '../lib/utils/utility.js';
 
 // jest.mock('influx'); // SoundPlayer is now a mock constructor

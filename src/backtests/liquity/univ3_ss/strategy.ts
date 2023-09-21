@@ -1,4 +1,4 @@
-import { Measurement, Schema } from '../../../lib/utils/influx1x.js';
+import { Measurement, Schema } from '../../../lib/utils/timeseriesdb.js';
 import {
   UniV3Position,
   UniV3PositionManager,

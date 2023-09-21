@@ -1,5 +1,5 @@
 import * as Influx from 'influx';
-import { Settings } from './utility.js';
+import { Settings } from '../utils/utility.js';
 
 export abstract class Schema {
   public abstract tags: object;
