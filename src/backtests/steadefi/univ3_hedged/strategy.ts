@@ -47,7 +47,6 @@ class Stats {
 }
 
 const REBALANCE_COST = 1;
-const FIXED_SLIPPAGE = 0.002;
 const HARVEST_COST = 0;
 
 class HedgedUniswap {
@@ -75,7 +74,8 @@ class HedgedUniswap {
     public rangeSpread: number,
     public priceToken: number,
     public collatRatio: number,
-    public debtRatioRange: number
+    public debtRatioRange: number,
+    public fixedSlippage : number,
   ) {
     this.highest = initial;
     this.tokenIndex = priceToken == 0 ? 1 : 0
@@ -127,7 +127,7 @@ class HedgedUniswap {
   public async rebalanceDebt(
     mgr: UniV3PositionManager,
     aave: AAVEPositionManager,
-    data: Uni3Snaphot,
+    data: Uni3Snaphot
   ) {
     this.rebalanceCount++;
     // console.log('rebalanceDebt', new Date(data.timestamp * 1000).toISOString());
@@ -145,7 +145,7 @@ class HedgedUniswap {
       const { borrow, lend } = this.calcLenderAmounts(totalAssets, data);
       const usdLeft = (borrow*pool.close)*2
       const wantDiff = wantBefore - (lend + usdLeft)
-      const slippage = Math.abs(wantDiff) * FIXED_SLIPPAGE
+      const slippage = Math.abs(wantDiff) * this.fixedSlippage
       return slippage
     }
 
@@ -413,18 +413,27 @@ export class HedgedUniswapStrategy {
   private lender = new AAVEPositionManager();
   private strategies: HedgedUniswap[] = [];
   constructor() {
-    const strategies = Array.from(Array(10).keys()).map(i => {
-      const n = i + 1
-      return {
-        initialInvestment: 100_000,
-        name: `#${n}: Camelotv3 WETH/USDC ${n*5}%`,
-        pool: 'Camelotv3 WETH/USDC 0%',
-        rangeSpread: 0.05 * n,
-        priceToken: 0,
-        collatRatio: 0.6,
-        debtRatioRange: 0.05
-      }
+    const strategies = Array.from(Array(5).keys()).flatMap(i => {
+      return Array.from(Array(2).keys()).flatMap(j => {
+        return Array.from(Array(1).keys()).flatMap(k => {
+          const n = i + 1
+          return {
+            initialInvestment: 100_000,
+            name: `#${n}: Camelotv3 WETH/USDC ${n*5}% | debt ratio : ${(j+1)*2.5}% | slippage : ${(k+1)*.1}%`,
+            pool: 'Camelotv3 WETH/USDC 0%',
+            rangeSpread: 0.05 * n,
+            priceToken: 0,
+            collatRatio: 0.6,
+            debtRatioRange: 0.025 * (j+1),
+            fixedSlippage: 0.001 * (k+1), 
+          }
+        })
+      })
     })
+
+    console.log(strategies.length)
+    // process.exit()
+    
     this.strategies = strategies.map(
       (s) =>
         new HedgedUniswap(
@@ -434,7 +443,8 @@ export class HedgedUniswapStrategy {
           s.rangeSpread,
           s.priceToken,
           s.collatRatio,
-          s.debtRatioRange
+          s.debtRatioRange,
+          s.fixedSlippage,
         ),
     );
   }
