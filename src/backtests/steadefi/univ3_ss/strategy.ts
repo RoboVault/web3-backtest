@@ -2,7 +2,7 @@ import { Measurement, Schema } from '../../../lib/utils/timeseriesdb.js';
 import {
   UniV3Position,
   UniV3PositionManager,
-} from '../../../lib/protocols/UNIV3PositionManager.js'//'../../../lib/protocols/UniV3PositionManager.js';
+} from '../../../lib/protocols/UNIV3PositionManager.js'; //'../../../lib/protocols/UniV3PositionManager.js';
 import { Uni3Snaphot } from '../../../lib/datasource/univ3Dex.js';
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
@@ -93,8 +93,8 @@ class SingleSidedUniswap {
     // open the first position
     if (!this.pos) {
       const pool = this.pool(data);
-      console.log(`this.initial: ${this.initial}`)
-      console.log(`pool.close: ${pool.close}`)
+      console.log(`this.initial: ${this.initial}`);
+      console.log(`pool.close: ${pool.close}`);
       this.pos = uni.open(
         this.initial,
         pool.close * (1 - this.rangeSpread),
@@ -237,16 +237,16 @@ export class SingleSidedUniswapStrategy {
   private lastData!: Uni3Snaphot;
   private strategies: SingleSidedUniswap[] = [];
   constructor() {
-    const strategies = Array.from(Array(6).keys()).map(i => {
-      const n = i + 1
+    const strategies = Array.from(Array(6).keys()).map((i) => {
+      const n = i + 1;
       return {
         initialInvestment: 100_000,
-        name: `#${n}: Camelotv3 WETH/USDC ${n*3}%`,
+        name: `#${n}: Camelotv3 WETH/USDC ${n * 3}%`,
         pool: 'Camelotv3 WETH/USDC 0%',
         rangeSpread: 0.03 * n,
         priceToken: 0,
-      }
-    })
+      };
+    });
     this.strategies = strategies.map(
       (s) =>
         new SingleSidedUniswap(

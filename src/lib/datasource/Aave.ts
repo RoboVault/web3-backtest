@@ -38,7 +38,7 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
   public readonly id: string;
   public poolSymbols: string[]; // Underlying Symbols
   public pools: AAVEPool[] = [];
-  public network: string
+  public network: string;
   constructor(public info: DataSourceInfo) {
     this.id = info.id || 'aave';
     this.poolSymbols = info.config.pools;
@@ -99,13 +99,11 @@ export class AaveDataSource implements DataSource<AaveSnapshot> {
 			}
 		  }
 		`;
-    const data = (await this.client.request(query)) as any
-    return data.HourDatas.map(
-      (e: any) => {
-        const { pool, ...rest } = e
-        return { ...rest, underlying: pool.underlyingSymbol };
-      },
-    );
+    const data = (await this.client.request(query)) as any;
+    return data.HourDatas.map((e: any) => {
+      const { pool, ...rest } = e;
+      return { ...rest, underlying: pool.underlyingSymbol };
+    });
   }
 
   public async fetch(

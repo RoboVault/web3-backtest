@@ -116,11 +116,11 @@ export class UniV3Position {
   public claimed: number = 0;
   public lpAmount: number = 0;
 
-  // fees for this time step 
+  // fees for this time step
   public feeToken0T: number = 0;
   public feeToken1T: number = 0;
-  public token0Bal : number = 0;
-  public token1Bal : number = 0;
+  public token0Bal: number = 0;
+  public token1Bal: number = 0;
 
   constructor(
     public amount: number,
@@ -269,7 +269,7 @@ export class UniV3Position {
     const feeUnb1 = unbFees[1] * unboundedLiquidity;
 
     let fgV, feeV, feeUnb, amountV, feeUSD: number, amountTR;
-    feeUSD = 0
+    feeUSD = 0;
     // const firstClose = this.priceToken === 1 ? 1 / data[0].close : data[0].close;
     const firstClose = this.entryPrice;
 
@@ -305,13 +305,16 @@ export class UniV3Position {
           lastPool.totalValueLockedToken0 / lastPool.close);
       amountTR = this.amount + (amountV - (x0 * (1 / pool.close) + y0));
     }
-    const reservesValueUsd = pool.prices[0] * posReserves[0] + pool.prices[1] * posReserves[1]
-    const diluted = feeUSD * (reservesValueUsd/(lastPool.totalValueLockedUSD+reservesValueUsd))
-    this.claimed += feeUSD
-    this.valueUsd = this.claimed + reservesValueUsd
-    this.token0Bal = posReserves[0] 
-    this.token1Bal = posReserves[1]
-    this.reserves = posReserves
+    const reservesValueUsd =
+      pool.prices[0] * posReserves[0] + pool.prices[1] * posReserves[1];
+    const diluted =
+      feeUSD *
+      (reservesValueUsd / (lastPool.totalValueLockedUSD + reservesValueUsd));
+    this.claimed += feeUSD;
+    this.valueUsd = this.claimed + reservesValueUsd;
+    this.token0Bal = posReserves[0];
+    this.token1Bal = posReserves[1];
+    this.reserves = posReserves;
 
     this.snapshot = {
       fg0: unbFees[0],
@@ -348,14 +351,13 @@ export class UniV3PositionManager {
 
     for (const pos of this.positions) {
       function getPool(data: Uni3Snaphot) {
-        try{
+        try {
           return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
-        } catch(e){
-          console.log(e)
-          console.log(data)
+        } catch (e) {
+          console.log(e);
+          console.log(data);
           return data.data.univ3.find((p) => p.symbol === pos.poolSymbol)!;
         }
-        
       }
       const pool = getPool(data);
       const lastPool = getPool(this.lastData);
