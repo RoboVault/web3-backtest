@@ -417,7 +417,7 @@ export class HedgedUniswapStrategy {
       const n = i + 1
       return {
         initialInvestment: 100_000,
-        name: `#${n}: Camelotv3 WETH/USDC ${n*3}%`,
+        name: `#${n}: Camelotv3 WETH/USDC ${n*5}%`,
         pool: 'Camelotv3 WETH/USDC 0%',
         rangeSpread: 0.05 * n,
         priceToken: 0,
