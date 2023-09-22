@@ -289,6 +289,9 @@ export class HedgedUniswap {
         name: this.name,
         pool: this.poolSymbol,
         ...tokens,
+        rangeSpread: (this.rangeSpread * 100).toFixed(2),
+        debtRatioRange: (this.debtRatioRange * 100).toFixed(2),
+        collatRatio: (this.collatRatio * 100).toFixed(2),
       },
       fields: {
         strategy: this.name,
@@ -300,8 +303,6 @@ export class HedgedUniswap {
         highest: this.highest,
         apy, // TODO: get APY
         aum: totalAssets,
-        debtRatioRange: this.debtRatioRange,
-        rangeSpread: this.rangeSpread,
         minRange: this.pos.minRange,
         maxRange: this.pos.maxRange,
         debtRatio,
