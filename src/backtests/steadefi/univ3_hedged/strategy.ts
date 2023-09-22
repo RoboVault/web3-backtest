@@ -22,6 +22,7 @@ export class HedgedUniswap {
   public series: any[] = [];
   public aaveMgr: AAVEPositionManager = new AAVEPositionManager();
   public aave: AAVEPosition = this.aaveMgr.create(); // todo: type this
+  public tags: any = {};
 
   public rebalanceCount = 0;
   public startPrice = 0;
@@ -56,9 +57,6 @@ export class HedgedUniswap {
     const borrowInUSD = totalAssets - lendUSD;
     const lend = lendUSD / pool.tokens[this.tokenIndex].price;
 
-    //const price = this.tokenIndex ? pool.tokens[0].price/pool.tokens[1].price : pool.tokens[1].price/pool.tokens[0].price
-    // const borrow =
-    //   borrowInUSD / pool.tokens[this.priceToken].price;
     // TODO: Logic should change if we are using Token0 or Token1, not just pool.close
     const borrow = borrowInUSD / pool.close;
     return { borrow, lend };
@@ -135,7 +133,7 @@ export class HedgedUniswap {
     this.pos = mgr.open(
       usdLeft,
       pool.close * (1 - this.rangeSpread),
-      pool.close * (1 + this.rangeSpread),
+      pool.close / (1 - this.rangeSpread),
       this.priceToken,
       this.poolSymbol,
     );
@@ -206,7 +204,7 @@ export class HedgedUniswap {
       this.pos = uni.open(
         usdLeft,
         pool.close * (1 - this.rangeSpread),
-        pool.close * (1 + this.rangeSpread),
+        pool.close / (1 - this.rangeSpread),
         this.priceToken,
         this.poolSymbol,
       );
@@ -282,17 +280,17 @@ export class HedgedUniswap {
     this.maxDrawdown = Math.max(this.maxDrawdown, -drawdown);
     const profit = totalAssets - this.initial;
     const debtRatio = this.calcDebtRatio(mgr, this.pos, data);
-
+    this.tags = {
+      name: this.name,
+      pool: this.poolSymbol,
+      ...tokens,
+      rangeSpread: (this.rangeSpread * 100).toFixed(2),
+      debtRatioRange: (this.debtRatioRange * 100).toFixed(2),
+      collatRatio: (this.collatRatio * 100).toFixed(2),
+    }
     const apy = this.apy(data);
     const log = {
-      tags: {
-        name: this.name,
-        pool: this.poolSymbol,
-        ...tokens,
-        rangeSpread: (this.rangeSpread * 100).toFixed(2),
-        debtRatioRange: (this.debtRatioRange * 100).toFixed(2),
-        collatRatio: (this.collatRatio * 100).toFixed(2),
-      },
+      tags: this.tags,
       fields: {
         strategy: this.name,
         ...this.pos.snapshot,

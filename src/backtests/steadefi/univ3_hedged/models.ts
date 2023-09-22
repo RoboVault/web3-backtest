@@ -5,3 +5,6 @@ export const Log = new InfluxBatcher<ILogAny, any, any>('hedged_camelot3_strateg
 export const Rebalance = new InfluxBatcher<ILogAny, any, any>(
   'hedged_camelot3_rebalance',
 );
+export const Summary = new InfluxBatcher<ILogAny, any, any>(
+  'hedged_camelot3_summary',
+);

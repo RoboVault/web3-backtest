@@ -25,6 +25,12 @@
     },
     {
       "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
       "id": "timeseries",
       "name": "Time series",
       "version": ""
@@ -56,10 +62,124 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
   "id": null,
-  "iteration": 1695357492458,
+  "iteration": 1695357492465,
   "links": [],
   "liveNow": false,
   "panels": [
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "rebalanceCount"
+          }
+        ]
+      },
+      "pluginVersion": "8.4.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "rangeSpread"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "debtRatioRange"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "collatRatio"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "hedged_camelot3_summary",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "rebalanceCount"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "apr"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "aum"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Panel Title",
+      "type": "table"
+    },
     {
       "fieldConfig": {
         "defaults": {
@@ -115,7 +235,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 14
       },
       "id": 1,
       "options": {
@@ -261,7 +381,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 14
       },
       "id": 7,
       "options": {
@@ -407,7 +527,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 22
       },
       "id": 4,
       "options": {
@@ -553,7 +673,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 22
       },
       "id": 5,
       "options": {
@@ -703,7 +823,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 30
       },
       "id": 2,
       "options": {
@@ -824,7 +944,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 30
       },
       "id": 6,
       "options": {
@@ -970,7 +1090,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 38
       },
       "id": 3,
       "options": {
@@ -1142,13 +1262,13 @@
     ]
   },
   "time": {
-    "from": "now-3M",
+    "from": "now-6M",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Camelot V3",
   "uid": "f334b0e8-efd9-40a6-87e5-15facc56d953",
-  "version": 4,
+  "version": 6,
   "weekStart": ""
 }
