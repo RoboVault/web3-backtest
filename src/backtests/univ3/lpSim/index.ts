@@ -14,8 +14,8 @@ const main = async () => {
       },
     },
   ];
-  const start = new Date('2023-06-20')
-  const end = new Date()
+  const start = new Date('2023-06-20');
+  const end = new Date();
   const bt = await Backtest.create(start, end, sources);
 
   // Configure Strategy

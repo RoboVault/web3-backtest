@@ -11,9 +11,7 @@ const SECONDS_IN_DAY = 60 * 60 * 24;
 const MILLISECONDS_IN_DAY = SECONDS_IN_DAY * 1000;
 const PERIOD = 8 * 7; // 8 weeks
 
-const POOLS = [
-  'Camelotv3 WETH/USDC 0%',
-]
+const POOLS = ['Camelotv3 WETH/USDC 0%'];
 
 export class HedgedUniswapStrategyRunner {
   private uni = new UniV3PositionManager();
@@ -27,22 +25,23 @@ export class HedgedUniswapStrategyRunner {
     const rangeSpread = range(0.05, 0.25, 5);
     const fixedSlippage = range(0.004, 0.01, 1);
 
-    const variations = permutations([
-      rangeSpread,
-      fixedSlippage
-    ])
+    const variations = permutations([rangeSpread, fixedSlippage]);
 
-    variations.forEach(e => {
-      this.strategies.push(new UniV3Hodl({
-        name: `#${e[0]}: Camelotv3 WETH/USDC ${e[0] * 100}% | slippage : ${e[1] * 100}%`,
-        poolSymbol: pool,
-        initial: 10_000,
-        rangeSpread: e[0],
-        priceToken: 0,
-        fixedSlippage: e[1],
-        period: PERIOD,
-      }))
-    })    
+    variations.forEach((e) => {
+      this.strategies.push(
+        new UniV3Hodl({
+          name: `#${e[0]}: Camelotv3 WETH/USDC ${e[0] * 100}% | slippage : ${
+            e[1] * 100
+          }%`,
+          poolSymbol: pool,
+          initial: 10_000,
+          rangeSpread: e[0],
+          priceToken: 0,
+          fixedSlippage: e[1],
+          period: PERIOD,
+        }),
+      );
+    });
   }
 
   public async before() {
@@ -56,7 +55,7 @@ export class HedgedUniswapStrategyRunner {
     );
     await Log.exec(true);
     await Rebalance.exec(true);
-    const summary = this.strategies.map((s) => s.summary)
+    const summary = this.strategies.map((s) => s.summary);
     console.log(summary);
     const csv = stringify(summary, { header: true });
     fs.writeFile('./camelotv3_hedged.csv', csv);
@@ -83,8 +82,11 @@ export class HedgedUniswapStrategyRunner {
 
     this.uni.processPoolData(snapshot);
 
-    const daysElapsed = Math.floor((snapshot.timestamp - this.lastStart!) / SECONDS_IN_DAY);
-    const daysRemaining = (this.end.getTime() - snapshot.timestamp * 1000) / MILLISECONDS_IN_DAY;
+    const daysElapsed = Math.floor(
+      (snapshot.timestamp - this.lastStart!) / SECONDS_IN_DAY,
+    );
+    const daysRemaining =
+      (this.end.getTime() - snapshot.timestamp * 1000) / MILLISECONDS_IN_DAY;
 
     // Create new strategies every 3 days
     if (

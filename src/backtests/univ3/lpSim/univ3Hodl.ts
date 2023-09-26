@@ -6,7 +6,6 @@ import {
 import { Log, Summary } from './models.js';
 import { Stats } from './stats.js';
 
-
 const SECONDS_IN_DAY = 60 * 60 * 24;
 const HARVEST_PERIOD = 60 * 60 * 24; // 1 day
 const TWO_WEEKS = 60 * 60 * 24 * 14;
@@ -19,8 +18,8 @@ type StrategyConfig = {
   rangeSpread: number;
   priceToken: number;
   fixedSlippage: number;
-  period: number
-}
+  period: number;
+};
 
 export class UniV3Hodl {
   public pos!: UniV3Position;
@@ -39,18 +38,15 @@ export class UniV3Hodl {
   public startPrice = 0;
   public gasCosts = 0;
   public tokenIndex: number = 0;
-  public config: StrategyConfig
+  public config: StrategyConfig;
 
   constructor(config: StrategyConfig) {
-    this.config = config
+    this.config = config;
     this.highest = config.initial;
     this.tokenIndex = config.priceToken == 0 ? 1 : 0;
   }
 
-  public async process(
-    uni: UniV3PositionManager,
-    data: Uni3Snaphot
-  ) {
+  public async process(uni: UniV3PositionManager, data: Uni3Snaphot) {
     if (this.expired) return;
 
     if (!this.pool(data)) {
@@ -60,11 +56,11 @@ export class UniV3Hodl {
 
     // open the first position
     if (!this.pos) {
-      console.log('openning the first position')
+      console.log('openning the first position');
       this.start = data.timestamp;
       const pool = this.pool(data);
       this.pos = uni.open(
-        this.config.initial/2,
+        this.config.initial / 2,
         pool.close * (1 - this.config.rangeSpread),
         pool.close / (1 - this.config.rangeSpread),
         this.config.priceToken,
@@ -92,13 +88,13 @@ export class UniV3Hodl {
   }
 
   public poolIndex(data: Uni3Snaphot) {
-    return data.data.velodrome.findIndex((p) => p.symbol === this.config.poolSymbol)!;
+    return data.data.velodrome.findIndex(
+      (p) => p.symbol === this.config.poolSymbol,
+    )!;
   }
 
   private estTotalAssets(data: Uni3Snaphot) {
-    const result =
-      this.idle +
-      this.pos.valueUsd
+    const result = this.idle + this.pos.valueUsd;
     return result;
   }
 
@@ -118,7 +114,8 @@ export class UniV3Hodl {
   private apr(data: Uni3Snaphot) {
     const elapsed = data.timestamp - this.start;
     return (
-      (this.estTotalAssets(data) / this.config.initial - 1) / (elapsed / ONE_YEAR)
+      (this.estTotalAssets(data) / this.config.initial - 1) /
+      (elapsed / ONE_YEAR)
     );
   }
 
@@ -211,8 +208,8 @@ export class UniV3Hodl {
         .replace('T', ' ');
 
     if (isNaN(this.apy(data))) {
-      console.log(this.apy(data))
-      process.exit()
+      console.log(this.apy(data));
+      process.exit();
     }
 
     this.summary = {
@@ -237,6 +234,6 @@ export class UniV3Hodl {
       tags: this.tags,
       fields: this.summary,
       timestamp: new Date(data.timestamp * 1000),
-    })
+    });
   }
 }
