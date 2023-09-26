@@ -1,8 +1,15 @@
-import { Uni3Snaphot } from "../../../lib/datasource/univ3Dex.js";
-import { AAVEPosition, AAVEPositionManager } from "../../../lib/protocols/AavePositionManager.js";
-import { UniV3Position, UniV3PositionManager, tokensForStrategy } from "../../../lib/protocols/UNIV3PositionManager.js";
-import { Log, Rebalance } from "./models.js";
-import { Stats } from "./stats.js";
+import { Uni3Snaphot } from '../../../lib/datasource/univ3Dex.js';
+import {
+  AAVEPosition,
+  AAVEPositionManager,
+} from '../../../lib/protocols/AavePositionManager.js';
+import {
+  UniV3Position,
+  UniV3PositionManager,
+  tokensForStrategy,
+} from '../../../lib/protocols/UNIV3PositionManager.js';
+import { Log, Rebalance } from './models.js';
+import { Stats } from './stats.js';
 
 const REBALANCE_COST = 1;
 const HARVEST_COST = 0;
@@ -287,7 +294,7 @@ export class HedgedUniswap {
       rangeSpread: (this.rangeSpread * 100).toFixed(2),
       debtRatioRange: (this.debtRatioRange * 100).toFixed(2),
       collatRatio: (this.collatRatio * 100).toFixed(2),
-    }
+    };
     const apy = this.apy(data);
     const log = {
       tags: this.tags,
@@ -312,8 +319,8 @@ export class HedgedUniswap {
     if (apy !== 0) log.fields.apy = apy;
 
     if (isNaN(debtRatio)) {
-      console.log(log)
-      process.exit()
+      console.log(log);
+      process.exit();
     }
     try {
       await Log.writePoint(log);

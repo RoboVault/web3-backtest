@@ -2,12 +2,9 @@ import { UniV3PositionManager } from '../../../lib/protocols/UNIV3PositionManage
 import { Uni3Snaphot } from '../../../lib/datasource/univ3Dex.js';
 import { stringify } from 'csv-stringify/sync';
 import fs from 'fs/promises';
-import {
-  AAVEPositionManager,
-} from '../../../lib/protocols/AavePositionManager.js';
+import { AAVEPositionManager } from '../../../lib/protocols/AavePositionManager.js';
 import { HedgedUniswap } from './strategy.js';
 import { Log, Rebalance, Summary } from './models.js';
-
 
 export class HedgedUniswapStrategyRunner {
   private uni = new UniV3PositionManager();
@@ -72,14 +69,16 @@ export class HedgedUniswapStrategyRunner {
     const seriesCsv = stringify(series, { header: true });
     fs.writeFile('./camelotv3_hedged_series.csv', seriesCsv);
 
-    await Summary.writePoints(summary.map((s, i) => {
-      return {
-        tags: this.strategies[i].tags,
-        fields: s,
-        timestamp: new Date(this.lastData.timestamp * 1000),
-      }
-    }))
-    await Summary.exec()
+    await Summary.writePoints(
+      summary.map((s, i) => {
+        return {
+          tags: this.strategies[i].tags,
+          fields: s,
+          timestamp: new Date(this.lastData.timestamp * 1000),
+        };
+      }),
+    );
+    await Summary.exec();
   }
 
   public async onData(snapshot: Uni3Snaphot) {

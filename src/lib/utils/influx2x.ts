@@ -81,8 +81,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
     for (const tag in point.tags) {
       if (typeof point.tags[tag] === 'boolean')
         newPoint.tag(tag, point.tags[tag] ? 'true' : 'false');
-      else
-        newPoint.tag(tag, point.tags[tag] as string);
+      else newPoint.tag(tag, point.tags[tag] as string);
     }
     for (const field in point.fields) {
       if (typeof point.fields[field] === 'boolean')

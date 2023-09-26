@@ -27,7 +27,7 @@ export class InfluxBatcher<
   }
 
   public async writePoints(points: T[], batchLimit: number = 1000) {
-    this.points.push(...points)
+    this.points.push(...points);
     if (this.points.length > batchLimit) await this.exec();
   }
 

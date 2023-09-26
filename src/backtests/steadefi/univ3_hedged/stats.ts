@@ -1,4 +1,3 @@
-
 export class Stats {
   // Calculate the average of all the numbers
   static mean(values: number[]) {
