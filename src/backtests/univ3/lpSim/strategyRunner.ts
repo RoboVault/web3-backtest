@@ -25,7 +25,7 @@ export class HedgedUniswapStrategyRunner {
 
   public async startNewStartForPool(pool: string) {
     const rangeSpread = range(0.05, 0.25, 5);
-    const fixedSlippage = range(0.004, 0.01, 4);
+    const fixedSlippage = range(0.004, 0.01, 1);
 
     const variations = permutations([
       rangeSpread,
