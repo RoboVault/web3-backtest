@@ -1,4 +1,4 @@
-import { Schema, Measurement } from './timeseriesdb.js';
+import { Schema, Measurement } from './influx2x.js';
 
 interface ILogAny extends Schema {
   tags: any;
@@ -24,6 +24,11 @@ export class InfluxBatcher<
 
   public async writePoint(point: T, batchLimit: number = 1000) {
     this.writePointBatched(point, batchLimit);
+  }
+
+  public async writePoints(points: T[], batchLimit: number = 1000) {
+    this.points.push(...points);
+    if (this.points.length > batchLimit) await this.exec();
   }
 
   public pending() {

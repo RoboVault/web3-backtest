@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_INFLUXDB",
-      "label": "InfluxDB",
+      "name": "DS_INFLUXDB2",
+      "label": "InfluxDB2",
       "description": "",
       "type": "datasource",
       "pluginId": "influxdb",
@@ -22,6 +22,12 @@
       "id": "influxdb",
       "name": "InfluxDB",
       "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
     },
     {
       "type": "panel",
@@ -56,15 +62,125 @@
   "fiscalYearStartMonth": 0,
   "graphTooltip": 2,
   "id": null,
-  "iteration": 1694855197892,
+  "iteration": 1695357492465,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
       },
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 9,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "rebalanceCount"
+          }
+        ]
+      },
+      "pluginVersion": "8.4.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "rangeSpread"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "debtRatioRange"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "collatRatio"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "hedged_camelot3_summary",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "rebalanceCount"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "apr"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "aum"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Panel Title",
+      "type": "table"
+    },
+    {
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -119,7 +235,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 0
+        "y": 14
       },
       "id": 1,
       "options": {
@@ -139,7 +255,7 @@
           "alias": "$tag_name",
           "datasource": {
             "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
+            "uid": "${DS_INFLUXDB2}"
           },
           "groupBy": [
             {
@@ -185,6 +301,24 @@
               "key": "name",
               "operator": "=~",
               "value": "/^$strategy$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rangeSpread",
+              "operator": "=~",
+              "value": "/^$rangeSpread$/"
+            },
+            {
+              "condition": "AND",
+              "key": "debtRatioRange",
+              "operator": "=~",
+              "value": "/^$debtRatioRange$/"
+            },
+            {
+              "condition": "AND",
+              "key": "collatRatio",
+              "operator": "=~",
+              "value": "/^$collatRatio$/"
             }
           ]
         }
@@ -193,10 +327,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
-      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -251,7 +381,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 0
+        "y": 14
       },
       "id": 7,
       "options": {
@@ -271,7 +401,7 @@
           "alias": "$tag_name",
           "datasource": {
             "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
+            "uid": "${DS_INFLUXDB2}"
           },
           "groupBy": [
             {
@@ -317,6 +447,24 @@
               "key": "name",
               "operator": "=~",
               "value": "/^$strategy$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rangeSpread",
+              "operator": "=~",
+              "value": "/^$rangeSpread$/"
+            },
+            {
+              "condition": "AND",
+              "key": "debtRatioRange",
+              "operator": "=~",
+              "value": "/^$debtRatioRange$/"
+            },
+            {
+              "condition": "AND",
+              "key": "collatRatio",
+              "operator": "=~",
+              "value": "/^$collatRatio$/"
             }
           ]
         }
@@ -325,10 +473,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
-      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -383,7 +527,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 8
+        "y": 22
       },
       "id": 4,
       "options": {
@@ -403,7 +547,7 @@
           "alias": "$tag_name",
           "datasource": {
             "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
+            "uid": "${DS_INFLUXDB2}"
           },
           "groupBy": [
             {
@@ -449,6 +593,24 @@
               "key": "name",
               "operator": "=~",
               "value": "/^$strategy$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rangeSpread",
+              "operator": "=~",
+              "value": "/^$rangeSpread$/"
+            },
+            {
+              "condition": "AND",
+              "key": "debtRatioRange",
+              "operator": "=~",
+              "value": "/^$debtRatioRange$/"
+            },
+            {
+              "condition": "AND",
+              "key": "collatRatio",
+              "operator": "=~",
+              "value": "/^$collatRatio$/"
             }
           ]
         }
@@ -457,10 +619,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
-      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -515,7 +673,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 8
+        "y": 22
       },
       "id": 5,
       "options": {
@@ -535,7 +693,7 @@
           "alias": "$tag_name",
           "datasource": {
             "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
+            "uid": "${DS_INFLUXDB2}"
           },
           "groupBy": [
             {
@@ -585,6 +743,24 @@
               "key": "name",
               "operator": "=~",
               "value": "/^$strategy$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rangeSpread",
+              "operator": "=~",
+              "value": "/^$rangeSpread$/"
+            },
+            {
+              "condition": "AND",
+              "key": "debtRatioRange",
+              "operator": "=~",
+              "value": "/^$debtRatioRange$/"
+            },
+            {
+              "condition": "AND",
+              "key": "collatRatio",
+              "operator": "=~",
+              "value": "/^$collatRatio$/"
             }
           ]
         }
@@ -593,10 +769,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
-      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -651,7 +823,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 16
+        "y": 30
       },
       "id": 2,
       "options": {
@@ -668,10 +840,9 @@
       },
       "targets": [
         {
-          "alias": "$tag_name",
           "datasource": {
             "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
+            "uid": "${DS_INFLUXDB2}"
           },
           "groupBy": [
             {
@@ -679,12 +850,6 @@
                 "$__interval"
               ],
               "type": "time"
-            },
-            {
-              "params": [
-                "name"
-              ],
-              "type": "tag"
             },
             {
               "params": [
@@ -725,10 +890,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
-      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -783,7 +944,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 16
+        "y": 30
       },
       "id": 6,
       "options": {
@@ -803,7 +964,7 @@
           "alias": "$tag_name",
           "datasource": {
             "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
+            "uid": "${DS_INFLUXDB2}"
           },
           "groupBy": [
             {
@@ -849,6 +1010,24 @@
               "key": "name",
               "operator": "=~",
               "value": "/^$strategy$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rangeSpread",
+              "operator": "=~",
+              "value": "/^$rangeSpread$/"
+            },
+            {
+              "condition": "AND",
+              "key": "debtRatioRange",
+              "operator": "=~",
+              "value": "/^$debtRatioRange$/"
+            },
+            {
+              "condition": "AND",
+              "key": "collatRatio",
+              "operator": "=~",
+              "value": "/^$collatRatio$/"
             }
           ]
         }
@@ -857,10 +1036,6 @@
       "type": "timeseries"
     },
     {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXDB}"
-      },
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -915,7 +1090,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 24
+        "y": 38
       },
       "id": 3,
       "options": {
@@ -935,7 +1110,7 @@
           "alias": "Price: $tag_name",
           "datasource": {
             "type": "influxdb",
-            "uid": "${DS_INFLUXDB}"
+            "uid": "${DS_INFLUXDB2}"
           },
           "groupBy": [
             {
@@ -981,6 +1156,24 @@
               "key": "name",
               "operator": "=~",
               "value": "/^$strategy$/"
+            },
+            {
+              "condition": "AND",
+              "key": "rangeSpread",
+              "operator": "=~",
+              "value": "/^$rangeSpread$/"
+            },
+            {
+              "condition": "AND",
+              "key": "debtRatioRange",
+              "operator": "=~",
+              "value": "/^$debtRatioRange$/"
+            },
+            {
+              "condition": "AND",
+              "key": "collatRatio",
+              "operator": "=~",
+              "value": "/^$collatRatio$/"
             }
           ]
         }
@@ -999,7 +1192,7 @@
         "current": {},
         "datasource": {
           "type": "influxdb",
-          "uid": "${DS_INFLUXDB}"
+          "uid": "${DS_INFLUXDB2}"
         },
         "definition": "SHOW TAG VALUES FROM \"hedged_camelot3_strategy\" WITH KEY = \"name\"",
         "hide": 0,
@@ -1014,17 +1207,68 @@
         "skipUrlSync": false,
         "sort": 0,
         "type": "query"
+      },
+      {
+        "current": {},
+        "definition": "SHOW TAG VALUES FROM \"hedged_camelot3_strategy\" WITH KEY = \"rangeSpread\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "LP Range",
+        "multi": true,
+        "name": "rangeSpread",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"hedged_camelot3_strategy\" WITH KEY = \"rangeSpread\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query",
+        "datasource": "${DS_INFLUXDB2}"
+      },
+      {
+        "current": {},
+        "definition": "SHOW TAG VALUES FROM \"hedged_camelot3_strategy\" WITH KEY = \"debtRatioRange\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Debt Ratio",
+        "multi": true,
+        "name": "debtRatioRange",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"hedged_camelot3_strategy\" WITH KEY = \"debtRatioRange\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query",
+        "datasource": "${DS_INFLUXDB2}"
+      },
+      {
+        "current": {},
+        "definition": "SHOW TAG VALUES FROM \"hedged_camelot3_strategy\" WITH KEY = \"collatRatio\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Collat Ratio",
+        "multi": true,
+        "name": "collatRatio",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"hedged_camelot3_strategy\" WITH KEY = \"collatRatio\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query",
+        "datasource": "${DS_INFLUXDB2}"
       }
     ]
   },
   "time": {
-    "from": "2023-06-21T07:03:24.869Z",
-    "to": "2023-06-27T14:56:53.672Z"
+    "from": "now-6M",
+    "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Camelot V3",
   "uid": "f334b0e8-efd9-40a6-87e5-15facc56d953",
-  "version": 5,
+  "version": 6,
   "weekStart": ""
 }
