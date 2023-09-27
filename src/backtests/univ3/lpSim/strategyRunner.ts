@@ -23,21 +23,22 @@ export class HedgedUniswapStrategyRunner {
 
   public async startNewStartForPool(pool: string) {
     const rangeSpread = range(0.05, 0.25, 5);
-    const fixedSlippage = range(0.004, 0.01, 1);
+    const priceOffset = range(-0.1, .1, .1);
 
-    const variations = permutations([rangeSpread, fixedSlippage]);
+    const variations = permutations([rangeSpread, priceOffset]);
 
     variations.forEach((e) => {
       this.strategies.push(
         new UniV3Hodl({
-          name: `#${e[0]}: Camelotv3 WETH/USDC ${e[0] * 100}% | slippage : ${
+          name: `#${e[0]}: Camelotv3 WETH/USDC ${e[0] * 100}% | offset : ${
             e[1] * 100
           }%`,
           poolSymbol: pool,
           initial: 10_000,
           rangeSpread: e[0],
+          priceOffset : e[1],
           priceToken: 0,
-          fixedSlippage: e[1],
+          fixedSlippage: 0.01,
           period: PERIOD,
         }),
       );
@@ -56,7 +57,7 @@ export class HedgedUniswapStrategyRunner {
     await Log.exec(true);
     await Rebalance.exec(true);
     const summary = this.strategies.map((s) => s.summary);
-    console.log(summary);
+    //console.log(summary);
     const csv = stringify(summary, { header: true });
     fs.writeFile('./camelotv3_hedged.csv', csv);
 

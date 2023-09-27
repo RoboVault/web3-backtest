@@ -16,6 +16,7 @@ type StrategyConfig = {
   poolSymbol: string;
   initial: number;
   rangeSpread: number;
+  priceOffset : number;
   priceToken: number;
   fixedSlippage: number;
   period: number;
@@ -34,8 +35,15 @@ export class UniV3Hodl {
   public tags: any = {};
   public summary: any;
 
+  public token0start: number = 0;
+  public token1start: number = 0;
+  public token0end: number = 0;
+  public token1end: number = 0;
+
+  public startPrice: number = 0;
+  public endPrice: number = 0;
+
   public rebalanceCount = 0;
-  public startPrice = 0;
   public gasCosts = 0;
   public tokenIndex: number = 0;
   public config: StrategyConfig;
@@ -61,12 +69,18 @@ export class UniV3Hodl {
       const pool = this.pool(data);
       this.pos = uni.open(
         this.config.initial / 2,
-        pool.close * (1 - this.config.rangeSpread),
-        pool.close / (1 - this.config.rangeSpread),
+        pool.close * (1 + this.config.priceOffset) * (1 - this.config.rangeSpread),
+        pool.close * (1 + this.config.priceOffset) / (1 - this.config.rangeSpread),
         this.config.priceToken,
         this.config.poolSymbol,
       );
       this.pos.valueUsd = this.config.initial; //hack
+      this.token0start = this.pos.token0Bal;
+      this.token1start = this.pos.token1Bal;
+      this.startPrice = pool.close;
+      console.log("Token 0 Bal " + this.pos.token0Bal)
+      console.log("Token 1 Bal " + this.pos.token1Bal)
+
     }
 
     if (data.timestamp - this.lastHarvest >= HARVEST_PERIOD) {
@@ -194,6 +208,10 @@ export class UniV3Hodl {
   public async end(uni: UniV3PositionManager, data: Uni3Snaphot) {
     const totalAssets = this.estTotalAssets(data);
     console.log('Strategy closing position', this.estTotalAssets(data));
+    this.token0end = this.pos.token0Bal;
+    this.token1end = this.pos.token1Bal;
+    const pool = this.pool(data);
+    this.endPrice = pool.close;
     const close = await uni.close(this.pos);
     this.idle = this.idle + close;
 
@@ -224,6 +242,13 @@ export class UniV3Hodl {
       rewards: this.claimed,
       start: toDate(this.start),
       end: toDate(data.timestamp),
+      startPrice : this.startPrice,
+      endPrice : this.endPrice,
+      startBalance0 : this.token0start,
+      startBalance1 : this.token1start,
+      endBalance0 : this.token0end,
+      endBalance1 : this.token1end,
+
       daysElapsed: (data.timestamp - this.start) / (60 * 60 * 24), // days
       variance,
       rangeSpread: this.config.rangeSpread,
