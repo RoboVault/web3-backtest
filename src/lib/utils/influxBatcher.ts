@@ -17,16 +17,16 @@ export class InfluxBatcher<
   }
 
   // adds point to batch
-  public async writePointBatched(point: T, batchLimit: number = 1000) {
+  public async writePointBatched(point: T, batchLimit: number = 10000) {
     this.points.push(point);
     if (this.points.length > batchLimit) await this.exec();
   }
 
-  public async writePoint(point: T, batchLimit: number = 1000) {
-    this.writePointBatched(point, batchLimit);
+  public async writePoint(point: T, batchLimit: number = 10000) {
+    await this.writePointBatched(point, batchLimit);
   }
 
-  public async writePoints(points: T[], batchLimit: number = 1000) {
+  public async writePoints(points: T[], batchLimit: number = 10000) {
     this.points.push(...points);
     if (this.points.length > batchLimit) await this.exec();
   }
@@ -41,12 +41,12 @@ export class InfluxBatcher<
     this.lock = true;
     const start = Date.now();
     await super.writePoints(this.points);
-    this.lock = false;
     console.log(
       `batch ${this.measurement} ${this.points.length} points - elapsed ${
         Date.now() - start
       }ms`,
     );
+    this.lock = false;
     this.points = [];
   }
 }
