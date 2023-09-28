@@ -32,7 +32,7 @@ export class InfluxBatcher<
 
   public async exec(force = false) {
     if (this.points.length === 0) return;
-    if (this.lock && !force) return;
+    while (this.lock && !force) await new Promise((r) => setTimeout(r, 10));
     this.lock = true;
     const start = Date.now();
     await super.writePoints(this.points);

@@ -10,8 +10,8 @@ export class PriceSeriesStore {
     await Price.dropSeries({
       where: `id="${name}"`,
     });
-    const points = series.map((price) => {
-      return {
+    for (let price of series) {
+      const point = {
         tags: {
           id: name,
         },
@@ -20,8 +20,8 @@ export class PriceSeriesStore {
         },
         timestamp: new Date(price.ts * 1000),
       };
-    });
-    await Price.writePoints(points);
+      await Price.writePointBatched(point, 5000);
+    }
   }
 
   static async fetch(name: string, start: number, end: number) {
