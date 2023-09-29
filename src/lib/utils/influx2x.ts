@@ -121,37 +121,48 @@ export class Measurement<T extends Schema, Fields, Tags> {
   }
 
   public async query(
-    options: IQueryOptions<Tags>,
+    options: IQueryOptions<Tags>, retries = 0
   ): Promise<Array<{ timestamp: number } & Fields> | any> {
-    let query = `
-    from(bucket: "${this.bucket}")
-      |> range(start: ${options.start.toISOString()}, stop: ${options.end.toISOString()})
-      |> filter(fn: (r) => r._measurement == "${this.name}")\n      `;
 
-    for (const tag in options.where) {
-      query += `|> filter(fn: (r) => r.${tag} == "${options.where[tag]}")`;
+    const queryTask = async () => {
+      let query = `
+      from(bucket: "${this.bucket}")
+        |> range(start: ${options.start.toISOString()}, stop: ${options.end.toISOString()})
+        |> filter(fn: (r) => r._measurement == "${this.name}")\n      `;
+
+      for (const tag in options.where) {
+        query += `|> filter(fn: (r) => r.${tag} == "${options.where[tag]}")`;
+      }
+
+      const data: any[] = [];
+      // Influx2 is unlike influx1, so we must merge fields with the same timestamp
+      for await (const { values, tableMeta } of this.queryApi.iterateRows(
+        query,
+      )) {
+        const o = tableMeta.toObject(values);
+
+        const field = data.find((e) => e.time === o._time);
+        if (field) {
+          field[o._field] = o._value;
+        } else {
+          data.push({
+            time: o._time,
+            timestamp: new Date(o._time),
+            [o._field]: o._value,
+          });
+        }
+      }
+      return data;
     }
 
-    const data: any[] = [];
-    // Influx2 is unlike influx1, so we must merge fields with the same timestamp
-    for await (const { values, tableMeta } of this.queryApi.iterateRows(
-      query,
-    )) {
-      const o = tableMeta.toObject(values);
-
-      const field = data.find((e) => e.time === o._time);
-      if (field) {
-        field[o._field] = o._value;
-      } else {
-        data.push({
-          time: o._time,
-          timestamp: new Date(o._time),
-          [o._field]: o._value,
-        });
+    while (retries + 1 > 0) {
+      try {
+        return await queryTask()
+      } catch (e) {
+        console.log('Error querying - retrying', e)
+        retries--
       }
     }
-
-    return data;
   }
 
   public async dropMeasurement() {
