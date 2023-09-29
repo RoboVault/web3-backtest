@@ -6,6 +6,7 @@ import {
 } from '@influxdata/influxdb-client';
 import { DeleteAPI } from '@influxdata/influxdb-client-apis';
 import { Settings } from './utility.js';
+import { Queue } from 'async-await-queue';
 
 export type Fields = Record<string, number | boolean | string>;
 export type Tags = Record<string, string | boolean>;
@@ -57,6 +58,18 @@ interface IQueryOptions<T> {
   end: Date;
 }
 
+export class AsyncQueue {
+  private queue = new Queue<number>(2, 100);
+  private count = 0;
+  async queueTask(task: () => Promise<void>, priority: number = 0) {
+    const id = this.count++
+    await this.queue
+        .wait(id, priority)
+        .then(task)
+        .finally(() => this.queue.end(id))
+  }
+}
+
 export class Measurement<T extends Schema, Fields, Tags> {
   public timeseriesDB: typeof TimeSeriesDB.db;
   public name: string;
@@ -64,6 +77,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
   private queryApi: QueryApi;
   private bucket: string;
   private org: string;
+  private throttle = new AsyncQueue()
   constructor(measurement: string) {
     this.timeseriesDB = TimeSeriesDB.db;
     this.name = measurement;
@@ -96,8 +110,10 @@ export class Measurement<T extends Schema, Fields, Tags> {
 
   public async writePoints(points: T[]) {
     const newPoints = points.map((e) => this.convertToPoint(e));
-    this.writeApi.writePoints(newPoints);
-    await this.writeApi.flush();
+    await this.throttle.queueTask(async () => {
+      this.writeApi.writePoints(newPoints);
+      await this.writeApi.flush();
+    })
   }
 
   public async writePoint(point: T) {
