@@ -1,3 +1,11 @@
+
+
+> [!WARNING]  
+> This project is in early development. The API will change. Please use at your own risk. 
+
+> [!NOTE]  
+> What do we want?!?! More Datasources! More Pairs! We welcome PRs 🙏
+
 # Web3 Backtest
 
 Web3 Backtest is a generic Backtesting library for DeFi trading strategies. The library simplifies pullling historic data, simulating protocols, backtest metrics, charting and analytics.
