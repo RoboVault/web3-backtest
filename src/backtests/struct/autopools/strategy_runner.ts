@@ -8,11 +8,7 @@ import { JoesAutopoolsSnaphot } from '../../../lib/datasource/joesAutopools.js';
 
 const SECONDS_IN_DAY = 60 * 60 * 24;
 const MILLISECONDS_IN_DAY = SECONDS_IN_DAY * 1000;
-const POOLS = [
-  'BTC.b-WAVAX', 
-  'WETH.e-WAVAX', 
-  'WAVAX-USDC'
-];
+const POOLS = ['BTC.b-WAVAX', 'WETH.e-WAVAX', 'WAVAX-USDC'];
 const PERIOD = 8 * 7;
 
 export class StructJoesAutopoolStrategyRunner {
