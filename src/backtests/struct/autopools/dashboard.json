@@ -1,0 +1,1510 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_INFLUXDB2",
+      "label": "InfluxDB2",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__elements": [],
+  "__requires": [
+    {
+      "type": "panel",
+      "id": "barchart",
+      "name": "Bar chart",
+      "version": ""
+    },
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "8.4.4"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "table",
+      "name": "Table",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      },
+      {
+        "datasource": "${DS_INFLUXDB2}",
+        "enable": false,
+        "hide": true,
+        "iconColor": "orange",
+        "name": "Rebalance",
+        "query": "SELECT \"valueQuote\" FROM \"struct_joesv2_rebalance\" WHERE $timeFilter",
+        "tagsColumn": "",
+        "textColumn": "Rebalance"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1696318611695,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 13,
+      "panels": [],
+      "title": "Strategy",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "variableApr"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "variableApr"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Variable"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fixedApr"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Fixed"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 15,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "symbol"
+          }
+        ]
+      },
+      "pluginVersion": "8.4.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "struct_joes_autopool_summary",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "fixedApr"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "variableApr"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "APR",
+      "type": "table"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "axisSoftMin": 0,
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "variableApr"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "variableApr"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Variable"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "fixedApr"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Fixed"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 13,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "id": 16,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "orientation": "auto",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "8.4.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            }
+          ],
+          "measurement": "struct_joesv2_summary",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "fixedApr"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "variableApr"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "APR",
+      "type": "barchart"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "[$tag_start] Fixed ($tag_base)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "base"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "struct_autopool",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "fixedReturns"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        },
+        {
+          "alias": "[$tag_start] Variable ($tag_quote)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "quote"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "struct_joesv2",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "variableReturns"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "Fixed & Variable Returns",
+      "type": "timeseries"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "[$tag_start] Fixed ($tag_base)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "base"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "struct_autopool",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "fixedApr"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        },
+        {
+          "alias": "[$tag_start] Variable ($tag_quote)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "quote"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "struct_joesv2",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "variableApr"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "Earnings",
+      "type": "timeseries"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "$tag_base / $tag_quote",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "struct_joes_autopool",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "price"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            }
+          ]
+        }
+      ],
+      "title": "Prices",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 34
+      },
+      "id": 8,
+      "panels": [],
+      "title": "Position",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "[$tag_start] $tag_quote",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "quote"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "struct_joes_autopool",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "valueInQuote"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "Value (In quote)",
+      "type": "timeseries"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "alias": "[$tag_start] Base Value ($tag_quote)",
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXDB2}"
+          },
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "quote"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "start"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "symbol"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "rebalance"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "fixedToken"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "linear"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "struct_joes_autopool",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "valueInBase"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "start",
+              "operator": "=~",
+              "value": "/^$starttime$/"
+            },
+            {
+              "condition": "AND",
+              "key": "symbol",
+              "operator": "=~",
+              "value": "/^$symbol$/"
+            },
+            {
+              "condition": "AND",
+              "key": "fixedToken",
+              "operator": "=~",
+              "value": "/^$fixedToken$/"
+            }
+          ]
+        }
+      ],
+      "title": "Value (In base)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": false,
+  "schemaVersion": 35,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "influxdb",
+          "uid": "${DS_INFLUXDB2}"
+        },
+        "definition": "SHOW TAG VALUES FROM \"struct_joesv2_summary\" WITH KEY = \"start\"",
+        "description": "",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Start Time",
+        "multi": true,
+        "name": "starttime",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"struct_joesv2_summary\" WITH KEY = \"start\"",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "influxdb",
+          "uid": "${DS_INFLUXDB2}"
+        },
+        "definition": "SHOW TAG VALUES FROM \"struct_joesv2\" WITH KEY = \"symbol\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Symbol",
+        "multi": true,
+        "name": "symbol",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"struct_joesv2\" WITH KEY = \"symbol\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {},
+        "datasource": {
+          "type": "influxdb",
+          "uid": "${DS_INFLUXDB2}"
+        },
+        "definition": "SHOW TAG VALUES FROM \"struct_joesv2\" WITH KEY = \"fixedToken\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Fixed Token",
+        "multi": true,
+        "name": "fixedToken",
+        "options": [],
+        "query": "SHOW TAG VALUES FROM \"struct_joesv2\" WITH KEY = \"fixedToken\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-3M",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Struct Backtests",
+  "uid": "Fn0065kIz",
+  "version": 4,
+  "weekStart": ""
+}

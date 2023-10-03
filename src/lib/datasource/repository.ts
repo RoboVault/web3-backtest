@@ -1,6 +1,4 @@
 import { AaveDataSource } from './Aave.js';
-import { AaveArbitrumDataSource } from './aaveArbitrum.js';
-import { CamelotDexDataSource } from './camelotDex.js';
 import { CamelotFarmDataSource } from './camelotFarm.js';
 import { CurveDexDataSource } from './curveDex.js';
 import { DataSource, DataSourceInfo } from './types.js';
@@ -8,6 +6,7 @@ import { VelodromeDexDataSource } from './velodromeDex.js';
 import { Uni3DexDataSource } from './univ3Dex.js';
 import { SonneDataSource } from './sonne.js';
 import { JoesV2DexDataSource } from './joesv2Dex.js';
+import { JoesAutopoolsDexDataSource } from './joesAutopools.js';
 
 type DataSourceEntry = DataSourceInfo & {
   createSource: (info: DataSourceInfo) => DataSource;
@@ -33,12 +32,6 @@ export const DataSourcesRepo: DataSourceEntry[] = [
     resoution: '1h',
     createSource: CamelotFarmDataSource.create,
   },
-  // {
-  //   chain: 'arbitrum',
-  //   protocol: 'camelot-dex',
-  //   resoution: '1m',
-  //   createSource: CamelotDexDataSource.create,
-  // },
   {
     chain: 'optimism',
     protocol: 'velodrome-dex',
@@ -86,5 +79,11 @@ export const DataSourcesRepo: DataSourceEntry[] = [
     protocol: 'joes-v2-dex',
     resoution: '1h',
     createSource: JoesV2DexDataSource.create,
+  },
+  {
+    chain: 'avalanche',
+    protocol: 'joes-autopools',
+    resoution: '1h',
+    createSource: JoesAutopoolsDexDataSource.create,
   },
 ];

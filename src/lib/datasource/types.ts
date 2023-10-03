@@ -16,6 +16,7 @@ export type Protocols =
   | 'curve-dex'
   | 'uniswap-dex'
   | 'joes-v2-dex'
+  | 'joes-autopools'
   | 'sonne';
 
 export type Resolution = '1m' | '1h' | '1d';
