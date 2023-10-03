@@ -44,7 +44,7 @@ export class JoesV2AutoPoolStrategy {
 
   public calcSharesForAmount(pool: JoesAutopoolsPoolSnapshot, amount: number) {
     const { balances, price, totalSupply } = pool;
-    const poolValueInQuote = balances[0] / price + balances[1];
+    const poolValueInQuote = balances[0] * price + balances[1];
     return (totalSupply * amount) / poolValueInQuote;
   }
 
@@ -69,8 +69,8 @@ export class JoesV2AutoPoolStrategy {
     const rewardsInQuote = rewards / priceY;
     this.shares += this.calcSharesForAmount(pool, rewardsInQuote);
 
-    const poolValueInQuote = balances[0] / price + balances[1];
-    const poolValueInBase = balances[0] + balances[1] * price;
+    const poolValueInQuote = balances[0] * price + balances[1];
+    const poolValueInBase = balances[0] + balances[1] / price;
     const valueInBase = (poolValueInBase * this.shares) / totalSupply;
     const valueInQuote = (poolValueInQuote * this.shares) / totalSupply;
     const valueUsd = sharePrice * this.shares;
