@@ -25,7 +25,7 @@ type HourData = {
   joesPrice: number;
   joesPerSec: number;
   block: number;
-  balances: number[]
+  balances: number[];
 };
 
 type Token = {
@@ -53,12 +53,14 @@ export type JoesAutopoolsPoolSnapshot = {
   joesPrice: number;
   joesPerSec: number;
   block: number;
-  balances: number[]
+  balances: number[];
 };
 
 export type JoesAutopoolsSnaphot = DataSnapshot<JoesAutopoolsPoolSnapshot>;
 
-export class JoesAutopoolsDexDataSource implements DataSource<JoesAutopoolsSnaphot> {
+export class JoesAutopoolsDexDataSource
+  implements DataSource<JoesAutopoolsSnaphot>
+{
   private client: GraphQLClient;
   private pools: Pool[] = [];
   public readonly id: string;

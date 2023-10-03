@@ -49,7 +49,7 @@ export class StructJoesAutopoolStrategyRunner {
       new StructJoesAutopoolStrategy({
         initialValue: 1000,
         period: PERIOD,
-        pool, 
+        pool,
         fixedApr: 0.1,
         fixedToken: 'base',
       }),
@@ -58,7 +58,7 @@ export class StructJoesAutopoolStrategyRunner {
       new StructJoesAutopoolStrategy({
         initialValue: 1000,
         period: PERIOD,
-        pool, 
+        pool,
         fixedApr: 0.1,
         fixedToken: 'quote',
       }),
@@ -78,7 +78,7 @@ export class StructJoesAutopoolStrategyRunner {
       (this.strategies.length === 0 || daysElapsed > 3) &&
       daysRemaining > PERIOD
     ) {
-    // if (this.strategies.length === 0) {
+      // if (this.strategies.length === 0) {
       for (const pool of POOLS) {
         console.log('start strat', pool, new Date(snapshot.timestamp * 1000));
         this.startNewStartForPool(pool);
@@ -94,9 +94,7 @@ export class StructJoesAutopoolStrategyRunner {
         continue;
         // throw new Error('Pool data doesnt exist')
       }
-      const strats = this.strategies.filter(
-        (s) => s.options.pool === symbol,
-      );
+      const strats = this.strategies.filter((s) => s.options.pool === symbol);
       await Promise.all(strats.map((strat) => strat.process(pool)));
     }
   }

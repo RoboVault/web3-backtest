@@ -1,4 +1,4 @@
-import { JoesAutopoolsPoolSnapshot } from "../../../lib/datasource/joesAutopools.js";
+import { JoesAutopoolsPoolSnapshot } from '../../../lib/datasource/joesAutopools.js';
 
 type JoesV2AutoPoolStrategySnapshot = {
   shares: number;
@@ -16,15 +16,14 @@ type JoesV2AutoPoolStrategySnapshot = {
   tvl: number;
   valueUsd: number;
   sharePrice: number;
-}
-
+};
 
 const PRICE: any = {
   'WETH.e': 1666.78,
-  'WAVAX': 9.29,
+  WAVAX: 9.29,
   'BTC.b': 26000,
-  'USDC': 1,
-}
+  USDC: 1,
+};
 
 export class JoesV2AutoPoolStrategy {
   public snapshot!: JoesV2AutoPoolStrategySnapshot;
@@ -38,33 +37,42 @@ export class JoesV2AutoPoolStrategy {
     },
     pool: JoesAutopoolsPoolSnapshot,
   ) {
-    
     this.shares = this.calcSharesForAmount(pool, this.options.amountInQuote);
-    this.last = pool.timestamp 
-    this.process(pool)
+    this.last = pool.timestamp;
+    this.process(pool);
   }
 
   public calcSharesForAmount(pool: JoesAutopoolsPoolSnapshot, amount: number) {
     const { balances, price, totalSupply } = pool;
     const poolValueInQuote = balances[0] / price + balances[1];
-    return totalSupply * amount / poolValueInQuote;
+    return (totalSupply * amount) / poolValueInQuote;
   }
 
   public async process(pool: JoesAutopoolsPoolSnapshot) {
-    const { sharePrice, balances, price, totalSupply, joesPerSec, joesPrice, tvl, pool: { tokenX, tokenY} } = pool;
+    const {
+      sharePrice,
+      balances,
+      price,
+      totalSupply,
+      joesPerSec,
+      joesPrice,
+      tvl,
+      pool: { tokenX, tokenY },
+    } = pool;
     const elapsed = pool.timestamp - this.last;
 
     // assuming we autocompound every 1h -> this isn't realistic but wont impact results much
-    const priceX = PRICE[tokenX.symbol]
-    const priceY = PRICE[tokenX.symbol]
-    const rewards = pool.joesPerSec * this.shares * elapsed * joesPrice / totalSupply;
+    const priceX = PRICE[tokenX.symbol];
+    const priceY = PRICE[tokenX.symbol];
+    const rewards =
+      (pool.joesPerSec * this.shares * elapsed * joesPrice) / totalSupply;
     const rewardsInQuote = rewards / priceY;
-    this.shares += this.calcSharesForAmount(pool, rewardsInQuote)
+    this.shares += this.calcSharesForAmount(pool, rewardsInQuote);
 
     const poolValueInQuote = balances[0] / price + balances[1];
     const poolValueInBase = balances[0] + balances[1] * price;
-    const valueInBase = poolValueInBase * this.shares / totalSupply;
-    const valueInQuote = poolValueInQuote * this.shares / totalSupply;
+    const valueInBase = (poolValueInBase * this.shares) / totalSupply;
+    const valueInQuote = (poolValueInQuote * this.shares) / totalSupply;
     const valueUsd = sharePrice * this.shares;
 
     this.snapshot = {
@@ -83,8 +91,7 @@ export class JoesV2AutoPoolStrategy {
       tvl,
       valueUsd,
       sharePrice,
-    }
+    };
     this.last = pool.timestamp;
   }
-
 }

@@ -24,7 +24,6 @@ const main = async () => {
   bt.onBefore(strategy.before.bind(strategy));
   bt.onData(strategy.onData.bind(strategy));
   bt.onAfter(strategy.after.bind(strategy));
-  
 
   // Run
   await bt.run();
