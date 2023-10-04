@@ -394,6 +394,7 @@ export class UniV3PositionManager {
       lastPool.close,
       poolSymbol,
     );
+    pos.processData(this.lastData, this.lastData, [0, 0]);
     this.positions.push(pos);
     return pos;
   }
