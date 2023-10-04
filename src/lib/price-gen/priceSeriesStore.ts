@@ -25,11 +25,14 @@ export class PriceSeriesStore {
   }
 
   static async fetch(name: string, start: number, end: number) {
-    const data = await Price.query({
-      where: { id: name },
-      start: new Date(start * 1000),
-      end: new Date(end * 1000),
-    });
+    const data = await Price.query(
+      {
+        where: { id: name },
+        start: new Date(start * 1000),
+        end: new Date(end * 1000),
+      },
+      10, // retries
+    );
     return {
       id: name,
       data: data.map((e: any) => {
