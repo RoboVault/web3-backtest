@@ -62,11 +62,11 @@ export class AsyncQueue {
   private queue = new Queue<number>(2, 100);
   private count = 0;
   async queueTask(task: () => Promise<void>, priority: number = 0) {
-    const id = this.count++
+    const id = this.count++;
     await this.queue
-        .wait(id, priority)
-        .then(task)
-        .finally(() => this.queue.end(id))
+      .wait(id, priority)
+      .then(task)
+      .finally(() => this.queue.end(id));
   }
 }
 
@@ -77,7 +77,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
   private queryApi: QueryApi;
   private bucket: string;
   private org: string;
-  private throttle = new AsyncQueue()
+  private throttle = new AsyncQueue();
   constructor(measurement: string) {
     this.timeseriesDB = TimeSeriesDB.db;
     this.name = measurement;
@@ -113,7 +113,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
     await this.throttle.queueTask(async () => {
       this.writeApi.writePoints(newPoints);
       await this.writeApi.flush();
-    })
+    });
   }
 
   public async writePoint(point: T) {
@@ -121,9 +121,9 @@ export class Measurement<T extends Schema, Fields, Tags> {
   }
 
   public async query(
-    options: IQueryOptions<Tags>, retries = 0
+    options: IQueryOptions<Tags>,
+    retries = 0,
   ): Promise<Array<{ timestamp: number } & Fields> | any> {
-
     const queryTask = async () => {
       let query = `
       from(bucket: "${this.bucket}")
@@ -153,14 +153,14 @@ export class Measurement<T extends Schema, Fields, Tags> {
         }
       }
       return data;
-    }
+    };
 
     while (retries + 1 > 0) {
       try {
-        return await queryTask()
+        return await queryTask();
       } catch (e) {
-        console.log('Error querying - retrying', e)
-        retries--
+        console.log('Error querying - retrying', e);
+        retries--;
       }
     }
   }

@@ -22,6 +22,7 @@ export class PriceSeriesStore {
       };
       await Price.writePointBatched(point, 5000);
     }
+    await Price.exec();
   }
 
   static async fetch(name: string, start: number, end: number) {
