@@ -24,6 +24,7 @@ export class HedgedUniswap {
   public highest: number;
   public lastHarvest: number = 0;
   public claimed = 0;
+  public totalRewards = 0;
   public idle: number = 0; // idle assets
   public maxDrawdown = 0;
   public series: any[] = [];
@@ -250,6 +251,7 @@ export class HedgedUniswap {
 
   private async harvest(data: Uni3Snaphot) {
     this.claimed = this.pos.claimed;
+    this.totalRewards += this.claimed;
     this.lastHarvest = data.timestamp;
   }
 
@@ -376,7 +378,7 @@ export class HedgedUniswap {
       apy: this.apy(data),
       apr: this.apr(data),
       drawdown: this.maxDrawdown,
-      rewards: this.claimed,
+      totalRewards: this.totalRewards,
       start: toDate(this.start),
       end: toDate(data.timestamp),
       daysElapsed: (data.timestamp - this.start) / (60 * 60 * 24), // days

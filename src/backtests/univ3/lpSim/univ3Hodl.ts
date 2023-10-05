@@ -20,6 +20,7 @@ type StrategyConfig = {
   priceToken: number;
   fixedSlippage: number;
   period: number;
+  writeToInflux : boolean;
 };
 
 export class UniV3Hodl {
@@ -68,7 +69,7 @@ export class UniV3Hodl {
       this.start = data.timestamp;
       const pool = this.pool(data);
       this.pos = uni.open(
-        this.config.initial / 2,
+        this.config.initial,
         pool.close * (1 + this.config.priceOffset) * (1 - this.config.rangeSpread),
         pool.close * (1 + this.config.priceOffset) / (1 - this.config.rangeSpread),
         this.config.priceToken,
@@ -78,8 +79,8 @@ export class UniV3Hodl {
       this.token0start = this.pos.token0Bal;
       this.token1start = this.pos.token1Bal;
       this.startPrice = pool.close;
-      console.log("Token 0 Bal " + this.pos.token0Bal)
-      console.log("Token 1 Bal " + this.pos.token1Bal)
+      //console.log("Token 0 Bal " + this.pos.token0Bal)
+      //console.log("Token 1 Bal " + this.pos.token1Bal)
 
     }
 
@@ -179,12 +180,16 @@ export class UniV3Hodl {
     };
     if (apy !== 0) log.fields.apy = apy;
 
-    try {
-      await Log.writePoint(log);
-    } catch (e) {
-      console.log('log error');
-      await Log.writePoint(log);
+    if (this.config.writeToInflux) {
+      try {
+      
+        await Log.writePoint(log);
+      } catch (e) {
+        console.log('log error');
+        await Log.writePoint(log);
+      }
     }
+
     this.series.push({
       name: this.config.name,
       timestamp: data.timestamp,
@@ -255,10 +260,13 @@ export class UniV3Hodl {
       stddev,
       rebalanceCount: this.rebalanceCount,
     };
-    await Summary.writePoint({
-      tags: this.tags,
-      fields: this.summary,
-      timestamp: new Date(data.timestamp * 1000),
-    });
+    if (this.config.writeToInflux){
+      await Summary.writePoint({
+        tags: this.tags,
+        fields: this.summary,
+        timestamp: new Date(data.timestamp * 1000),
+      });
+    }
+
   }
 }

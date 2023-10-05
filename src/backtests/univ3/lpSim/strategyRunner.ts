@@ -9,7 +9,7 @@ import { permutations } from '../../../lib/utils/permutations.js';
 
 const SECONDS_IN_DAY = 60 * 60 * 24;
 const MILLISECONDS_IN_DAY = SECONDS_IN_DAY * 1000;
-const PERIOD = 8 * 7; // 8 weeks
+const PERIOD = 1; // 1 Day
 
 const POOLS = ['Camelotv3 WETH/USDC 0%'];
 
@@ -23,7 +23,7 @@ export class HedgedUniswapStrategyRunner {
 
   public async startNewStartForPool(pool: string) {
     const rangeSpread = range(0.05, 0.25, 5);
-    const priceOffset = range(-0.1, .1, .1);
+    const priceOffset = range(-0.1, .1, 5);
 
     const variations = permutations([rangeSpread, priceOffset]);
 
@@ -40,6 +40,7 @@ export class HedgedUniswapStrategyRunner {
           priceToken: 0,
           fixedSlippage: 0.01,
           period: PERIOD,
+          writeToInflux : false,
         }),
       );
     });
@@ -59,11 +60,11 @@ export class HedgedUniswapStrategyRunner {
     const summary = this.strategies.map((s) => s.summary);
     //console.log(summary);
     const csv = stringify(summary, { header: true });
-    fs.writeFile('./camelotv3_hedged.csv', csv);
+    fs.writeFile('./camelotv3LP.csv', csv);
 
     const series = this.strategies.map((s) => s.series).flat();
     const seriesCsv = stringify(series, { header: true });
-    fs.writeFile('./camelotv3_hedged_series.csv', seriesCsv);
+    fs.writeFile('./camelotv3LPSeries.csv', seriesCsv);
 
     await Summary.writePoints(
       summary.map((s, i) => {
@@ -83,7 +84,7 @@ export class HedgedUniswapStrategyRunner {
 
     this.uni.processPoolData(snapshot);
 
-    const daysElapsed = Math.floor(
+    const hoursElapsed = 24 * Math.floor(
       (snapshot.timestamp - this.lastStart!) / SECONDS_IN_DAY,
     );
     const daysRemaining =
@@ -91,7 +92,7 @@ export class HedgedUniswapStrategyRunner {
 
     // Create new strategies every 3 days
     if (
-      (this.strategies.length === 0 || daysElapsed > 3) &&
+      (this.strategies.length === 0 || hoursElapsed > 6) &&
       daysRemaining > PERIOD
     ) {
       for (const pool of POOLS) {
