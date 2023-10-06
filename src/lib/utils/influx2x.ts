@@ -6,6 +6,7 @@ import {
 } from '@influxdata/influxdb-client';
 import { DeleteAPI } from '@influxdata/influxdb-client-apis';
 import { Settings } from './utility.js';
+import { Queue } from 'async-await-queue';
 
 export type Fields = Record<string, number | boolean | string>;
 export type Tags = Record<string, string | boolean>;
@@ -57,6 +58,18 @@ interface IQueryOptions<T> {
   end: Date;
 }
 
+export class AsyncQueue {
+  private queue = new Queue<number>(2, 100);
+  private count = 0;
+  async queueTask(task: () => Promise<void>, priority: number = 0) {
+    const id = this.count++;
+    await this.queue
+      .wait(id, priority)
+      .then(task)
+      .finally(() => this.queue.end(id));
+  }
+}
+
 export class Measurement<T extends Schema, Fields, Tags> {
   public timeseriesDB: typeof TimeSeriesDB.db;
   public name: string;
@@ -64,6 +77,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
   private queryApi: QueryApi;
   private bucket: string;
   private org: string;
+  private throttle = new AsyncQueue();
   constructor(measurement: string) {
     this.timeseriesDB = TimeSeriesDB.db;
     this.name = measurement;
@@ -96,8 +110,10 @@ export class Measurement<T extends Schema, Fields, Tags> {
 
   public async writePoints(points: T[]) {
     const newPoints = points.map((e) => this.convertToPoint(e));
-    this.writeApi.writePoints(newPoints);
-    await this.writeApi.flush();
+    await this.throttle.queueTask(async () => {
+      this.writeApi.writePoints(newPoints);
+      await this.writeApi.flush();
+    });
   }
 
   public async writePoint(point: T) {
@@ -106,36 +122,47 @@ export class Measurement<T extends Schema, Fields, Tags> {
 
   public async query(
     options: IQueryOptions<Tags>,
+    retries = 0,
   ): Promise<Array<{ timestamp: number } & Fields> | any> {
-    let query = `
-    from(bucket: "${this.bucket}")
-      |> range(start: ${options.start.toISOString()}, stop: ${options.end.toISOString()})
-      |> filter(fn: (r) => r._measurement == "${this.name}")\n      `;
+    const queryTask = async () => {
+      let query = `
+      from(bucket: "${this.bucket}")
+        |> range(start: ${options.start.toISOString()}, stop: ${options.end.toISOString()})
+        |> filter(fn: (r) => r._measurement == "${this.name}")\n      `;
 
-    for (const tag in options.where) {
-      query += `|> filter(fn: (r) => r.${tag} == "${options.where[tag]}")`;
-    }
+      for (const tag in options.where) {
+        query += `|> filter(fn: (r) => r.${tag} == "${options.where[tag]}")`;
+      }
 
-    const data: any[] = [];
-    // Influx2 is unlike influx1, so we must merge fields with the same timestamp
-    for await (const { values, tableMeta } of this.queryApi.iterateRows(
-      query,
-    )) {
-      const o = tableMeta.toObject(values);
+      const data: any[] = [];
+      // Influx2 is unlike influx1, so we must merge fields with the same timestamp
+      for await (const { values, tableMeta } of this.queryApi.iterateRows(
+        query,
+      )) {
+        const o = tableMeta.toObject(values);
 
-      const field = data.find((e) => e.time === o._time);
-      if (field) {
-        field[o._field] = o._value;
-      } else {
-        data.push({
-          time: o._time,
-          timestamp: new Date(o._time),
-          [o._field]: o._value,
-        });
+        const field = data.find((e) => e.time === o._time);
+        if (field) {
+          field[o._field] = o._value;
+        } else {
+          data.push({
+            time: o._time,
+            timestamp: new Date(o._time),
+            [o._field]: o._value,
+          });
+        }
+      }
+      return data;
+    };
+
+    while (retries + 1 > 0) {
+      try {
+        return await queryTask();
+      } catch (e) {
+        console.log('Error querying - retrying', e);
+        retries--;
       }
     }
-
-    return data;
   }
 
   public async dropMeasurement() {
@@ -145,7 +172,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
       bucket: this.bucket,
       body: {
         start: new Date(0).toISOString(),
-        stop: new Date().toISOString(),
+        stop: new Date('2100-1-1').toISOString(),
         predicate: `_measurement="${this.name}"`,
       },
     });
@@ -158,7 +185,7 @@ export class Measurement<T extends Schema, Fields, Tags> {
       bucket: this.bucket,
       body: {
         start: new Date(0).toISOString(),
-        stop: new Date().toISOString(),
+        stop: new Date('2100-1-1').toISOString(),
         predicate: `_measurement="${this.name}" AND ${options.where}`,
       },
     });

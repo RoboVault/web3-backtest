@@ -1,4 +1,5 @@
 import { Schema, Fields, Tags, Measurement } from '../utils/influx2x.js';
+import { InfluxBatcher } from '../utils/influxBatcher.js';
 
 interface IPriceTags extends Tags {
   id: string;
@@ -13,7 +14,7 @@ export interface IPrice extends Schema {
   fields: IPriceFields;
 }
 
-export type PriceLog = Measurement<IPrice, IPriceFields, IPriceTags>;
-export const Price = new Measurement<IPrice, IPriceFields, IPriceTags>(
+export type PriceLog = InfluxBatcher<IPrice, IPriceFields, IPriceTags>;
+export const Price = new InfluxBatcher<IPrice, IPriceFields, IPriceTags>(
   'price_v1',
 );
