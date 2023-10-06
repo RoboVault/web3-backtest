@@ -1,3 +1,11 @@
+
+
+> [!WARNING]  
+> This project is in early development. The API will change. Please use at your own risk. 
+
+> [!NOTE]  
+> What do we want?!?! More Datasources! More Pairs! We welcome PRs 🙏
+
 # Web3 Backtest
 
 Web3 Backtest is a generic Backtesting library for DeFi trading strategies. The library simplifies pullling historic data, simulating protocols, backtest metrics, charting and analytics.
@@ -202,6 +210,18 @@ To input the above data, go to: http://localhost:3000/ then click on the hamburg
 To add an example dashboard, navigate to Dashboards -> New -> Import and paste the json files provided in the `/grafana` folder.
 
 __NOTE:__ If Grafana failed to connect to localhost, try setting connection mode to `server` use container name for the URL field. URL: http://influxdb:8086/
+
+## Grafana Influx2 Datasource setup
+
+Instructions [here](https://docs.influxdata.com/influxdb/v2/tools/grafana/?t=InfluxQL#configure-your-influxdb-connection)
+
+* URL: http://host.docker.internal:8086
+* Custom header: 
+  * Header: Authorization 
+  * Value: Token 1Vm2wdJdEM9BBxR8LHio1jjgAyx9Glm1SGQqQeBid5QPMqbvdIPjYxMhswV8AKKhA00s-ITdJgJqqJ6cX3cntA==
+* Database: backtest
+* User: admin
+* Password: password
 
 
 # Contributors and Supporters

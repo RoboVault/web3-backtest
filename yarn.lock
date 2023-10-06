@@ -1173,6 +1173,16 @@
   resolved "https://registry.yarnpkg.com/@influxdata/influxdb-client/-/influxdb-client-1.33.2.tgz#c68cfcf592e4e042361003143fbab99461410172"
   integrity sha512-RT5SxH+grHAazo/YK3UTuWK/frPWRM0N7vkrCUyqVprDgQzlLP+bSK4ak2Jv3QVF/pazTnsxWjvtKZdwskV5Xw==
 
+"@influxdata/influxdb-client-apis@^1.33.2":
+  "integrity" "sha512-W6x9TOAQ3AUx0RBCrCibDhSvMqN50lxJmElc3rHn7+R/9Zi35oczu8r9YMkyNlzWnksu+dcyKr8/xLv28Ot4hw=="
+  "resolved" "https://registry.npmjs.org/@influxdata/influxdb-client-apis/-/influxdb-client-apis-1.33.2.tgz"
+  "version" "1.33.2"
+
+"@influxdata/influxdb-client@*", "@influxdata/influxdb-client@^1.33.2":
+  "integrity" "sha512-RT5SxH+grHAazo/YK3UTuWK/frPWRM0N7vkrCUyqVprDgQzlLP+bSK4ak2Jv3QVF/pazTnsxWjvtKZdwskV5Xw=="
+  "resolved" "https://registry.npmjs.org/@influxdata/influxdb-client/-/influxdb-client-1.33.2.tgz"
+  "version" "1.33.2"
+
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.npmjs.org/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz"

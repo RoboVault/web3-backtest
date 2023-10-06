@@ -1,9 +1,5 @@
 import { InfluxDB } from 'influx';
-import {
-  Measurement,
-  ILogAny,
-  TimeSeriesDB,
-} from '../lib/utils/influx1x.js';
+import { Measurement, ILogAny, TimeSeriesDB } from '../lib/utils/influx1x.js';
 import { waitFor } from '../lib/utils/utility.js';
 
 // jest.mock('influx'); // SoundPlayer is now a mock constructor

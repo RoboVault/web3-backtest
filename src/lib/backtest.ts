@@ -33,7 +33,12 @@ export class Backtest {
     const sources =
       _sources || sourceConfig?.map((source) => DataSourceStore.get(source));
     if (!sources) throw new Error('no sources provided');
-    const bt = new Backtest(start, end, sources, options || { useCache: false });
+    const bt = new Backtest(
+      start,
+      end,
+      sources,
+      options || { useCache: false },
+    );
     return bt;
   }
 

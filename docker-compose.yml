@@ -6,22 +6,27 @@ services:
     image: influxdb:latest
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
-      DOCKER_INFLUXDB_INIT_USERNAME: sector
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
       DOCKER_INFLUXDB_INIT_PASSWORD: password
-      DOCKER_INFLUXDB_INIT_ORG: sector
+      DOCKER_INFLUXDB_INIT_ORG: admin
       DOCKER_INFLUXDB_INIT_BUCKET: backtest
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: 1Vm2wdJdEM9BBxR8LHio1jjgAyx9Glm1SGQqQeBid5QPMqbvdIPjYxMhswV8AKKhA00s-ITdJgJqqJ6cX3cntA==
       V1_DB_NAME: v1-db 
       V1_RP_NAME: v1-rp 
-      V1_AUTH_USERNAME: sector 
+      V1_AUTH_USERNAME: admin 
       V1_AUTH_PASSWORD: password
     volumes:
       - ${PWD}/scripts:/docker-entrypoint-initdb.d
+      - ${PWD}/influx:/var/lib/influxdb2
     ports:
       - 8086:8086
 
   grafana:
     container_name: grafana_local
     image: grafana/grafana
+    environment:
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+    volumes:
+      - ${PWD}/data:/var/lib/grafana
     ports:
       - 3000:3000
