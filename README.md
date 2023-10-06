@@ -8,13 +8,13 @@
 
 # Web3 Backtest
 
-Web3 Backtest is a generic Backtesting library for DeFi trading strategies. The library simplifies pullling historic data, simulating protocols, backtest metrics, charting and analytics.
+Web3 Backtest is a generic Backtesting library for DeFi trading strategies. The library simplifies pulling historic data, simulating protocols, backtest metrics, charting and analytics.
 
 ![Grafana Screenshot](./img/architecture.png)
 
 ## Historic Data
 
-Web3 Backtester pull desired historic data using [arkiver](https://github.com/RoboVault/robo-arkiver). All data is formatted into snaphots with resolutions of 1m, 1h, or 1day. transaction- or block-resolution may be added in the future.
+Web3 Backtester pull desired historic data using [arkiver](https://github.com/RoboVault/robo-arkiver). All data is formatted into snapshots with resolutions of 1m, 1h, or 1day. transaction- or block-resolution may be added in the future.
 
 Datasources are specified with a simple configuration
 
@@ -23,7 +23,7 @@ const sources: DataSourceInfo[] = [
   {
     chain: 'arbitrum',
     protocol: 'camelot-dex',
-    resoution: '1m',
+    resolution: '1m',
     config: {
       pairs: [USDCWETH],
     },
@@ -35,7 +35,7 @@ Supported sources are detailed [below](#Data Sources Supported)
 
 ## Position Simulation
 
-The library contains helper classes that simulate openning, changing and closing defi positions. For example, the Univ2PositionManager will simulation a position with:
+The library contains helper classes that simulate opening, changing and closing defi positions. For example, the Univ2PositionManager will simulate a position with:
 
 ```ts
 const univ2 = new UniV2PositionManager();
@@ -80,7 +80,7 @@ const main = async () => {
       {
         chain: 'arbitrum',
         protocol: 'camelot-dex',
-        resoution: '1m',
+        resolution: '1m',
         config: {
           pairs: [USDCWETH],
         },
@@ -233,5 +233,5 @@ Instructions [here](https://docs.influxdata.com/influxdb/v2/tools/grafana/?t=Inf
 If you would like to support the project, please contact us on [Twitter](https://twitter.com/robolabs_biz).
 # Robo Labs
 
-If your looking for to build custom backtests for you, using this library, hit up [Robo Labs](https://www.robolabs.biz/) on Twitter [@robolabs_biz](https://twitter.com/robolabs_biz).
+If you're looking for to build custom backtests for you, using this library, hit up [Robo Labs](https://www.robolabs.biz/) on Twitter [@robolabs_biz](https://twitter.com/robolabs_biz).
 
