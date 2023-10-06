@@ -308,7 +308,7 @@ export class UniV3Position {
     //   feeUSD *
     //   (reservesValueUsd / (lastPool.totalValueLockedUSD + reservesValueUsd));
     this.claimed += feeUSD;
-    this.valueUsd = this.claimed + reservesValueUsd;
+    this.valueUsd = reservesValueUsd;
     this.token0Bal = posReserves[0];
     this.token1Bal = posReserves[1];
     this.reserves = posReserves;
