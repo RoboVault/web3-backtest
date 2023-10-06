@@ -102,7 +102,6 @@ export const tokensForStrategy = (
   const amountNow = yLp + xLp * price;
   return [xLp, yLp];
 };
-
 export class UniV3Position {
   // pool!: ethers.Contract
   // provider!: ethers.providers.BaseProvider
@@ -214,7 +213,7 @@ export class UniV3Position {
     );
 
     const unboundedLiquidity = liquidityForStrategy(
-      this.entryPrice,
+      pool.close,
       Math.pow(1.0001, -887220),
       Math.pow(1.0001, 887220),
       posReserves[0],
@@ -223,7 +222,7 @@ export class UniV3Position {
       pool.tokens[1].decimals,
     );
     const liquidity = liquidityForStrategy(
-      this.entryPrice,
+      pool.close,
       this.minRange,
       this.maxRange,
       posReserves[0],
@@ -268,11 +267,8 @@ export class UniV3Position {
     const feeUnb0 = unbFees[0] * unboundedLiquidity;
     const feeUnb1 = unbFees[1] * unboundedLiquidity;
 
-    let fgV, feeV, feeUnb, amountV, feeUSD: number, amountTR;
-    feeUSD = 0;
-    // const firstClose = this.priceToken === 1 ? 1 / data[0].close : data[0].close;
-    const firstClose = this.entryPrice;
-
+    let fgV, feeV, feeUnb, amountV, feeUSD = 0, amountTR;
+    const firstClose = this.priceToken === 1 ? 1 / this.entryPrice : this.entryPrice;
     const tokenRatioFirstClose = this.tokensFromLiquidity(
       firstClose,
       this.minRange,
@@ -281,6 +277,7 @@ export class UniV3Position {
       pool.tokens[0].decimals,
       pool.tokens[1].decimals,
     );
+
     const x0 = tokenRatioFirstClose[1];
     const y0 = tokenRatioFirstClose[0];
 
@@ -307,9 +304,9 @@ export class UniV3Position {
     }
     const reservesValueUsd =
       pool.prices[0] * posReserves[0] + pool.prices[1] * posReserves[1];
-    const diluted =
-      feeUSD *
-      (reservesValueUsd / (lastPool.totalValueLockedUSD + reservesValueUsd));
+    // const diluted =
+    //   feeUSD *
+    //   (reservesValueUsd / (lastPool.totalValueLockedUSD + reservesValueUsd));
     this.claimed += feeUSD;
     this.valueUsd = this.claimed + reservesValueUsd;
     this.token0Bal = posReserves[0];
