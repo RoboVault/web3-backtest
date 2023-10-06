@@ -126,7 +126,7 @@ export class HedgedUniswap {
 
     // Update Lend
     const slippage = calcSlippage();
-    const totalAssetsMinusCosts = totalAssets - slippage - REBALANCE_COST
+    const totalAssetsMinusCosts = totalAssets - slippage - REBALANCE_COST;
     const { borrow, lend } = this.calcLenderAmounts(
       totalAssetsMinusCosts,
       data,
