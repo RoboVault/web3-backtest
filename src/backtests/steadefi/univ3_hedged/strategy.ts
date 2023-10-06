@@ -115,7 +115,6 @@ export class HedgedUniswap {
     const totalAssets = this.estTotalAssets(data);
     const mgrClose = await mgr.close(this.pos);
     await aave.close(this.aave);
-    this.idle = totalAssets;
 
     const calcSlippage = () => {
       const { borrow, lend } = this.calcLenderAmounts(totalAssets, data);
@@ -127,8 +126,9 @@ export class HedgedUniswap {
 
     // Update Lend
     const slippage = calcSlippage();
+    const totalAssetsMinusCosts = totalAssets - slippage - REBALANCE_COST;
     const { borrow, lend } = this.calcLenderAmounts(
-      totalAssets - slippage,
+      totalAssetsMinusCosts,
       data,
     );
     const usdLeft = borrow * pool.close * 2;
@@ -148,10 +148,7 @@ export class HedgedUniswap {
     this.pos.valueUsd = usdLeft;
     this.idle = 0;
     const totalAssetsNew = this.estTotalAssets(data);
-    // console.log(totalAssets, totalAssetsNew)
-    if (totalAssets - totalAssetsNew > 0) {
-      this.idle = totalAssets - totalAssetsNew;
-    }
+    this.idle = totalAssetsMinusCosts - totalAssetsNew;
 
     // console.log(`this.idle: ${this.idle}`)
     this.gasCosts += REBALANCE_COST;
@@ -235,16 +232,10 @@ export class HedgedUniswap {
     // TODO: this logic should change if we are starting with token0 or token1
     const result =
       this.idle +
+      this.pos.claimed +
       this.pos.valueUsd +
       this.aave.lent(pool.tokens[this.tokenIndex].symbol) -
       this.aave.borrowed('WETH') * pool.close;
-    // if (isNaN(result)) {
-    //   console.log('is is nan')
-    //   console.log(this.idle)
-    //   console.log(this.pos.valueUsd)
-    //   console.log(this.aave.lent(pool.tokens[this.tokenIndex].symbol))
-    //   process.exit()
-    // }
     return result;
   }
 

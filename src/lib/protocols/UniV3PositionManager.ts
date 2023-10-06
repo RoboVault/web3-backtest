@@ -267,8 +267,14 @@ export class UniV3Position {
     const feeUnb0 = unbFees[0] * unboundedLiquidity;
     const feeUnb1 = unbFees[1] * unboundedLiquidity;
 
-    let fgV, feeV, feeUnb, amountV, feeUSD = 0, amountTR;
-    const firstClose = this.priceToken === 1 ? 1 / this.entryPrice : this.entryPrice;
+    let fgV,
+      feeV,
+      feeUnb,
+      amountV,
+      feeUSD = 0,
+      amountTR;
+    const firstClose =
+      this.priceToken === 1 ? 1 / this.entryPrice : this.entryPrice;
     const tokenRatioFirstClose = this.tokensFromLiquidity(
       firstClose,
       this.minRange,
@@ -308,7 +314,7 @@ export class UniV3Position {
     //   feeUSD *
     //   (reservesValueUsd / (lastPool.totalValueLockedUSD + reservesValueUsd));
     this.claimed += feeUSD;
-    this.valueUsd = this.claimed + reservesValueUsd;
+    this.valueUsd = reservesValueUsd;
     this.token0Bal = posReserves[0];
     this.token1Bal = posReserves[1];
     this.reserves = posReserves;
