@@ -50,3 +50,10 @@ export class Numbers {
 
 export const waitFor = (delay: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, delay));
+
+export const range = (start: number, end: number, iterations: number) => {
+  const step = (end - start) / iterations;
+  return Array(iterations)
+    .fill(0)
+    .map((_, idx) => start + idx * step);
+};
